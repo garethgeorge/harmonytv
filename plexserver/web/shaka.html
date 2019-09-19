@@ -1,0 +1,56 @@
+<html>
+
+<head>
+  <title>Shaka Player Example</title>
+  <script src="js/shaka-player.compiled.js"></script>
+  <script src="js/util.js"></script>
+</head>
+
+<body>
+  <video id="video"
+    width="100%"
+    controls autoplay>
+    <source src="/tmp/fallback.mp4" type="video/mp4">
+  </video>
+</body>
+
+<script>
+
+// var manifestUri = 'http://localhost:3000/media/bfae546d-eb5f-4cb8-9247-c805cbe5b954/files/stream.mpd';
+const manifestUri = '/tmp/stream.mpd';
+
+function initApp() {
+  shaka.polyfill.installAll();
+
+  if (shaka.Player.isBrowserSupported()) {
+    initPlayer();
+  } else {
+    alert("Browser not supported by shaka player");
+  }
+}
+
+function initPlayer() {
+  var video = document.getElementById('video');
+  var player = new shaka.Player(video);
+  window.player = player;
+  
+  player.addEventListener('error', (event) => {
+    console.error("Error code ", error.detail.code, " object ", error);
+  });
+
+  const nwEngine = player.getNetworkingEngine(); // does nothing with it at the moment
+  // see https://shaka-player-demo.appspot.com/docs/api/shaka.extern.html#.RequestFilter
+  // can use this to inject encryption headers and virtually everything else needed wowza
+  // this is freaking perfect 
+  player.load(manifestUri).then(function() {
+    console.log('The video has now been loaded!');
+  }).catch((err) => {
+    console.error("Encountered an error loading the manifestUrl ", err);
+  });
+}
+
+document.addEventListener('DOMContentLoaded', initApp);
+
+</script>
+
+</html>
