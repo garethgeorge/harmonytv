@@ -13,7 +13,7 @@ class Library extends EventEmitter {
     if (this.media)
       return this.media;
 
-    const res = await axios.get(config.apiHost + "/api/library/" + this.library.libraryid + "/getMedia");
+    const res = await axios.get(config.apiHost + "/library/" + this.library.libraryid + "/getMedia");
     this.media = res.data;
     
     const series = {};
@@ -40,7 +40,7 @@ class LibraryManager extends EventEmitter {
   }
 
   async refreshLibraries() {
-    const res = await axios.get(config.apiHost + "/api/getLibraries")
+    const res = await axios.get(config.apiHost + "/library/getAll")
     console.log("LibraryManager::refreshLibraries() - libraries list: ", JSON.stringify(res.data, false, 3));
     this.libraries = {};
     for (const library of res.data) {
@@ -53,11 +53,14 @@ class LibraryManager extends EventEmitter {
   }
 }
 
-const libraryManager = new LibraryManager();
-
+let libraryManager = null;
 const getLibraryManager = async () => {
-  const libraryManager = new LibraryManager();
-  await libraryManager.refreshLibraries();
+  if (libraryManager)
+    return libraryManager;
+  
+  const tmp = new LibraryManager();
+  await tmp.refreshLibraries();
+  libraryManager = tmp;
   return libraryManager;
 }
 
@@ -68,7 +71,14 @@ const getMedia = async (mediaid) => {
   return res.data;
 }
 
+const createLobbyWithMedia = async (mediaid) => {
+  const res = await axios.get(config.apiHost + "/lobby/create?mediaid=" + mediaid);
+  console.log("created lobby playing media: " + mediaid + " lobbyid: " + res.data.lobbyId);
+  return res.data.lobbyId;
+}
+
 export {
   getLibraryManager,
   getMedia,
+  createLobbyWithMedia,
 }

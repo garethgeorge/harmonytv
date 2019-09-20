@@ -26,7 +26,7 @@ const extractSubtitleStream = async (sourcefn, streamno, outputSubsFile) => {
 
 const waitForFFmpeg = (proc) => {
   return new Promise((accept, reject) => {
-    const bar = new cliprogress.SingleBar({}, cliprogress.Presets.shades_classic);
+    const bar = new cliprogress.SingleBar({}, cliprogress.Presets.legacy);
     proc.on('start', function(commandLine) {
       console.log('Spawned ffmpeg with command: ' + commandLine);
       bar.start(100, 0);

@@ -4,12 +4,16 @@ import SideNav from "./components/sidenav";
 import "./App.css";
 import Library from "./components/libraryview";
 import Player from "./components/player";
+import Lobby from "./components/lobbyview";
 
 const playerPage = (props) => {
-  console.log("THE PROPS: ", props);
   const mediaid = props.match.params.mediaid;
-  console.log("PLAYER PAGE MEDIA ID: " + mediaid);
   return <Player mediaid={mediaid} />
+}
+
+const lobbyPage = (props) => {
+  const lobbyid = props.match.params.lobbyid;
+  return <Lobby lobbyid={lobbyid} />
 }
 
 class App extends React.Component {
@@ -26,7 +30,8 @@ class App extends React.Component {
     return (
       <Router>
         <Switch> {/* iterates its children and takes the first that matches */}
-          <Route path={`/player/:mediaid`} component={playerPage} />
+          {/* <Route path={`/player/:mediaid`} component={playerPage} /> */}
+          <Route path={`/lobby/:lobbyid`} component={lobbyPage} />
           <Route path={`/`}>
             <div className="App">
               <div className="sidenav-container">

@@ -1,6 +1,6 @@
 // presents a view of a given library
 import React from "react";
-import {getLibraryManager} from "../model/model";
+import {getLibraryManager, createLobbyWithMedia} from "../model/model";
 import "./libraryview.css";
 import { Route, Link } from "react-router-dom";
 
@@ -43,15 +43,32 @@ class SeriesView extends React.Component {
 
     const seriesId = this.props.match.params.seriesid;
     const curSeries = this.state.series[seriesId];
+
     if (!curSeries) {
       return <h1>Error: series not found</h1>
     }
 
+    // sort the episodes by name :P 
+    curSeries.sort((a, b) => {
+      if (a.name > b.name) {
+        return 1;
+      } else if (a.name == b.name) {
+        return 0;
+      } else 
+        return -1;
+    });
+
     const episodes = [];
     for (const episode of curSeries) {
+      const doClick = () => {
+        createLobbyWithMedia(episode.mediaid).then(lobbyid => {
+          window.location.href = "/lobby/" + lobbyid;
+        });
+      }
+
       episodes.push(
-        <div className="episode">
-          <a href={"/player/" + episode.mediaid}>
+        <div className="episode" key={episode.mediaid}>
+          <a href="#" onClick={doClick}>
             {episode.name}
           </a>
         </div>

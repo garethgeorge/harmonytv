@@ -1,18 +1,16 @@
 (async () => {
-  const express = require("express");
+  const app = require("express")();
+  const http = require('http').createServer(app);
+  const io = require("socket.io")(http);
+
   const model = require("../src/model");
-  const btoa = require("btoa");
-  const bodyParser = require('body-parser');
-  const app = express();
-  // TODO: switch to using debug 
+  const lobby = require("../src/lobby");
 
   await model.setup();
 
   app.use(require("morgan")("tiny"));
-  app.use(bodyParser.urlencoded({ extended: false }));
-  app.use(bodyParser.json());
-
-  app.use(express.static("./web"));
+  app.use(require('body-parser').urlencoded({ extended: false }));
+  app.use(require('body-parser').json());
 
   /* required for use as an API backend */
   app.use((req, res, next) => {
@@ -20,24 +18,19 @@
     next();
   });
 
-  app.get("/api/getLibraries", async (req, res) => {
+  app.get("/library/getAll", async (req, res) => {
     const libraries = await model.getAllLibraries();
     res.header("Content-Type", "application/json");
     res.end(JSON.stringify(libraries));
   });
 
-  app.get("/api/library/:libraryid/getMedia", async (req, res) => {
+  app.get("/library/:libraryid/getMedia", async (req, res) => {
     // first get the library 
     const media = await model.libraryGetAllMedia(req.params.libraryid);
     console.log("returned " + media.length + " records for library " + req.params.libraryid);
     res.header("Content-Type", "application/json");
     res.end(JSON.stringify(media));
   });
-
-  /*
-    this route directly accesses the file from the backing store from streaming 
-    w/o optimization
-  */
 
   app.get("/media/:mediaid/info.json", async (req, res) => {
     console.log("getting info for media: " + req.params.mediaid);
@@ -86,8 +79,23 @@
     res.setHeader("Content-Type", obj.mimetype);
     obj.stream.pipe(res);
   });
+  
+  app.get("/lobby/create", (req, res) => {
+    const lby = lobby.create()
+    if (req.query.mediaid) {
+      lby.startPlaying(req.query.mediaid);
+    }
+    
+    res.header("Content-Type", "application/json");
+    res.end(JSON.stringify({
+      lobbyId: lby.id
+    }));
+  });
 
-  app.listen(5000, () => {
+
+  lobby.socketio_setup(io.of("/lobbyns"));
+
+  http.listen(5000, () => {
     console.log("listening on port :5000");
   });
 
