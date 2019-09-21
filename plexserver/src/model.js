@@ -113,9 +113,22 @@ exports.putStreamObject = async (mediaid, filepath, objectStream, conn=null) => 
     throw new Error("mimetype not found for file " + path);
   }
 
-  const blockId = await mediaStore.putBlock(objectStream, mimetype);
-  debug(`putStreamObject(${mediaid}, ${filepath}, ...) - stored as blockid ${blockId}, inserting in database`);
+  // retries for up to 100 seconds until it succeeds
+  let blockId = null;
+  for (let i = 0; i < 10; ++i) {
+    try {
+      blockId = await mediaStore.putBlock(objectStream, mimetype);
+      debug(`putStreamObject(${mediaid}, ${filepath}, ...) - stored as blockid ${blockId}, inserting in database`);
+      break ;
+    } catch (e) {
+      console.log(`putStreamObject(${mediaid}, ${filepath}, ...) encountered an error: ${e}, retrying ${i}`);
+      await new Promise((accept, reject) => {
+        setTimeout(accept, 10 * 1000);
+      });
+    }
+  }
   
+
   await conn.query(pgformat(
     "INSERT INTO media_objects (mediaId, path, objectid) VALUES (%L, %L, %L)",
     mediaid, filepath, blockId
