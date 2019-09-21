@@ -1,7 +1,7 @@
 import React from "react";
 import config from "../config";
-import "./player.css";
 import {getMedia} from "../model/model";
+import "./player.css";
 
 // https://shaka-player-demo.appspot.com/docs/api/tutorial-ui.html
 let shakaUiLoaded = false;
@@ -83,15 +83,15 @@ class Player extends React.Component {
         this.installShaka(elem);
       }
       retry();
-    }
+    } 
 
     return (
-      <div className="shaka" data-shaka-player-container data-shaka-player-cast-receiver-id="7B25EC44">
-        <video data-shaka-player ref={onVideoRef} style={{width: '100%'}}>
+      <div className="shakaContainer" data-shaka-player-container data-shaka-player-cast-receiver-id="7B25EC44">
+        <video data-shaka-player ref={onVideoRef} style={{width: "100%", height: "100%"}}>
           {/* <source src={fallbackUrl} type="video/mp4"></source> */}
         </video>
       </div>
-    )
+    );
   }
 }
 

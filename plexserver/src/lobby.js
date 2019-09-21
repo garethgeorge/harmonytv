@@ -1,4 +1,5 @@
 const uuidv4 = require("uuid/v4");
+const debug = require("debug")("model:lobby");
 
 const lobbies = {};
 
@@ -48,7 +49,7 @@ module.exports = {
 
   socketio_setup: (ionsp) => {
     ionsp.on("connection", (socket) => {
-      console.log("socket.io /lobbyns connection");
+      debug("socket.io /lobbyns connection");
 
       let lobby = null;
 
@@ -59,10 +60,10 @@ module.exports = {
       });
 
       socket.on('client:join-lobby', (lobbyid) => {
-        console.log("socket.io /lobbyns:join-lobby lobbyid: " + lobbyid);
+        debug("socket.io /lobbyns:join-lobby lobbyid: " + lobbyid);
         if (lobby === null) {
           if (!lobbies[lobbyid]) {
-            console.log("ERROR: lobbyid does not exist: " + lobbyid);
+            debug("ERROR: lobbyid does not exist: " + lobbyid);
             socket.emit("server:error", "this lobby does not exist");
             return ;
           }
@@ -80,7 +81,7 @@ module.exports = {
       });
 
       socket.on('client:play-video', (mediaid) => {
-        console.log("socket.io /lobbyns:play-video lobbyid: " + lobbyid + " mediaid: " + mediaid);
+        debug("socket.io /lobbyns:play-video lobbyid: " + lobbyid + " mediaid: " + mediaid);
         if (!lobby) {
           socket.emit("server:error", "you are not in a room yet");
           return ;
@@ -92,12 +93,12 @@ module.exports = {
 
       socket.on("client:update-now-playing", (nowPlaying) => {
         if (!lobby) {
-          socket.emit("error", "you are not in a room yet");
+          socket.emit("server:error", "you are not in a room yet");
           return ;
         }
         lobby.nowPlaying = nowPlaying;
 
-        console.log("client:update-now-playing for lobby " + lobby.id, JSON.stringify(nowPlaying, false, 3));
+        debug("client:update-now-playing for lobby " + lobby.id, JSON.stringify(nowPlaying, false, 3));
 
         // check the effects of adding a fake delay
         socket.to(lobby.id).emit("server:update-now-playing", lobby.nowPlaying);

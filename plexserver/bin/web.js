@@ -2,9 +2,11 @@
   const app = require("express")();
   const http = require('http').createServer(app);
   const io = require("socket.io")(http);
+  const debug = require("debug")("web");
 
   const model = require("../src/model");
   const lobby = require("../src/lobby");
+
 
   await model.setup();
 
@@ -27,21 +29,21 @@
   app.get("/library/:libraryid/getMedia", async (req, res) => {
     // first get the library 
     const media = await model.libraryGetAllMedia(req.params.libraryid);
-    console.log("returned " + media.length + " records for library " + req.params.libraryid);
+    debug("returned " + media.length + " records for library " + req.params.libraryid);
     res.header("Content-Type", "application/json");
     res.end(JSON.stringify(media));
   });
 
   app.get("/media/:mediaid/info.json", async (req, res) => {
-    console.log("getting info for media: " + req.params.mediaid);
+    debug("getting info for media: " + req.params.mediaid);
     const media = await model.getMediaById(req.params.mediaid);
-    console.log("\tmedia: " + JSON.stringify(media, false, 3));
+    debug("\tmedia: " + JSON.stringify(media, false, 3));
     if (media === null) {
       res.status(404);
       res.end("404 Not Found");
     }
     res.status(200);
-    console.log("\tsuccessfully retrieved and returning.");
+    debug("\tsuccessfully retrieved and returning.");
     res.end(JSON.stringify(media));
   });
 
@@ -49,17 +51,17 @@
     const mediaId = req.params.mediaid;
     const path = req.params.path;
 
-    console.log(`fetching media object ${mediaId} ${path}`);
+    debug(`fetching media object ${mediaId} ${path}`);
     const mediaObjId = await model.getStreamObjectIdFromPath(mediaId, path);
 
     if (!mediaObjId) {
-      console.log("\tobject not found");
+      debug("\tobject not found");
       res.status(404);
       res.end("404 Object Not Found");
       return ;
     }
 
-    console.log("\tfound object, streaming back to requester");
+    debug("\tfound object, streaming back to requester");
 
     let range;
     if (req.headers.range) {
@@ -72,7 +74,7 @@
         stop: stopRange,
       }
 
-      console.log("should try to only fetch range: ", range, " OPERATION NOT YET SUPPORTED");
+      debug("should try to only fetch range: ", range, " OPERATION NOT YET SUPPORTED");
     }
 
     const obj = await model.getStreamObject(mediaId, mediaObjId);

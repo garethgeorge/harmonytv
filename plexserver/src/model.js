@@ -6,6 +6,7 @@ const path = require("path");
 const StreamCache = require('stream-cache');
 const LRU = require('lru-cache');
 const AsyncLock = require('async-lock');
+const debug = require("debug")("model");
 
 let mediaStore = null;
 let cacheStore = null;
@@ -20,11 +21,11 @@ exports.setup = async (conn = null) => {
     conn = pool;
 
   // bit of a race condition here but it makes life much easier to just live w/it 
-  console.log("initializing cloud data stores");
+  debug("initializing cloud data stores");
   mediaStore = await require('./storage-backends/gdrive')();
   await mediaStore.setGdriveRootFolderId(config.gdrive.parentFolder);
   
-  console.log("initializing database");
+  debug("initializing database");
 
   try {
     await conn.query(`
@@ -113,7 +114,7 @@ exports.putStreamObject = async (mediaid, filepath, objectStream, conn=null) => 
   }
 
   const blockId = await mediaStore.putBlock(objectStream, mimetype);
-  console.log(`putStreamObject(${mediaid}, ${filepath}, ...) - stored as blockid ${blockId}, inserting in database`);
+  debug(`putStreamObject(${mediaid}, ${filepath}, ...) - stored as blockid ${blockId}, inserting in database`);
   
   await conn.query(pgformat(
     "INSERT INTO media_objects (mediaId, path, objectid) VALUES (%L, %L, %L)",
@@ -189,25 +190,21 @@ const alreadyFetched = {};
 
 exports.getStreamObject = async (mediaid, objectid) => {
   return await objectCacheLock.acquire(mediaid, (callback) => {
-    console.log(`getStreamObject(${mediaid}, ${objectid})`);
+    debug(`getStreamObject(${mediaid}, ${objectid})`);
 
     // check the cache 
     const cacheObject = objectCache.get(objectid);
     if (cacheObject)
       return callback(null, cacheObject);
 
-    if (alreadyFetched[objectid])
-      throw new Error("WHAT THE FUCK MY DUDES");
-    alreadyFetched[objectid] = true;
-
-    console.log(`\tNOT CACHED :( fetching from backing store`);
+    debug(`\tNOT CACHED :( fetching from backing store`);
     const object = mediaStore.getBlock(objectid).then((object) => {
         // swap the object's stream with a stream cache 
       const stream = new StreamCache();
       object.stream.pipe(stream);
       object.stream = stream;
 
-      console.log(`\t\tfetched object ${objectid} successfully, caching it and returning it`);
+      debug(`\t\tfetched object ${objectid} successfully, caching it and returning it`);
       objectCache.set(objectid, object);
 
       callback(null, object);
