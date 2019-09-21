@@ -31,7 +31,7 @@ module.exports = {
     parentFolder: "<your gdrive folder id>",
     scopes: ['https://www.googleapis.com/auth/drive'],
     tokenPath: resolvePath("~/.config/myplex/gdrive-token.json"), // TODO: update this to an application specific path instead of sharing w/plexfs 
-    credentials: {"installed":{"client_id":"655291428817-nu0odqirkicunj07nnskoocunrtqtkkf.apps.googleusercontent.com","project_id":"linen-diorama-169422","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"iEJdnuFi9iDxukQbChj7XLit","redirect_uris":["urn:ietf:wg:oauth:2.0:oob","http://localhost"]}},
+    credentials: { /* Your credentials here */ },
   },
 
   // options not currently used
