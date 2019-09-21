@@ -1,4 +1,5 @@
 const stream = require("stream");
+const crypto = require("crypto");
 
 function StreamStringWriter(callback) {
   let bufferedData = [];

@@ -63,7 +63,11 @@ class Lobby extends React.Component {
       this.player.playVideo(nowPlaying.mediaid, () => {
         serverNowPlaying = new NowPlaying(nowPlaying);
         clearTimeout(transmitTimeoutRef);
-        serverNowPlaying.apply(this.player.videoElem);
+
+        setTimeout(() => {
+          serverNowPlaying.apply(this.player.videoElem);
+        }, 100);
+        
 
         this.socket.on("server:update-now-playing", (nowPlaying) => {
           console.log("server:update-now-playing ", JSON.stringify(nowPlaying, false, 3));

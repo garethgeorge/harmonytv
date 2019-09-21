@@ -307,7 +307,7 @@ class GDriveBlockStore {
           parents: [parentId],
         }
       }, (err, file) => {
-        if (err)
+        if (err)  
           return reject(err);
         accept(file.id);
       });

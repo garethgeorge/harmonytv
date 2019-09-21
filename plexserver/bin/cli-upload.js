@@ -176,7 +176,7 @@ const mimetypes = {
       const mimetype = mimetypes[path.extname(file)];
       if (!mimetype) {
         console.log("skipping file " + file + " mimetype not recognized.");
-        return ;
+        return callback();
       }
       
       console.log(`uploading file ${file} with mimetype ${mimetype}`);
@@ -188,6 +188,7 @@ const mimetypes = {
         })
         .catch((err) => {
           console.log("\tencountered error uploading file: " + file);
+          callback(err);
         });
     }, 4);
 
@@ -195,7 +196,9 @@ const mimetypes = {
       queue.push(file);
     }
 
+    console.log("waiting for the upload queue.");
     await queue.drain();
+    console.log("upload queue drained.");
     
     await client.query("COMMIT");
   } catch (e) {
