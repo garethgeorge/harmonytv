@@ -54,9 +54,9 @@ module.exports = {
       let lobby = null;
 
       socket.on("disconnect", () => {
-        if (lobby) {
+        if (lobby)
           lobby.members--;
-        }
+        ionsp.to(lobby.id).emit("server:lobby-connected-users", lobby.members);
       });
 
       socket.on('client:join-lobby', (lobbyid) => {
@@ -75,6 +75,8 @@ module.exports = {
           if (lobby.nowPlaying) {
             socket.emit("server:play-video", lobby.nowPlaying);
           }
+          
+          ionsp.to(lobby.id).emit("server:lobby-connected-users", lobby.members);
         } else {
           socket.emit("server:error", "you already joined a room");
         }
@@ -102,6 +104,11 @@ module.exports = {
 
         // check the effects of adding a fake delay
         socket.to(lobby.id).emit("server:update-now-playing", lobby.nowPlaying);
+      });
+
+      socket.on("client:message", (message) => {
+        debug("client:message relaying message '", message, "'");
+        socket.to(lobby.id).emit("server:message", message);
       });
 
     });

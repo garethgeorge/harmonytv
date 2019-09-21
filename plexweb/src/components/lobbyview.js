@@ -2,7 +2,7 @@ import React from "react";
 import config from "../config";
 import Player from "./player";
 import io from 'socket.io-client'
-
+import "./lobbyview.css"; 
 
 class NowPlaying {
   constructor(nowPlaying) {
@@ -40,18 +40,79 @@ class NowPlaying {
   }
 }
 
+class ChatBox extends React.Component {
+  state = {
+    composition: "",
+    messages: [],
+    users: 1,
+  }
+
+  constructor(props) {
+    super(props);
+    this.props.socket.on("server:message", (message) => {
+      const state = Object.assign({}, this.state);
+      state.messages = this.state.messages.slice(0);
+      state.messages.push(">" + message);
+      this.setState(state);
+    });
+    this.props.socket.on("server:lobby-connected-users", (users) => {
+      const state = Object.assign({}, this.state);
+      state.users = users;
+      state.messages = this.state.messages.slice(0);
+      state.messages.push("> " + users + " total users are now connected.");
+      this.setState(state);
+    });
+  }
+
+  render() {
+    if (this.state.users <= 1)
+      return (<div></div>);
+
+    const messages = [];
+    for (const message of this.state.messages) {
+      messages.push(<span className="message" key={Math.random()}>{message}</span>);
+    }
+
+    return (
+      <div className="chatbox">
+        {messages}
+        {/* functionally this is padding */}
+        <div style={{height: "30px", color: "red"}}></div> 
+        {/* this is the actual text input */}
+        <input className="chatboxTextEntry" type="text" 
+          value={this.state.composition}
+          onChange={(e) => {
+            const state = Object.assign({}, this.state);
+            state.composition = e.target.value;
+            this.setState(state);
+          }}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              const state = Object.assign({}, this.state);
+              state.messages = this.state.messages.slice(0);
+              state.messages.push(">" + this.state.composition);
+              state.composition = "";
+              this.props.socket.emit("client:message", this.state.composition);
+              this.setState(state);
+            }
+          }}/>
+      </div>
+    )
+  }
+};
+
 class Lobby extends React.Component {
   state = {}
   
   constructor(props) {
     super(props);
     console.log("Lobby::constructor - lobbyid: " + props.lobbyid);
+    
+    this.socket = io(config.apiHost + "/lobbyns");
   }
 
   setupMediaPlayer(player) {
     this.player = player; // the player element 
-    
-    this.socket = io(config.apiHost + "/lobbyns");
     this.socket.emit("client:join-lobby", this.props.lobbyid);
 
     let serverNowPlaying = null;
@@ -139,7 +200,10 @@ class Lobby extends React.Component {
     };
 
     return (
-      <Player ref={onRef}/>
+      <div className="lobbyview">
+        <Player ref={onRef}/>
+        <ChatBox socket={this.socket} />
+      </div>
     );
   }
 }

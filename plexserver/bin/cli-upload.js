@@ -34,6 +34,7 @@ parser.addArgument(
 );
 
 const args = parser.parseArgs();
+args.originPath = path.resolve(args.originPath);
 
 const scanFiles = (dir, results) => {
   const files = fs.readdirSync(dir);
@@ -63,7 +64,6 @@ const mimetypes = {
   // console.log(episodes);
 
   await model.setup();
-  let uploadDir = args.originPath;
 
   const client = await model.getClient();
   try {
