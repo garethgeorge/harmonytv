@@ -96,6 +96,10 @@ module.exports = {
           return ;
         }
         lobby.nowPlaying = nowPlaying;
+
+        console.log("client:update-now-playing for lobby " + lobby.id, JSON.stringify(nowPlaying, false, 3));
+
+        // check the effects of adding a fake delay
         socket.to(lobby.id).emit("server:update-now-playing", lobby.nowPlaying);
       });
 

@@ -37,7 +37,7 @@ class Player extends React.Component {
     }
   }
 
-  playVideo(mediaid) {
+  playVideo(mediaid, callback=null) {
     console.log("Player::playVideo(" + mediaid + ")");
 
     getMedia(mediaid).then(media => {
@@ -63,7 +63,8 @@ class Player extends React.Component {
           );
         }
 
-        this.emit("videoLoaded", mediaid);
+        if (callback)
+          callback();
       }).catch((err) => {
         console.error("Encountered an error loading the manifestUrl", err);
       }); 
