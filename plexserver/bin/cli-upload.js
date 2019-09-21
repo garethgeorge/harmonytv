@@ -172,33 +172,25 @@ const mimetypes = {
 
     console.log("inserted new media with id: " + mediaId);
 
-    const queue = async.queue((file, callback) => {
+    for (const file of files) {
       const mimetype = mimetypes[path.extname(file)];
       if (!mimetype) {
-        console.log("skipping file " + file + " mimetype not recognized.");
-        return callback();
+        console.log("\tskipping file " + file + " mimetype not recognized");
+        return ;
       }
-      
+
       console.log(`uploading file ${file} with mimetype ${mimetype}`);
       const readStream = fs.createReadStream(path.join(uploadDir, file));
-      model.putStreamObject(mediaId, file, readStream, client)
-        .then((blockId) => {
-          console.log(`\tuploaded ${file} to block ${blockId}`);
-          callback();
-        })
-        .catch((err) => {
-          console.log("\tencountered error uploading file: " + file);
-          callback(err);
-        });
-    }, 4);
-
-    for (const file of files) {
-      queue.push(file);
+      const blockId = await model.putStreamObject(mediaId, file, readStream, client)
     }
-
-    console.log("waiting for the upload queue.");
-    await queue.drain();
-    console.log("upload queue drained.");
+    
+    // verify that all of the uploads completed successfully
+    for (const file of files) {
+      const res = await client.query(pgformat("SELECT mediaid FROM media_objects WHERE path = %L", file))
+      if (res.rows.length === 0) 
+        throw new Error("failed to find file " + file + " in media_objects");
+      console.log(`validating, file ${file} was uploaded as ${res.rows[0].mediaid}`);
+    }
     
     await client.query("COMMIT");
   } catch (e) {

@@ -54,9 +54,10 @@ module.exports = {
       let lobby = null;
 
       socket.on("disconnect", () => {
-        if (lobby)
+        if (lobby) {
           lobby.members--;
-        ionsp.to(lobby.id).emit("server:lobby-connected-users", lobby.members);
+          ionsp.to(lobby.id).emit("server:lobby-connected-users", lobby.members);
+        }
       });
 
       socket.on('client:join-lobby', (lobbyid) => {
