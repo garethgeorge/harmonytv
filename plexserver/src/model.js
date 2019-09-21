@@ -5,6 +5,7 @@ const uuidv4 = require('uuid/v4');
 const path = require("path");
 const StreamCache = require('stream-cache');
 const LRU = require('lru-cache');
+const AsyncLock = require('async-lock');
 
 let mediaStore = null;
 let cacheStore = null;
@@ -183,53 +184,33 @@ const objectCache = new LRU({
     return obj.length;
   }
 });
+const objectCacheLock = new AsyncLock();
+const alreadyFetched = {};
 
-const fetchesInProgress = {};
 exports.getStreamObject = async (mediaid, objectid) => {
-  console.log(`getStreamObject(${mediaid}, ${objectid})`);
+  return await objectCacheLock.acquire(mediaid, (callback) => {
+    console.log(`getStreamObject(${mediaid}, ${objectid})`);
 
-  // wait for the current fetch in progress if there is one
-  if (fetchesInProgress[mediaid]) {
-    console.log("\tfetch in progress, waiting for result");
-    return await new Promise((accept, reject) => {
-      fetchesInProgress.append({
-        accept: accept,
-        reject: reject
-      });
-    });
-  }
+    // check the cache 
+    const cacheObject = objectCache.get(objectid);
+    if (cacheObject)
+      return callback(null, cacheObject);
 
-  // otherwise check the cache
-  const cacheObject = objectCache.get(objectid);
-  if (cacheObject) {
-    console.log(`\talready cached! returning`);
-    return cacheObject;
-  }
+    if (alreadyFetched[objectid])
+      throw new Error("WHAT THE FUCK MY DUDES");
+    alreadyFetched[objectid] = true;
 
-  // finally try to fetch it ourselves
-  fetchesInProgress[objectid] = [];
-  try {
     console.log(`\tNOT CACHED :( fetching from backing store`);
-    const object = await mediaStore.getBlock(objectid);
+    const object = mediaStore.getBlock(objectid).then((object) => {
+        // swap the object's stream with a stream cache 
+      const stream = new StreamCache();
+      object.stream.pipe(stream);
+      object.stream = stream;
 
-    // swap the object's stream with a stream cache 
-    const stream = new StreamCache();
-    object.stream.pipe(stream);
-    object.stream = stream;
+      console.log(`\t\tfetched object ${objectid} successfully, caching it and returning it`);
+      objectCache.set(objectid, object);
 
-    console.log(`\t\tfetched object ${objectid} successfully, caching it and returning it`);
-    objectCache.set(objectid, object);
-    for (const fetcher of fetchesInProgress[objectid]) {
-      fetcher.accept(object);
-    }
-
-    return object;
-  } catch (e) {
-    for (const fetcher of fetchesInProgress[objectid]) {
-      fetcher.reject(e);
-    }
-    throw e;
-  } finally {
-    delete fetchesInProgress[objectid];
-  }
+      callback(null, object);
+    }).catch(callback);
+  });
 }

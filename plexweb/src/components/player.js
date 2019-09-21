@@ -87,7 +87,7 @@ class Player extends React.Component {
 
     return (
       <div className="shaka" data-shaka-player-container data-shaka-player-cast-receiver-id="7B25EC44">
-        <video data-shaka-player ref={onVideoRef} style={{width: '100%', height: '100%'}}>
+        <video data-shaka-player ref={onVideoRef} style={{width: '100%'}}>
           {/* <source src={fallbackUrl} type="video/mp4"></source> */}
         </video>
       </div>
