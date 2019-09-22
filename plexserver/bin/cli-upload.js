@@ -11,8 +11,8 @@ const uuidv4 = require('uuid/v4');
 const os = require("os");
 const async = require("async");
 
-const TVDB = require('node-tvdb');
-const tvdb = new TVDB("FVPW8O55SRM7SMNJ");
+// const TVDB = require('node-tvdb');
+// const tvdb = new TVDB("FVPW8O55SRM7SMNJ");
 
 parser = new ArgumentParser({
   help: true, 
@@ -63,6 +63,7 @@ const mimetypes = {
   // console.log(series);
   // console.log(episodes);
 
+  let uploadDir;
   await model.setup();
 
   const client = await model.getClient();
@@ -104,9 +105,13 @@ const mimetypes = {
       }
       seasonNumber = parseInt(match[1]);
       episodeNumber = parseInt(match[2]);
-
+      
       mediaName = pathSegments[0].split(" ").filter((segment) => {
-        return !segment.match(/.*p\.(mp4|mkv|flv|mov|webm)$/);
+        if (segment.match(/.*\.(mp4|mkv|flv|mov|webm)$/))
+          return false;
+        if (segment.match(/.\[.*\]\.(mp4|mkv|flv|mov|webm)$/))
+          return false;
+        return true;
       }).join(" ");
     } else 
       throw new Error("no path parsing implemented for Movies at the moment");
@@ -180,16 +185,15 @@ const mimetypes = {
       }
 
       console.log(`uploading file ${file} with mimetype ${mimetype}`);
-      const readStream = fs.createReadStream(path.join(uploadDir, file));
-      const blockId = await model.putStreamObject(mediaId, file, readStream, client)
+      const blockId = await model.putStreamObject(mediaId, uploadDir, file, client)
     }
     
     // verify that all of the uploads completed successfully
     for (const file of files) {
-      const res = await client.query(pgformat("SELECT mediaid FROM media_objects WHERE path = %L", file))
+      const res = await client.query(pgformat("SELECT objectid FROM media_objects WHERE path = %L", file))
       if (res.rows.length === 0) 
         throw new Error("failed to find file " + file + " in media_objects");
-      console.log(`validating, file ${file} was uploaded as ${res.rows[0].mediaid}`);
+      console.log(`validating, file ${file} was uploaded as ${res.rows[0].objectid}`);
     }
     
     await client.query("COMMIT");

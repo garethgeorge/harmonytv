@@ -12,12 +12,19 @@ document.addEventListener('shaka-ui-loaded', () => {
 class Player extends React.Component {
   state = {}
   
+  isDashSupported() {
+    const shaka = window.shaka;
+    return window.MediaSource && shaka.Player.isBrowserSupported();
+  }
+
   installShaka(videoElem) {
     console.log("installing shaka on element: ", videoElem);
-    const shaka = window.shaka;
+    this.videoElem = videoElem;
 
-    shaka.polyfill.installAll();
-    if (shaka.Player.isBrowserSupported()) {
+    const shaka = window.shaka;
+    if (this.isDashSupported()) {
+      shaka.polyfill.installAll();
+
       const ui = videoElem['ui'];
       const controls = ui.getControls();
       const player = controls.getPlayer();
@@ -29,21 +36,26 @@ class Player extends React.Component {
       // use to contorl the network connection
       // const nwEngine = player.getNetworkingEngine();
 
-      this.videoElem = videoElem;
       this.shakaPlayer = player;
       this.shakaUi = ui;
     } else {
-      alert("Browser not supported by shaka player");
     }
   }
 
   playVideo(mediaid, callback=null) {
     console.log("Player::playVideo(" + mediaid + ")");
 
+    if (!this.shakaPlayer) {
+      const fallbackUrl = config.apiHost + "/media/" + mediaid + "/files/fallback.mp4";
+      this.videoElem.src = fallbackUrl;
+      return ;
+    }
+
     getMedia(mediaid).then(media => {
       console.log("MEDIA INFO: " + JSON.stringify(media));
       
       const manifestUrl = config.apiHost + "/media/" + mediaid + "/files/stream.mpd";
+
       const player = this.shakaPlayer;
 
       player.load(manifestUrl).then(() => {
@@ -73,8 +85,6 @@ class Player extends React.Component {
   }
 
   render() {
-    // const fallbackUrl = config.apiHost + "/media/" + this.props.mediaid + "/files/fallback.mp4";
-
     const onVideoRef = (elem) => {
       if (elem === null) return ;
       const retry = () => {
@@ -85,13 +95,21 @@ class Player extends React.Component {
       retry();
     } 
 
-    return (
-      <div className="shakaContainer" data-shaka-player-container data-shaka-player-cast-receiver-id="7B25EC44">
-        <video data-shaka-player ref={onVideoRef}>
-          {/* <source src={fallbackUrl} type="video/mp4"></source> */}
-        </video>
-      </div>
-    );
+    if (this.isDashSupported()) {
+      return (
+        <div className="shakaContainer" data-shaka-player-container data-shaka-player-cast-receiver-id="7B25EC44">
+          <video data-shaka-player ref={onVideoRef}>
+            {/* <source src={fallbackUrl} type="video/mp4"></source> */}
+          </video>
+        </div>
+      );
+    } else {
+      return (
+        <div className="shakaContainer">
+          <video controls autoPlay={true} ref={onVideoRef}></video>;
+        </div>
+      )
+    }
   }
 }
 

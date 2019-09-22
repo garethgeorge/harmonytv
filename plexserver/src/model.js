@@ -7,6 +7,7 @@ const StreamCache = require('stream-cache');
 const LRU = require('lru-cache');
 const AsyncLock = require('async-lock');
 const debug = require("debug")("model");
+const fs = require("fs");
 
 let mediaStore = null;
 let cacheStore = null;
@@ -41,12 +42,13 @@ exports.setup = async (conn = null) => {
     )
   `);
 
+  // TODO: drop the origin path column from media
   await conn.query(`
     CREATE TABLE IF NOT EXISTS media (
       mediaId VARCHAR(100) PRIMARY KEY NOT NULL, 
       libraryId VARCHAR(100) NOT NULL, 
       name VARCHAR(512) NOT NULL,
-      originPath VARCHAR(512) NOT NULL,
+      originPath VARCHAR(512) NOT NULL, 
       metadata JSON NOT NULL,
       seriesName VARCHAR(512),
       seasonNumber INTEGER,
@@ -104,11 +106,11 @@ const mimetypes = {
   ".vtt": "text/vtt",
 };
 
-exports.putStreamObject = async (mediaid, filepath, objectStream, conn=null) => {
+exports.putStreamObject = async (mediaid, uploadDir, file, conn=null) => {
   if (!conn)
     conn = pool;
 
-  const mimetype = mimetypes[path.extname(filepath)];
+  const mimetype = mimetypes[path.extname(file)];
   if (!mimetype) {
     throw new Error("mimetype not found for file " + path);
   }
@@ -117,21 +119,22 @@ exports.putStreamObject = async (mediaid, filepath, objectStream, conn=null) => 
   let blockId = null;
   for (let i = 0; i < 10; ++i) {
     try {
+      const objectStream = fs.createReadStream(path.join(uploadDir, file));
       blockId = await mediaStore.putBlock(objectStream, mimetype);
-      debug(`putStreamObject(${mediaid}, ${filepath}, ...) - stored as blockid ${blockId}, inserting in database`);
       break ;
     } catch (e) {
-      console.log(`putStreamObject(${mediaid}, ${filepath}, ...) encountered an error: ${e}, retrying ${i}`);
+      console.log(`putStreamObject(${mediaid}, ${file}, ...) encountered an error: ${e}, retrying ${i}`);
       await new Promise((accept, reject) => {
         setTimeout(accept, 10 * 1000);
       });
     }
   }
   
+  debug(`putStreamObject(${mediaid}, ${file}, ...) - stored as blockid ${blockId}, inserting in database`);
 
   await conn.query(pgformat(
     "INSERT INTO media_objects (mediaId, path, objectid) VALUES (%L, %L, %L)",
-    mediaid, filepath, blockId
+    mediaid, file, blockId
   ));
 
   return blockId;

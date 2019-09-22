@@ -47,21 +47,35 @@ class ChatBox extends React.Component {
     users: 1,
   }
 
+  addMessage(message) {
+    const removeAMessage = (delay) => {
+      setTimeout(() => {
+        const state = Object.assign({}, this.state);
+        state.messages = this.state.messages.slice(0);
+        state.messages.shift();
+        this.setState(state);
+      }, delay);
+    }
+
+    const state = Object.assign({}, this.state);
+    state.messages = this.state.messages.slice(0);
+    state.messages.push(">" + message);
+    this.setState(state);
+
+    removeAMessage(5000);
+  }
+
   constructor(props) {
     super(props);
+
     this.props.socket.on("server:message", (message) => {
-      const state = Object.assign({}, this.state);
-      state.messages = this.state.messages.slice(0);
-      state.messages.push(">" + message);
-      this.setState(state);
+      this.addMessage(message);
     });
+
     this.props.socket.on("server:lobby-connected-users", (users) => {
-      const state = Object.assign({}, this.state);
-      state.users = users;
-      state.messages = this.state.messages.slice(0);
-      state.messages.push("> " + users + " total users are now connected.");
-      this.setState(state);
+      this.addMessage(users + " total users are now connected.");
     });
+
   }
 
   render() {
@@ -88,12 +102,8 @@ class ChatBox extends React.Component {
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              const state = Object.assign({}, this.state);
-              state.messages = this.state.messages.slice(0);
-              state.messages.push(">" + this.state.composition);
-              state.composition = "";
+              this.addMessage(this.state.composition);
               this.props.socket.emit("client:message", this.state.composition);
-              this.setState(state);
             }
           }}/>
       </div>
@@ -192,7 +202,7 @@ class Lobby extends React.Component {
     const onRef = (elem) => {
       this.player = elem;
       const retry = () => {
-        if (!this.player || !this.player.shakaUi)
+        if (!this.player || !this.player.videoElem)
           return setTimeout(retry, 50);
         this.setupMediaPlayer(elem);
       }
