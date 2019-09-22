@@ -17,6 +17,8 @@ let cacheStore = null;
 */
 const pool = new Pool(config.pg);
 
+exports.pool = pool;
+
 exports.setup = async (conn = null) => {
   if (!conn) 
     conn = pool;

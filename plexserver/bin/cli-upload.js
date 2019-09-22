@@ -1,6 +1,7 @@
 const ArgumentParser = require('argparse').ArgumentParser;
 const _ = require('lodash');
 const fs = require("fs");
+const fsutil = require("../src/util/fsutil");
 const mkdirpsync = require("mkdirpsync");
 const model = require('../src/model');
 const path = require("path");
@@ -29,24 +30,12 @@ parser.addArgument(
 parser.addArgument(
   'originPath',
   {
-    help: 'directory',
+    help: 'the path to the file to be uploaded, it will be transcoded before uploading',
   }
 );
 
 const args = parser.parseArgs();
 args.originPath = path.resolve(args.originPath);
-
-const scanFiles = (dir, results) => {
-  const files = fs.readdirSync(dir);
-  for (const file of files) {
-    const fullpath = path.join(dir, file);
-    if (fs.lstatSync(fullpath).isDirectory()) {
-      scanFiles(fullpath, results);
-    } else {
-      results.push(fullpath);
-    }
-  }
-}
 
 // mimetypes
 const mimetypes = {
@@ -63,7 +52,10 @@ const mimetypes = {
   // console.log(series);
   // console.log(episodes);
 
-  let uploadDir;
+  const uploadDir = path.join(os.tmpdir(), "/plex_uploader/" + uuidv4());
+  console.log("upload directory " + uploadDir);
+  mkdirpsync(uploadDir);
+
   await model.setup();
 
   const client = await model.getClient();
@@ -88,31 +80,12 @@ const mimetypes = {
     let episodeNumber = null;
 
     if (library.librarytype === "tv") {
-      const pathSegments = args.originPath.split("/").reverse();
-
-      // find the series name
-      for (const segment of pathSegments) {
-        if (segment === pathSegments[0] || segment.toLowerCase().indexOf("season") !== -1)
-          continue;
-        seriesName = segment.trim();
-        break;
-      }
-
-      const match = /.*S(\d+)E(\d+).*/.exec(pathSegments[0]);
-      if (!match) {
-        console.log("Error: could not extract Season or Episode number from path");
-        process.exit(1);
-      }
-      seasonNumber = parseInt(match[1]);
-      episodeNumber = parseInt(match[2]);
-      
-      mediaName = pathSegments[0].split(" ").filter((segment) => {
-        if (segment.match(/.*\.(mp4|mkv|flv|mov|webm)$/))
-          return false;
-        if (segment.match(/.\[.*\]\.(mp4|mkv|flv|mov|webm)$/))
-          return false;
-        return true;
-      }).join(" ");
+      const mediainfo = require("../src/transcoder/mediainfo");
+      const info = mediainfo.infoFromEpisodePath(args.originPath);
+      mediaName = info.niceName;
+      seriesName = info.seriesName;
+      seasonNumber = info.seasonNumber;
+      episodeNumber = info.episodeNumber;
     } else 
       throw new Error("no path parsing implemented for Movies at the moment");
     
@@ -133,10 +106,6 @@ const mimetypes = {
 
     console.log("determined origin path is a file, we need to transcode.");
     const transcoder = require("../src/transcoder/transcoder"); // lazy import only if we need it
-    
-    uploadDir = path.join(os.tmpdir(), "/plex_uploader/" + uuidv4());
-    console.log("upload directory " + uploadDir);
-    mkdirpsync(uploadDir);
 
     const metadata = await transcoder({
       filename: args.originPath,
@@ -149,9 +118,7 @@ const mimetypes = {
       scan files for upload 
     */
 
-    let files = [];
-    scanFiles(uploadDir, files);
-    files = _.filter(files, (f) => {
+    const files = _.filter(fsutil.dirtree(uploadDir), (f) => {
       if (f.endsWith('.DS_Store'))
         return false;
       return true;
@@ -174,9 +141,11 @@ const mimetypes = {
        args.originPath, JSON.stringify(metadata),
        seriesName, seasonNumber, episodeNumber)
     );
-
+    
     console.log("inserted new media with id: " + mediaId);
 
+    // TODO: parallelize this again, this was disabled for the time being due 
+    // to some errors during upload resulting in corrupted files
     for (const file of files) {
       const mimetype = mimetypes[path.extname(file)];
       if (!mimetype) {

@@ -1,6 +1,6 @@
 module.exports = {
   // for TV libraries
-  infoFromEpisodePath = (originPath) => {
+  infoFromEpisodePath: (originPath) => {
     const info = {};
 
     const pathSegments = originPath.split("/").reverse();
