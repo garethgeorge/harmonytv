@@ -1,6 +1,6 @@
 const { Pool, Client } = require('pg')
 const pgformat = require('pg-format');
-const config = require("./config");
+const config = require("../config");
 const uuidv4 = require('uuid/v4');
 const path = require("path");
 const StreamCache = require('stream-cache');
@@ -25,7 +25,7 @@ exports.setup = async (conn = null) => {
 
   // bit of a race condition here but it makes life much easier to just live w/it 
   debug("initializing cloud data stores");
-  mediaStore = await require('./storage-backends/gdrive')();
+  mediaStore = await require('../storage-backends/gdrive')();
   await mediaStore.setGdriveRootFolderId(config.gdrive.parentFolder);
   
   debug("initializing database");
@@ -76,6 +76,26 @@ exports.setup = async (conn = null) => {
       cacheObjectId VARCHAR(100) NOT NULL,
       FOREIGN KEY (sourceObjectId) REFERENCES media_objects (objectId) ON DELETE CASCADE
     );
+  `);
+
+  await conn.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      userid VARCHAR(100) PRIMARY KEY NOT NULL,
+      username VARCHAR(100) UNIQUE NOT NULL,
+      passwordSHA256 VARCHAR(64) NOT NULL
+    )
+  `);
+
+  await conn.query(`
+    CREATE TABLE IF NOT EXISTS user_resume_watching (
+      userid VARCHAR(100) NOT NULL,
+      mediaid VARCHAR(100) NOT NULL,
+      position BIGINT NOT NULL,
+      total_duration BIGINT NOT NULL,
+      PRIMARY KEY (userid, mediaid) NOT NULL,
+      FOREIGN KEY (userid) REFERENCES users (userid) ON DELETE CASCADE,
+      FOREIGN KEY (mediaid) REFERENCES media (mediaid) ON DELETE CASCADE
+    )
   `);
 
   await conn.query(`

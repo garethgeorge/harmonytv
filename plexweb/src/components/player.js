@@ -95,7 +95,7 @@ class Player extends React.Component {
       retry();
     } 
 
-    if (this.isDashSupported()) {
+    // if (this.isDashSupported()) {
       return (
         <div className="shakaContainer" data-shaka-player-container data-shaka-player-cast-receiver-id="7B25EC44">
           <video data-shaka-player ref={onVideoRef}>
@@ -103,13 +103,13 @@ class Player extends React.Component {
           </video>
         </div>
       );
-    } else {
-      return (
-        <div className="shakaContainer">
-          <video controls autoPlay={true} ref={onVideoRef}></video>;
-        </div>
-      )
-    }
+    // } else {
+    //   return (
+    //     <div className="shakaContainer">
+    //       <video controls autoPlay={true} ref={onVideoRef}></video>;
+    //     </div>
+    //   )
+    // }
   }
 }
 

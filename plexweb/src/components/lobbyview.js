@@ -4,6 +4,8 @@ import Player from "./player";
 import io from 'socket.io-client'
 import "./lobbyview.css"; 
 
+let delta = 0;
+
 class NowPlaying {
   constructor(nowPlaying) {
     this.nowPlaying = nowPlaying;
@@ -16,7 +18,7 @@ class NowPlaying {
   getPlaybackPosition() {
     const nowPlaying = this.nowPlaying;
     if (nowPlaying.state === "playing")
-      return ((new Date).getTime() - nowPlaying.updateTime) / 1000 + nowPlaying.position;
+      return ((new Date).getTime() - nowPlaying.updateTime + delta) / 1000 + nowPlaying.position;
     else 
       return nowPlaying.position;
   }
@@ -62,7 +64,7 @@ class ChatBox extends React.Component {
     state.messages.push(">" + message);
     this.setState(state);
 
-    removeAMessage(5000);
+    removeAMessage(10000);
   }
 
   constructor(props) {
@@ -73,7 +75,11 @@ class ChatBox extends React.Component {
     });
 
     this.props.socket.on("server:lobby-connected-users", (users) => {
-      this.addMessage(users + " total users are now connected.");
+      const state = Object.assign({}, this.state);
+      state.users = users;
+      this.setState(state, () => {
+        this.addMessage(users + " total users are now connected.");
+      });
     });
 
   }
@@ -102,8 +108,13 @@ class ChatBox extends React.Component {
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
-              this.addMessage(this.state.composition);
-              this.props.socket.emit("client:message", this.state.composition);
+              const state = Object.assign({}, this.state)
+              const composition = this.state.composition;
+              state.composition = "";
+              this.setState(state, () => {
+                this.addMessage(composition);
+                this.props.socket.emit("client:message", composition);
+              });
             }
           }}/>
       </div>
@@ -127,6 +138,10 @@ class Lobby extends React.Component {
 
     let serverNowPlaying = null;
     let transmitTimeoutRef = null;
+
+    this.socket.on("server:curtime", time => {
+      delta = time - (new Date).getTime();
+    });
 
     this.socket.on("server:play-video", (nowPlaying) => {
       console.log("server:play-video: ", JSON.stringify(nowPlaying, false, 3));

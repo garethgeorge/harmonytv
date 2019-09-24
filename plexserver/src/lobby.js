@@ -76,6 +76,8 @@ module.exports = {
           if (lobby.nowPlaying) {
             socket.emit("server:play-video", lobby.nowPlaying);
           }
+
+          socket.emit("server:curtime", (new Date).getTime());
           
           ionsp.to(lobby.id).emit("server:lobby-connected-users", lobby.members);
         } else {
