@@ -92,7 +92,7 @@ exports.setup = async (conn = null) => {
       mediaid VARCHAR(100) NOT NULL,
       position BIGINT NOT NULL,
       total_duration BIGINT NOT NULL,
-      PRIMARY KEY (userid, mediaid) NOT NULL,
+      PRIMARY KEY (userid, mediaid),
       FOREIGN KEY (userid) REFERENCES users (userid) ON DELETE CASCADE,
       FOREIGN KEY (mediaid) REFERENCES media (mediaid) ON DELETE CASCADE
     )
