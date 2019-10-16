@@ -143,6 +143,7 @@ class Lobby extends React.Component {
       delta = time - (new Date).getTime();
     });
 
+    // TODO: consider what happens when the play-video function is fired when the lobby is already playing something :P
     this.socket.on("server:play-video", (nowPlaying) => {
       console.log("server:play-video: ", JSON.stringify(nowPlaying, false, 3));
       // we don't actually respond to changes to mediaid other than here 

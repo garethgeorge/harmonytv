@@ -4,8 +4,26 @@ services:
   db:
     image: postgres:latest
     ports:
-      - 5432:5432
+      - 127.0.0.1:5432:5432
     volumes:
       - ./.db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: 'postgres'
+  
+  
+  apiserver:
+    image: node:12
+    user: node 
+    working_dir: /app/plexserver/
+    volumes:
+      - ./plexserver:/app/plexserver/
+    environment:
+      - NODE_ENV=development 
+      - POSTGRES_HOST=db
+    
+  webuiserver:
+    image: node:12
+    user: node 
+  
+
+  nginx:

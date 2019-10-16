@@ -40,8 +40,8 @@ if (args.type !== "tv" && args.type !== "movies") {
 }
 
 const extensions = [
-  ".flv.original",
   ".mkv.original",
+  ".flv.original",
   ".mov.original",
   ".mov",
   ".flv",
@@ -116,7 +116,6 @@ for (const file of files) {
         } catch (e) {
           debug("mediainfo.infoFromEpisodePath encountered error: ", e);
         }
-        
       } else if (args.type === "movies") 
         throw new Error("no rules for identifying 'movies' yet");
       else 

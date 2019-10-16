@@ -50,13 +50,13 @@ class SeriesView extends React.Component {
 
     // sort the episodes by name :P 
     curSeries.sort((a, b) => {
-      if (a.name > b.name) {
-        return 1;
-      } else if (a.name == b.name) {
-        return 0;
-      } else 
-        return -1;
+      return (a.seasonnumber * 1000 + a.episodenumber) - (b.seasonnumber * 1000 + b.episodenumber);
     });
+
+    const zeroPad = (num) => {
+      const s = "00" + num;
+      return s.substr(s.length - 2);
+    }
 
     const episodes = [];
     for (const episode of curSeries) {
@@ -70,6 +70,8 @@ class SeriesView extends React.Component {
         <div className="episode" key={episode.mediaid}>
           <a href="#" onClick={doClick}>
             {episode.name}
+
+            <span>S{zeroPad(episode.seasonnumber)}E{zeroPad(episode.episodenumber)}</span>
           </a>
         </div>
       )

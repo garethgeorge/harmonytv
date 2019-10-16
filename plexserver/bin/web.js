@@ -3,6 +3,8 @@
   const http = require('http').createServer(app);
   const io = require("socket.io")(http);
   const debug = require("debug")("web");
+  const passport = require('passport');
+  const PassportLocalStrategy = require('passport-local').Strategy;
 
   const model = require("../src/model");
   const lobby = require("../src/lobby");
@@ -19,6 +21,46 @@
     res.header("Access-Control-Allow-Origin", "*");
     next();
   });
+  
+  // TODO: finish implementing the passport strategy
+  passport.use(new PassportLocalStrategy(
+    (username, password, cb) => {
+      (async () => {
+        try {
+          const user = await model.user.findByUsername(username);
+          if (!user)
+            return cb(null, false);
+
+          if (user.checkPassword(password)) {
+            return cb(null, user);
+          } else {
+            return cb(null, false);
+          }
+        } catch (e) {
+          cb(e);
+        }
+      })();
+    }));
+
+  // TODO: finish passport.serializeUser and passport.deserializeUser from https://github.com/passport/express-4.x-local-example/blob/master/server.js
+  passport.serializeUser((user, cb) => {
+    cb(null, user.userid);
+  });
+  
+  passport.deserializeUser((id, cb) => {
+    model.user.getById(id)
+      .then((user) => {
+        cb(null, user);
+      }).error((err) => {
+        cb(err, null);
+      });
+  });
+
+  app.post('/login',
+    passport.authenticate('local', { successRedirect: '/',
+                                    failureRedirect: '/',
+                                    failureFlash: true })
+  );
 
   app.get("/library/getAll", async (req, res) => {
     const libraries = await model.getAllLibraries();
@@ -93,7 +135,6 @@
       lobbyId: lby.id
     }));
   });
-
 
   lobby.socketio_setup(io.of("/lobbyns"));
 

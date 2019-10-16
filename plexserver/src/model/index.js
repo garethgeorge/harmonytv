@@ -8,108 +8,28 @@ const LRU = require('lru-cache');
 const AsyncLock = require('async-lock');
 const debug = require("debug")("model");
 const fs = require("fs");
+const crypto = require("crypto");
+const {migrate} = require("postgres-migrations")
+
+const pool = require("./db");
 
 let mediaStore = null;
-let cacheStore = null;
-
-/*
-  setup the database and the media sources
-*/
-const pool = new Pool(config.pg);
 
 exports.pool = pool;
+exports.user = require("./user");
 
 exports.setup = async (conn = null) => {
-  if (!conn) 
-    conn = pool;
-
   // bit of a race condition here but it makes life much easier to just live w/it 
   debug("initializing cloud data stores");
+  // TODO: move this setup code to the config
   mediaStore = await require('../storage-backends/gdrive')();
   await mediaStore.setGdriveRootFolderId(config.gdrive.parentFolder);
-  
-  debug("initializing database");
+  exports.mediaStore = mediaStore;
 
-  try {
-    await conn.query(`
-      CREATE TYPE TLibrary AS ENUM ('movies', 'tv')
-    `);
-  } catch (e) { };
-
-  await conn.query(`
-    CREATE TABLE IF NOT EXISTS libraries (
-      libraryId VARCHAR(100) PRIMARY KEY NOT NULL,
-      libraryName VARCHAR(100) NOT NULL,
-      libraryType TLibrary
-    )
-  `);
-
-  // TODO: drop the origin path column from media
-  await conn.query(`
-    CREATE TABLE IF NOT EXISTS media (
-      mediaId VARCHAR(100) PRIMARY KEY NOT NULL, 
-      libraryId VARCHAR(100) NOT NULL, 
-      name VARCHAR(512) NOT NULL,
-      originPath VARCHAR(512) NOT NULL, 
-      metadata JSON NOT NULL,
-      seriesName VARCHAR(512),
-      seasonNumber INTEGER,
-      episodeNumber INTEGER,
-      UNIQUE (seriesName, seasonNumber, episodeNumber),
-      FOREIGN KEY (libraryId) REFERENCES libraries (libraryId) ON DELETE CASCADE
-    );
-  `);
-
-  await conn.query(`
-    CREATE TABLE IF NOT EXISTS media_objects (
-      mediaId VARCHAR(100) NOT NULL, 
-      path VARCHAR(100) NOT NULL, 
-      objectId VARCHAR(100) UNIQUE NOT NULL, 
-      PRIMARY KEY (mediaId, path),
-      FOREIGN KEY (mediaId) REFERENCES media (mediaId) ON DELETE CASCADE
-    );
-  `);
-
-  await conn.query(`
-    CREATE TABLE IF NOT EXISTS cache (
-      sourceObjectId VARCHAR(100) PRIMARY KEY NOT NULL, 
-      cacheObjectId VARCHAR(100) NOT NULL,
-      FOREIGN KEY (sourceObjectId) REFERENCES media_objects (objectId) ON DELETE CASCADE
-    );
-  `);
-
-  await conn.query(`
-    CREATE TABLE IF NOT EXISTS users (
-      userid VARCHAR(100) PRIMARY KEY NOT NULL,
-      username VARCHAR(100) UNIQUE NOT NULL,
-      passwordSHA256 VARCHAR(64) NOT NULL
-    )
-  `);
-
-  await conn.query(`
-    CREATE TABLE IF NOT EXISTS user_resume_watching (
-      userid VARCHAR(100) NOT NULL,
-      mediaid VARCHAR(100) NOT NULL,
-      position BIGINT NOT NULL,
-      total_duration BIGINT NOT NULL,
-      PRIMARY KEY (userid, mediaid),
-      FOREIGN KEY (userid) REFERENCES users (userid) ON DELETE CASCADE,
-      FOREIGN KEY (mediaid) REFERENCES media (mediaid) ON DELETE CASCADE
-    )
-  `);
-
-  await conn.query(`
-    CREATE INDEX IF NOT EXISTS mediaObjectsObjectIdIndex ON media_objects (objectId)
-  `);
-  
-  await conn.query(`
-    CREATE INDEX IF NOT EXISTS mediaSeriesIndex ON media (seriesName, seasonNumber) 
-    WHERE seriesName IS NOT NULL AND seasonNumber IS NOT NULL
-  `);
-
-  await conn.query(`
-    CREATE INDEX IF NOT EXISTS mediaLibraryIndex ON media (libraryId)
-  `);
+  debug("initializing database and running migrations");
+  await migrate(config.pg, "./src/db-migrations/", {
+    logger: require("debug")("model:migrate")
+  });
 }
 
 exports.shutdown = () => {
@@ -137,12 +57,15 @@ exports.putStreamObject = async (mediaid, uploadDir, file, conn=null) => {
     throw new Error("mimetype not found for file " + path);
   }
 
+
+
   // retries for up to 100 seconds until it succeeds
+  const encryptionKey = crypto.randomBytes(32).toString('hex');
   let blockId = null;
   for (let i = 0; i < 10; ++i) {
     try {
       const objectStream = fs.createReadStream(path.join(uploadDir, file));
-      blockId = await mediaStore.putBlock(objectStream, mimetype);
+      blockId = await mediaStore.putBlock(objectStream, mimetype, encryptionKey);
       break ;
     } catch (e) {
       console.log(`putStreamObject(${mediaid}, ${file}, ...) encountered an error: ${e}, retrying ${i}`);
@@ -155,8 +78,8 @@ exports.putStreamObject = async (mediaid, uploadDir, file, conn=null) => {
   debug(`putStreamObject(${mediaid}, ${file}, ...) - stored as blockid ${blockId}, inserting in database`);
 
   await conn.query(pgformat(
-    "INSERT INTO media_objects (mediaId, path, objectid) VALUES (%L, %L, %L)",
-    mediaid, file, blockId
+    "INSERT INTO media_objects (mediaId, path, objectid, encryptionkey) VALUES (%L, %L, %L, %L)",
+    mediaid, file, blockId, encryptionKey
   ));
 
   return blockId;
@@ -226,7 +149,18 @@ const objectCache = new LRU({
 const objectCacheLock = new AsyncLock();
 const alreadyFetched = {};
 
-exports.getStreamObject = async (mediaid, objectid) => {
+exports.getStreamObject = async (mediaid, objectid, conn=null) => {
+  if (!conn)
+    conn = pool;
+
+  let encryptionKey = null;
+  const res = await conn.query(pgformat("SELECT encryptionkey FROM media_objects WHERE objectid = %L", objectid));
+  if (res.rows.length > 0) {
+    debug("getStreamObject(...): encryptionkey: ", res.rows[0].encryptionkey);
+    if (res.rows[0].encryptionkey)
+      encryptionKey = res.rows[0].encryptionkey.trim();
+  }
+
   return await objectCacheLock.acquire(mediaid, (callback) => {
     debug(`getStreamObject(${mediaid}, ${objectid})`);
 
@@ -236,7 +170,7 @@ exports.getStreamObject = async (mediaid, objectid) => {
       return callback(null, cacheObject);
 
     debug(`\tNOT CACHED :( fetching from backing store`);
-    const object = mediaStore.getBlock(objectid).then((object) => {
+    const object = mediaStore.getBlock(objectid, encryptionKey).then((object) => {
         // swap the object's stream with a stream cache 
       const stream = new StreamCache();
       object.stream.pipe(stream);

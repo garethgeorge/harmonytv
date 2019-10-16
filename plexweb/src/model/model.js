@@ -1,6 +1,10 @@
 import axios from 'axios';
 import config from "../config";
 import {EventEmitter} from "events";
+import * as user from "./user";
+
+// specify that axios should pass cookies in its requests
+axios.defaults.withCredentials = true
 
 class Library extends EventEmitter {
   constructor(library) {
@@ -77,8 +81,10 @@ const createLobbyWithMedia = async (mediaid) => {
   return res.data.lobbyId;
 }
 
+
 export {
   getLibraryManager,
   getMedia,
   createLobbyWithMedia,
+  user
 }

@@ -68,24 +68,32 @@ module.exports = async (args) => {
     console.log(JSON.stringify(mediaInfo, false, 2));
 
     const metadata = {
-      fallback: "fallback.mp4",
+      fallback: null,
       dashStream: "stream.mpd",
       subtitles: {},
     };
 
     // scan for subtitles
-    // TODO: find a good way to associate ondisk subtitles
+    // TODO: find a good way to include separate .srt files from the disk and add them!
+    //       this will likely require coding an additional utility that can sweep the disk for .srt's, check if they are included, and if not translate and upload them.
     console.log("scanning for subtitles to extract");
     let imageSubtitlesIdx = -1;
+    const subtitleStreams = {};
     for (const stream of mediaInfo.streams) {
       if (stream.codec_type === "subtitle" || stream.codec_name.indexOf("text") !== -1) {
         if (stream.codec_name.indexOf("text") !== -1 || stream.codec_name === "ass" || stream.codec_name === "ssa") {
           console.log("\tfound subtitles, language: " + stream.tags.language + " on stream #" + stream.index);
           let language;
           if (stream.tags.language === "und")
-            language = "";
+            language = ".eng";
           else 
             language = "." + stream.tags.language;
+          
+          if (subtitleStreams[language]) {
+            console.log("\t\talready have subtitles for language '" + language + "' skipping.");
+            continue;
+          }
+          subtitleStreams[language] = stream;
           
           const subtitleFile = "subtitles" + language + ".vtt";
           await extractSubtitleStream(args.filename, stream.index, path.join(tmpDir, subtitleFile));
@@ -118,53 +126,51 @@ module.exports = async (args) => {
     const videoStream = mediaInfo.streams[videoStreamIdx];
 
     // NOTE: todo burn in the subtitles 
+    // if (imageSubtitlesIdx !== -1) {
+    //   throw new Error(args.filename + " uses image subtitle stream at index: " + imageSubtitlesIdx);
+    //   // going to wind up being something like this: // ffmpeg -i input.mkv -filter_complex "[0:v][0:s]overlay[v]" -map "[v]" -map 0:a <output options> output.mkv
+    // }
+
     if (imageSubtitlesIdx !== -1) {
-      throw new Error(args.filename + " uses image subtitle stream at index: " + imageSubtitlesIdx);
-      // going to wind up being something like this: // ffmpeg -i input.mkv -filter_complex "[0:v][0:s]overlay[v]" -map "[v]" -map 0:a <output options> output.mkv
+      console.log("Image subtitles at index: " + imageSubtitlesIdx + ", at somepoint we need to decide how to handle these.");
     }
     
     console.log("using video at stream #" + videoStreamIdx + " and audio at stream #" + audioStreamIdx);
 
-    /*
-      generate the fallback.mp4 at 720p maximum resolution
-    */
     const proc = ffmpeg({
       source: args.filename,
       cwd: tmpDir,
     });
     
-    console.log("setting up fallback.mp4 generation");
+    // console.log("setting up fallback.mp4 generation");
 
-    proc
-      .output(path.join(tmpDir, `fallback.mp4`))
-      .format('mp4')
-      .videoCodec('libx264')
-      .addOptions(['-crf 20', '-maxrate 2M', '-bufsize 2M'])
-      .size(`?x${ Math.min(720, videoStream.height) }`)
-      .audioCodec('aac')
-      .audioChannels(2)
-      .audioFrequency(44100)
-      .outputOptions([
-        '-preset fast',
-        '-movflags +faststart',
-        '-keyint_min 60',
-        '-refs 5',
-        '-g 60',
-        '-pix_fmt yuv420p',
-        '-sc_threshold 0',
-        '-profile:v main',
-        "-map_metadata", "-1",
-        "-profile:v baseline",
-        '-map 0:v:0',
-        '-map 0:a:' + _.filter(mediaInfo.streams, (stream) => {
-          return stream.index < audioStreamIdx && stream.codec_type === "audio"
-        }).length,
-        '-b:a 196k',
-      ]);
+    // proc
+    //   .output(path.join(tmpDir, `fallback.mp4`))
+    //   .format('mp4')
+    //   .videoCodec('libx264')
+    //   .addOptions(['-crf 20', '-maxrate 2M', '-bufsize 2M'])
+    //   .size(`?x${ Math.min(720, videoStream.height) }`)
+    //   .audioCodec('aac')
+    //   .audioChannels(2)
+    //   .audioFrequency(44100)
+    //   .outputOptions([
+    //     '-preset fast',
+    //     '-movflags +faststart',
+    //     '-keyint_min 60',
+    //     '-refs 5',
+    //     '-g 60',
+    //     '-pix_fmt yuv420p',
+    //     '-sc_threshold 0',
+    //     '-profile:v main',
+    //     "-map_metadata", "-1",
+    //     "-profile:v baseline",
+    //     '-map 0:v:0',
+    //     '-map 0:a:' + _.filter(mediaInfo.streams, (stream) => {
+    //       return stream.index < audioStreamIdx && stream.codec_type === "audio"
+    //     }).length,
+    //     '-b:a 196k',
+    //   ]);
     
-    /*
-      generate the dash video streams
-    */
     console.log("generating dash manifest and video sequences");
     const calcBitrateForSize = (size) => {
       const baseMaxBitrate = 4000;

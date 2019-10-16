@@ -67,7 +67,7 @@ class Player extends React.Component {
         console.log("loading subtitles");
         for (const language of Object.keys(metadata.subtitles)) {
           const subtitle = metadata.subtitles[language];
-          console.log("\tadding subtitle language: " + language);
+          console.log("\tadding subtitle language: " + language + " - file url: " + (config.apiHost + "/media/" + mediaid + "/files/" + subtitle.file));
 
           player.addTextTrack(
             config.apiHost + "/media/" + mediaid + "/files/" + subtitle.file, 

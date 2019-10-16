@@ -1,3 +1,23 @@
-# Notes
- - wtf am I doing -- just use a CDN
- - https://bunnycdn.com/pricing
+# MyPlex
+
+This is an alternative to plex designed for large-scale deployments with potentially hundreds of concurrent streamers. 
+
+MyPlex can be placed behind a load balancer or reverse proxy, some specific routing rules may be required however to support heavy load.
+
+## TODO
+- ~~implement synchronized video playback~~ DONE
+- ~~implement database migrations~~ DONE
+- ~~implement iOS/mobile fallback stream~~ ABANDONED (todo: return to this idea)
+- migrate model into submodules i.e. model.user, model.media, etc 
+- user accounts and password authentication
+- playback history for each user
+- resume playback option for previously played videos
+    - update play-position every 1 minute for each user
+- refactor encryption into shared code that sits outside the data stores, remove encryption by default instead storing plaintext first and then applying strong encryption if enabled in the settings
+- implement a localdisk storage provider
+- implement per-library provider configuration i.e. multiple storage backend types can be mounted at once
+- use a different encryption key for each file, makes application much more secure 
+- switch to https://react.semantic-ui.com/collections/breadcrumb/ for UI framework (React first UI framework)
+
+# Tech Stack Upgrades
+- look into MobX https://mobx.js.org/intro/concepts.html as a state manager (possibly simpler/easier alternative to redux) for React app

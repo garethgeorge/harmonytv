@@ -20,11 +20,13 @@ module.exports = {
     }
     info.seasonNumber = parseInt(match[1]);
     info.episodeNumber = parseInt(match[2]);
-    
+
+    const extensions = [".mp4", ".mkv"]
+
     info.niceName = pathSegments[0].split(" ").filter((segment) => {
-      if (segment.match(/.*\.(mp4|mkv|flv|mov|webm)$/))
+      if (segment.match(/.*p\.(mp4|mkv|flv|mov|webm|mkv\.original|mp4\.original|flv\.original)$/))
         return false;
-      if (segment.match(/.\[.*\]\.(mp4|mkv|flv|mov|webm)$/))
+      if (segment.match(/.\[.*\]\.(mp4|mkv|flv|mov|webm|mkv\.original|mp4\.original|flv\.original)$/))
         return false;
       return true;
     }).join(" ");

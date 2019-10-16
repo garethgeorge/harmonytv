@@ -146,21 +146,35 @@ const mimetypes = {
 
     // TODO: parallelize this again, this was disabled for the time being due 
     // to some errors during upload resulting in corrupted files
-    for (const file of files) {
-      const mimetype = mimetypes[path.extname(file)];
-      if (!mimetype) {
-        console.log("\tskipping file " + file + " mimetype not recognized");
-        return ;
-      }
+    const uploadQueue = async.queue((file, callback) => {
+      (async () => {
+        try {
+          const mimetype = mimetypes[path.extname(file)];
+          if (!mimetype) {
+            console.log("\tskipping file " + file + " mimetype not recognized");
+            return ;
+          }
 
-      console.log(`uploading file ${file} with mimetype ${mimetype}`);
-      const blockId = await model.putStreamObject(mediaId, uploadDir, file, client)
+          console.log(`uploading file ${file} with mimetype ${mimetype}`);
+          const blockId = await model.putStreamObject(mediaId, uploadDir, file, client);
+          callback();
+        } catch (e) {
+          console.log(`UPLOAD ENCOUNTERED ERROR ON FILE: ${file}, error: ${e}`);
+          callback(e);
+        }
+      })();
+    }, 4);
+
+    for (const file of files) {
+      uploadQueue.push(file);
     }
+
+    await uploadQueue.drain();
     
     // verify that all of the uploads completed successfully
     for (const file of files) {
-      const res = await client.query(pgformat("SELECT objectid FROM media_objects WHERE path = %L", file))
-      if (res.rows.length === 0) 
+      const res = await client.query(pgformat("SELECT objectid FROM media_objects WHERE mediaId = %L AND path = %L", mediaId, file))
+      if (res.rows.length === 0)
         throw new Error("failed to find file " + file + " in media_objects");
       console.log(`validating, file ${file} was uploaded as ${res.rows[0].objectid}`);
     }

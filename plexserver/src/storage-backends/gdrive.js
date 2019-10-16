@@ -102,7 +102,12 @@ class GDriveBlockStore {
   /* 
     block store api
   */
-  getBlock(blockId) {
+  getBlock(blockId, encryptionKey=null) {
+    if (encryptionKey == null) {
+      encryptionKey = cryptKey;
+    } else 
+      encryptionKey = crypto.createHash('sha256').update(encryptionKey).digest().slice(0, 32);
+
     return new Promise((accept, reject) => {
       this.gapi.files.get({
         fileId: blockId,
@@ -114,7 +119,7 @@ class GDriveBlockStore {
           return reject(err);
         }
         // decrypt the block and return it 
-        const resultStream = crypto.createDecipheriv('aes-256-ctr', cryptKey, cryptIv);
+        const resultStream = crypto.createDecipheriv('aes-256-ctr', encryptionKey, cryptIv);
         res.data.pipe(resultStream);
 
         accept({
@@ -133,7 +138,7 @@ class GDriveBlockStore {
     } else 
       encryptionKey = crypto.createHash('sha256').update(encryptionKey).digest().slice(0, 32);
 
-    const sourceStream = crypto.createCipheriv('aes-256-ctr', cryptKey, cryptIv);
+    const sourceStream = crypto.createCipheriv('aes-256-ctr', encryptionKey, cryptIv);
     srcPipe.pipe(sourceStream);
 
     return new Promise((accept, reject) => {

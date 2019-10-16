@@ -30,7 +30,7 @@ setInterval(() => {
   for (const lobbyId in lobbies) {
     const lobby = lobbies[lobbyId];
 
-    if (lobby.getAge() > 30 * 1000 && lobby.members === 0) {
+    if (lobby.getAge() > 60 * 60 * 1000 && lobby.members === 0) {
       delete lobbies[lobbyId];
     }
   }
@@ -75,6 +75,8 @@ module.exports = {
           // broadcast the nowPlaying event to the new member :P
           if (lobby.nowPlaying) {
             socket.emit("server:play-video", lobby.nowPlaying);
+          } else {
+            socket.emit("server:error", "this lobby is not playing anything, you should never be able to join a lobby with no now playing");
           }
 
           socket.emit("server:curtime", (new Date).getTime());
