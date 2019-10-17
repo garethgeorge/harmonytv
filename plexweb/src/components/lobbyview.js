@@ -1,10 +1,14 @@
 import React from "react";
 import config from "../config";
-import Player from "./player";
 import io from 'socket.io-client'
 import "./lobbyview.css"; 
+import Player from "./player"
 
 let delta = 0;
+
+const curTimeMilliseconds = () => {
+  return (new Date).getTime() + delta;
+}
 
 class NowPlaying {
   constructor(nowPlaying) {
@@ -17,9 +21,10 @@ class NowPlaying {
 
   getPlaybackPosition() {
     const nowPlaying = this.nowPlaying;
-    if (nowPlaying.state === "playing")
-      return ((new Date).getTime() - nowPlaying.updateTime + delta) / 1000 + nowPlaying.position;
-    else 
+    if (nowPlaying.state === "playing") {
+      // return ((new Date).getTime() - nowPlaying.updateTime + delta) / 1000 + nowPlaying.position;
+      return (curTimeMilliseconds() - nowPlaying.updateTime) / 1000 + nowPlaying.position;
+    } else 
       return nowPlaying.position;
   }
 
@@ -38,6 +43,7 @@ class NowPlaying {
       console.log("\tattempting to play video");
       player.play();
     }
+    console.log("SETTING player.currentTime = " + this.getPlaybackPosition());
     player.currentTime = this.getPlaybackPosition();
   }
 }
@@ -129,10 +135,11 @@ class Lobby extends React.Component {
     super(props);
     console.log("Lobby::constructor - lobbyid: " + props.lobbyid);
     
-    this.socket = io(config.apiHost + "/lobbyns");
+    this.socket = io("/lobbyns");
   }
 
   setupMediaPlayer(player) {
+    console.log("setting up the media player");
     this.player = player; // the player element 
     this.socket.emit("client:join-lobby", this.props.lobbyid);
 
@@ -141,6 +148,7 @@ class Lobby extends React.Component {
 
     this.socket.on("server:curtime", time => {
       delta = time - (new Date).getTime();
+      console.log("server:curtime servertime: ", time, "delta: ", delta);
     });
 
     // TODO: consider what happens when the play-video function is fired when the lobby is already playing something :P
@@ -150,10 +158,10 @@ class Lobby extends React.Component {
       this.player.playVideo(nowPlaying.mediaid, () => {
         serverNowPlaying = new NowPlaying(nowPlaying);
         clearTimeout(transmitTimeoutRef);
-
+        
         setTimeout(() => {
           serverNowPlaying.apply(this.player.videoElem);
-        }, 100);
+        }, 4000);
         
 
         this.socket.on("server:update-now-playing", (nowPlaying) => {
@@ -170,16 +178,16 @@ class Lobby extends React.Component {
           serverNowPlaying.apply(this.player.videoElem);
         });
         
-        // prevent any state from propogating in the first 4 seconds
+        // prevent any state from propogating in the first 10 seconds
         let settingUp = true;
-        setTimeout(() => settingUp = false, 4000);
+        setTimeout(() => settingUp = false, 10000);
         
         const updateState = () => {
           if (settingUp)
             return ;
     
           const newState = {
-            updateTime: (new Date).getTime(), // the time at which it was updated 
+            updateTime: curTimeMilliseconds(), // the time at which it was updated 
             position: this.player.videoElem.currentTime, // the position when it was updated 
             mediaid: serverNowPlaying.getMediaID(), // the media id playing 
             state: this.player.videoElem.paused ? "paused" : "playing", // the state (can also be paused)
@@ -201,6 +209,7 @@ class Lobby extends React.Component {
           transmitTimeoutRef = setTimeout(() => {
             serverNowPlaying = newStateNowPlaying;
             this.socket.emit("client:update-now-playing", newState);
+            console.log("SENDING MESSAGE TO SET PLAYER.currentTime to " +  new NowPlaying(newState).getPlaybackPosition());
           }, 100);
         }
     
@@ -215,6 +224,7 @@ class Lobby extends React.Component {
 
 
   render() {
+    console.log("rendering the video player...");
     const onRef = (elem) => {
       this.player = elem;
       const retry = () => {

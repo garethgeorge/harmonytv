@@ -1,145 +1,74 @@
-(async () => {
-  const app = require("express")();
-  const http = require('http').createServer(app);
-  const io = require("socket.io")(http);
-  const debug = require("debug")("web");
-  const passport = require('passport');
-  const PassportLocalStrategy = require('passport-local').Strategy;
+const debug = require("debug")("web");
+const passport = require('passport');
+const PassportLocalStrategy = require('passport-local').Strategy;
+const app = require("express")();
+const http = require('http').createServer(app);
+const io = require("socket.io")(http);
 
-  const model = require("../src/model");
-  const lobby = require("../src/lobby");
+const model = require("../src/model");
+const lobby = require("../src/model/lobby");
+
+app.use(require("morgan")("tiny"));
+app.use(require('body-parser').urlencoded({ extended: false }));
+app.use(require('body-parser').json());
+
+app.use(require('express-session')({ secret: 'AnVjaVMfpAIvfpeZfp', resave: false, saveUninitialized: false }))
+app.use(passport.initialize());
+app.use(passport.session());
+
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  next();
+});
 
 
-  await model.setup();
+// TODO: finish implementing the passport strategy
+passport.use(new PassportLocalStrategy(
+  (username, password, cb) => {
+    debug("authenticating user: " + username + " pass: " + password);
+    (async () => {
+      try {
+        const user = await model.user.getByUsername(username);
+        debug("found user: ", user);
+        if (!user)
+          return cb(null, false);
 
-  app.use(require("morgan")("tiny"));
-  app.use(require('body-parser').urlencoded({ extended: false }));
-  app.use(require('body-parser').json());
-
-  /* required for use as an API backend */
-  app.use((req, res, next) => {
-    res.header("Access-Control-Allow-Origin", "*");
-    next();
-  });
-  
-  // TODO: finish implementing the passport strategy
-  passport.use(new PassportLocalStrategy(
-    (username, password, cb) => {
-      (async () => {
-        try {
-          const user = await model.user.findByUsername(username);
-          if (!user)
-            return cb(null, false);
-
-          if (user.checkPassword(password)) {
-            return cb(null, user);
-          } else {
-            return cb(null, false);
-          }
-        } catch (e) {
-          cb(e);
+        if (user.checkPassword(password)) {
+          debug("successful password check for user " + username);
+          return cb(null, user);
+        } else {
+          debug("failed password check for user " + username);
+          return cb(null, false);
         }
-      })();
-    }));
-
-  // TODO: finish passport.serializeUser and passport.deserializeUser from https://github.com/passport/express-4.x-local-example/blob/master/server.js
-  passport.serializeUser((user, cb) => {
-    cb(null, user.userid);
-  });
-  
-  passport.deserializeUser((id, cb) => {
-    model.user.getById(id)
-      .then((user) => {
-        cb(null, user);
-      }).error((err) => {
-        cb(err, null);
-      });
-  });
-
-  app.post('/login',
-    passport.authenticate('local', { successRedirect: '/',
-                                    failureRedirect: '/',
-                                    failureFlash: true })
-  );
-
-  app.get("/library/getAll", async (req, res) => {
-    const libraries = await model.getAllLibraries();
-    res.header("Content-Type", "application/json");
-    res.end(JSON.stringify(libraries));
-  });
-
-  app.get("/library/:libraryid/getMedia", async (req, res) => {
-    // first get the library 
-    const media = await model.libraryGetAllMedia(req.params.libraryid);
-    debug("returned " + media.length + " records for library " + req.params.libraryid);
-    res.header("Content-Type", "application/json");
-    res.end(JSON.stringify(media));
-  });
-
-  app.get("/media/:mediaid/info.json", async (req, res) => {
-    debug("getting info for media: " + req.params.mediaid);
-    const media = await model.getMediaById(req.params.mediaid);
-    debug("\tmedia: " + JSON.stringify(media, false, 3));
-    if (media === null) {
-      res.status(404);
-      res.end("404 Not Found");
-    }
-    res.status(200);
-    debug("\tsuccessfully retrieved and returning.");
-    res.end(JSON.stringify(media));
-  });
-
-  app.get("/media/:mediaid/files/:path", async (req, res) => {
-    const mediaId = req.params.mediaid;
-    const path = req.params.path;
-
-    debug(`fetching media object ${mediaId} ${path}`);
-    const mediaObjId = await model.getStreamObjectIdFromPath(mediaId, path);
-
-    if (!mediaObjId) {
-      debug("\tobject not found");
-      res.status(404);
-      res.end("404 Object Not Found");
-      return ;
-    }
-
-    debug("\tfound object, streaming back to requester");
-
-    let range;
-    if (req.headers.range) {
-      let bytesPart = req.headers.range.substr(req.headers.range.indexOf("=") + 1);
-      const segments = bytesPart.split("-");
-      let startRange = parseInt(segments[0]);
-      let stopRange = parseInt(segments[1]);
-      range = {
-        start: startRange,
-        stop: stopRange,
+      } catch (e) {
+        debug("encountered error: " + e);
+        return cb(e);
       }
+    })();
+  }));
 
-      debug("should try to only fetch range: ", range, " OPERATION NOT YET SUPPORTED");
-    }
+// TODO: finish passport.serializeUser and passport.deserializeUser from https://github.com/passport/express-4.x-local-example/blob/master/server.js
+passport.serializeUser((user, cb) => {
+  cb(null, user.userid);
+});
 
-    const obj = await model.getStreamObject(mediaId, mediaObjId);
-    res.setHeader("Content-Type", obj.mimetype);
-    obj.stream.pipe(res);
-  });
-  
-  app.get("/lobby/create", (req, res) => {
-    const lby = lobby.create()
-    if (req.query.mediaid) {
-      lby.startPlaying(req.query.mediaid);
-    }
-    
-    res.header("Content-Type", "application/json");
-    res.end(JSON.stringify({
-      lobbyId: lby.id
-    }));
-  });
+passport.deserializeUser((id, cb) => {
+  model.user.getById(id)
+    .then((user) => {
+      cb(null, user);
+    }).catch((err) => {
+      cb(err, null);
+    });
+});
+
+app.use('/api', require("../src/routes/api"));
+
+(async () => {
+  await model.setup();
 
   lobby.socketio_setup(io.of("/lobbyns"));
 
   http.listen(5000, () => {
     console.log("listening on port :5000");
   });
-
 })();

@@ -36,17 +36,18 @@
 .episode > a {
     text-decoration: none;
     background-color: none;
-    color: white;
+    color:rgb(230,230,230);
 }
 
 .episode > a:hover {
     text-decoration: none;
     background-color: none;
-    color: grey;
+    color: rgb(255,255,255);
 }
 
 .episode span {
     color: rgba(200, 200, 200, 0.6);
-    float: right;
+    float: left;
     font-family: 'Roboto Mono', monospace;
+    margin-right: 30px;
 }

@@ -68,7 +68,7 @@ const getLibraryManager = async () => {
   return libraryManager;
 }
 
-const getMedia = async (mediaid) => {
+const getMediaInfo = async (mediaid) => {
   const res = await axios.get(config.apiHost + "/media/" + mediaid + "/info.json");
   if (res.status !== 200)
     throw new Error("fatal error: media " + mediaid + " not found");
@@ -84,7 +84,7 @@ const createLobbyWithMedia = async (mediaid) => {
 
 export {
   getLibraryManager,
-  getMedia,
+  getMediaInfo,
   createLobbyWithMedia,
   user
 }

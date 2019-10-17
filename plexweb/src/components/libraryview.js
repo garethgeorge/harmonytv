@@ -69,9 +69,9 @@ class SeriesView extends React.Component {
       episodes.push(
         <div className="episode" key={episode.mediaid}>
           <a href="#" onClick={doClick}>
-            {episode.name}
-
             <span>S{zeroPad(episode.seasonnumber)}E{zeroPad(episode.episodenumber)}</span>
+
+            {episode.name}
           </a>
         </div>
       )

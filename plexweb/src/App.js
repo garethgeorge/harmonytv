@@ -50,7 +50,7 @@ class App extends React.Component {
     }
     
     return (
-      <Router>
+      <Router basename="/web">
         <Switch> {/* iterates its children and takes the first that matches */}
           {/* <Route path={`/player/:mediaid`} component={playerPage} /> */}
           <Route path={`/lobby/:lobbyid`} component={lobbyPage} />

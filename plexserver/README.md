@@ -9,7 +9,8 @@ MyPlex can be placed behind a load balancer or reverse proxy, some specific rout
 - ~~implement database migrations~~ DONE
 - ~~implement iOS/mobile fallback stream~~ ABANDONED (todo: return to this idea)
 - migrate model into submodules i.e. model.user, model.media, etc 
-- user accounts and password authentication
+- ~~user accounts and password authentication~~ DONE
+- authenticate users with https://www.npmjs.com/package/passport.socketio
 - playback history for each user
 - resume playback option for previously played videos
     - update play-position every 1 minute for each user
@@ -18,6 +19,7 @@ MyPlex can be placed behind a load balancer or reverse proxy, some specific rout
 - implement per-library provider configuration i.e. multiple storage backend types can be mounted at once
 - use a different encryption key for each file, makes application much more secure 
 - switch to https://react.semantic-ui.com/collections/breadcrumb/ for UI framework (React first UI framework)
+- fix the videoplayer following tutorial here: https://github.com/amit08255/shaka-player-react-with-ui-config/blob/master/with-default-ui/src/components/VideoPlayer.js
 
 # Tech Stack Upgrades
 - look into MobX https://mobx.js.org/intro/concepts.html as a state manager (possibly simpler/easier alternative to redux) for React app

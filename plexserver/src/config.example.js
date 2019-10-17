@@ -18,12 +18,12 @@ module.exports = {
   // gets combined with object id's to generate unique encryption keys for 
   // media objects and other files, changing this will corrupt all stored data
   pg: {
-    user: 'postgres',
-    host: 'localhost',
-    database: 'postgres',
-    password: 'postgres',
-    port: 5432,
-    ssl: false,
+    user: process.env.POSTGRES_USER || 'postgres',
+    host: process.env.POSTGRES_HOST || 'localhost',
+    database: process.env.POSTGRES_DB || 'postgres',
+    password: process.env.POSTGRES_PASSWORD || 'postgres',
+    port: parseInt(process.env.POSTGRES_PORT || "5432"),
+    ssl: (process.env.POSTGRES_SSL || "false") === "true",
   },
   
   gdrive: {

@@ -2,6 +2,7 @@ const pgformat = require('pg-format');
 const uuidv4 = require('uuid/v4');
 const crypto = require('crypto');
 const pool = require("./db");
+const debug = require("debug")("model:user");
 
 const hashPassword = (userid, password) => {
   return crypto.createHash('sha256').update(userid + password).digest("hex");
@@ -28,8 +29,19 @@ class User {
     return this;
   }
 
-  async checkPassword(queryPassword) {
-    return !!(this.passwordsha256) && hashPassword(queryPassword) === this.passwordsha256;
+  checkPassword(queryPassword) {
+    if (!this.passwordsha256)
+      return ;
+    const pwhash = hashPassword(this.userid, queryPassword);
+    debug(`checkPassword() - compare hashes ${this.passwordsha256} === ${pwhash}`);
+    return pwhash === this.passwordsha256;
+  }
+
+  toJSON() {
+    return {
+      userid: this.userid,
+      username: this.username,
+    }
   }
 }
 
@@ -48,13 +60,17 @@ exports.create = async (username, password, conn=null) => {
   return await exports.getById(userid);
 }
 
-exports.getById = async (id) => {
+exports.getById = async (id, conn=null) => {
+  if (!conn)
+    conn = pool;
   const user = new User(id);
-  await user.load();
+  await user.load(conn);
   return user;
 }
 
-exports.getByUsername = async (username) => {
+exports.getByUsername = async (username, conn=null) => {
+  if (!conn)
+    conn = pool;
   const res = await conn.query(pgformat(
     "SELECT userid FROM users WHERE username = %L", username
   ));

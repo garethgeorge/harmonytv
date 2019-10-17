@@ -58,7 +58,7 @@ exports.putStreamObject = async (mediaid, uploadDir, file, conn=null) => {
   }
 
 
-
+  
   // retries for up to 100 seconds until it succeeds
   const encryptionKey = crypto.randomBytes(32).toString('hex');
   let blockId = null;

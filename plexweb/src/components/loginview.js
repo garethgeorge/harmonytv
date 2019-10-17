@@ -11,12 +11,13 @@ class LoginView extends React.Component {
 
   async login() {
     console.log("trying to login...");
-    alert("logging in... " + JSON.stringify(this.state));
     const userObj = await model.user.loginWithCredentials(this.state.username, this.state.password);
 
     if (!userObj) {
       return alert("incorrect username or password");
     }
+
+    window.location = "/";
   }
 
   handleInputChange(input, event) {

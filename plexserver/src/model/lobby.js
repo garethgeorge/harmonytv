@@ -48,6 +48,10 @@ module.exports = {
   },
 
   socketio_setup: (ionsp) => {
+    setInterval(() => {
+      ionsp.emit("server:curtime", (new Date).getTime());
+    }, 30000);
+
     ionsp.on("connection", (socket) => {
       debug("socket.io /lobbyns connection");
 
@@ -107,7 +111,6 @@ module.exports = {
 
         debug("client:update-now-playing for lobby " + lobby.id, JSON.stringify(nowPlaying, false, 3));
 
-        // check the effects of adding a fake delay
         socket.to(lobby.id).emit("server:update-now-playing", lobby.nowPlaying);
       });
 

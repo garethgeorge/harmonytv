@@ -17,13 +17,27 @@ services:
     working_dir: /app/plexserver/
     volumes:
       - ./plexserver:/app/plexserver/
+      - $HOME/.config/myplex:/home/node/.config/myplex
     environment:
       - NODE_ENV=development 
       - POSTGRES_HOST=db
+      - DEBUG=model*,web*
+    command: "./node_modules/nodemon/bin/nodemon.js bin/web.js"
     
   webuiserver:
     image: node:12
     user: node 
-  
+    working_dir: /app/plexweb/
+    volumes:
+      - ./plexweb:/app/plexweb/
+    command: "npm start"
 
-  nginx:
+  web:
+    image: nginx
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./mime.types:/etc/nginx/mime.types:ro
+      - ./plexweb/build/:/www/reactbuild/
+    command: [nginx-debug, '-g', 'daemon off;']
+    ports: 
+      - "8888:80"
