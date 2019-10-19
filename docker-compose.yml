@@ -2,14 +2,13 @@ version: '3'
 
 services:
   db:
-    image: postgres:latest
+    image: postgres:11
     ports:
-      - 127.0.0.1:5432:5432
+      - 5432:5432
     volumes:
       - ./.db_data:/var/lib/postgresql/data
     environment:
       POSTGRES_PASSWORD: 'postgres'
-  
   
   apiserver:
     image: node:12
@@ -22,6 +21,8 @@ services:
       - NODE_ENV=development 
       - POSTGRES_HOST=db
       - DEBUG=model*,web*
+    depends_on:
+      - db
     command: "./node_modules/nodemon/bin/nodemon.js bin/web.js"
     
   webuiserver:
@@ -38,6 +39,19 @@ services:
       - ./nginx.conf:/etc/nginx/nginx.conf:ro
       - ./mime.types:/etc/nginx/mime.types:ro
       - ./plexweb/build/:/www/reactbuild/
+      - ./.certbot/conf:/etc/letsencrypt
+      - ./.certbot/www:/var/www/certbot
     command: [nginx-debug, '-g', 'daemon off;']
     ports: 
-      - "8888:80"
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - webuiserver 
+      - apiserver 
+
+  certbot:
+    image: certbot/certbot
+    volumes:
+    - ./.certbot/conf:/etc/letsencrypt
+    - ./.certbot/www:/var/www/certbot
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"

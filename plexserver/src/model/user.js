@@ -43,6 +43,51 @@ class User {
       username: this.username,
     }
   }
+
+  async setPlaybackPositionForMedia(mediaid, position, total_duration, conn=null) {
+    if (!conn)
+      conn = pool;
+    
+    debug("setPlaybackPositionForMedia(", mediaid, position, total_duration, ")");
+    await conn.query(pgformat(`
+      INSERT INTO user_resume_watching (userid, mediaid, position, total_duration)
+      VALUES (%L, %L, %L, %L)
+      ON CONFLICT (userid, mediaid) DO UPDATE 
+      SET position = %L, total_duration = %L
+    `, this.userid, mediaid, position, total_duration, position, total_duration));
+  }
+
+  async listResumeWatching(conn = null) {
+    if (!conn)
+      conn = pool;
+    const res = await conn.query(pgformat(`
+      SELECT mediaid, position, total_duration FROM user_resume_watching WHERE userid = %L
+    `, this.userid));
+    return res.rows.map((row) => {
+      return {
+        mediaid: row.mediaid,
+        position: parseInt(row.position), 
+        total_duration: parseInt(row.total_duration),
+      }
+    });
+  }
+
+  async getResumeWatchingForMedia(mediaid, conn=null) {
+    if (!conn)
+      conn = pool;
+    const res = await conn.query(pgformat(`
+      SELECT position, total_duration FROM user_resume_watching WHERE userid = %L AND mediaid = %L
+    `, this.userid, mediaid));
+    if (res.rows.length === 0)
+      return null;
+    return res.rows.map((row) => {
+      return {
+        mediaid: row.mediaid,
+        position: parseInt(row.position), 
+        total_duration: parseInt(row.total_duration),
+      }
+    })[0];
+  }
 }
 
 exports.create = async (username, password, conn=null) => {

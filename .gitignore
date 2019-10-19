@@ -1,4 +1,5 @@
 .db_data
+.certbot 
 node_modules 
 coverage
 config.js 

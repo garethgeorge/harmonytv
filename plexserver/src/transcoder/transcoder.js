@@ -40,6 +40,7 @@ const waitForFFmpeg = (proc) => {
         accept();
       })
       // .on("stderr", console.log)
+      // .on("stdout", console.log)
       .on('error', (err) => {
         bar.stop();
         reject(err);

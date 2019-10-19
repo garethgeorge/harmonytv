@@ -26,20 +26,25 @@
     width: 100%;
 }
 
+
+/* episode unwatched */
 .episode {
     margin: 10px;
-    padding: 10px;
     color: white;
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
-.episode > a {
+.episode .inner {
+    padding: 10px;
+}
+
+.episode a {
     text-decoration: none;
     background-color: none;
-    color:rgb(230,230,230);
+    color:rgb(200,200,200);
 }
 
-.episode > a:hover {
+.episode a:hover {
     text-decoration: none;
     background-color: none;
     color: rgb(255,255,255);
@@ -50,4 +55,37 @@
     float: left;
     font-family: 'Roboto Mono', monospace;
     margin-right: 30px;
+}
+
+.episode input.btn-mark-played {
+    float: right;
+    background-color: rgb(155,150,150);
+}
+
+/* episode watched */
+
+.episode-watched {
+    background-color: rgba(0, 0, 0, 0.7);
+}
+
+.episode-watched a {
+    color:rgb(100,100,100);
+}
+
+.episode-watched a:hover {
+    text-decoration: none;
+    background-color: none;
+    color: rgb(150,150,150);
+}
+
+.episode-watched span {
+    color: rgba(180, 180, 180, 0.6);
+    float: left;
+    font-family: 'Roboto Mono', monospace;
+    margin-right: 30px;
+}
+
+.episode-progress-bar {
+    height: 2px;
+    background-color: rgba(255,125,0,0.8);
 }

@@ -2,7 +2,8 @@ import React from "react";
 import config from "../config";
 import io from 'socket.io-client'
 import "./lobbyview.css"; 
-import Player from "./player"
+import Player from "./player";
+import * as user from "../model/user";
 
 let delta = 0;
 
@@ -67,10 +68,10 @@ class ChatBox extends React.Component {
 
     const state = Object.assign({}, this.state);
     state.messages = this.state.messages.slice(0);
-    state.messages.push(">" + message);
+    state.messages.push(message);
     this.setState(state);
 
-    removeAMessage(10000);
+    removeAMessage(15000);
   }
 
   constructor(props) {
@@ -88,6 +89,10 @@ class ChatBox extends React.Component {
       });
     });
 
+    // get username to use for chat :P 
+    user.getCurrentUserInfo().then((user) => {
+      this.username = user.username;
+    });
   }
 
   render() {
@@ -114,12 +119,15 @@ class ChatBox extends React.Component {
           }}
           onKeyDown={(e) => {
             if (e.key === "Enter") {
+              if (!this.username)
+                return ;
               const state = Object.assign({}, this.state)
               const composition = this.state.composition;
               state.composition = "";
               this.setState(state, () => {
-                this.addMessage(composition);
-                this.props.socket.emit("client:message", composition);
+                const message = this.username + ": " + composition;
+                this.addMessage(message);
+                this.props.socket.emit("client:message", message);
               });
             }
           }}/>
@@ -136,11 +144,16 @@ class Lobby extends React.Component {
     console.log("Lobby::constructor - lobbyid: " + props.lobbyid);
     
     this.socket = io("/lobbyns");
+    this.player = React.createRef();
   }
 
-  setupMediaPlayer(player) {
+  componentDidMount() {
+    // TODO: this code needs major cleanup work
+    // mainly things need to be factored into reasonable functions etc.
+
+    const player = this.player.current;
+
     console.log("setting up the media player");
-    this.player = player; // the player element 
     this.socket.emit("client:join-lobby", this.props.lobbyid);
 
     let serverNowPlaying = null;
@@ -151,19 +164,29 @@ class Lobby extends React.Component {
       console.log("server:curtime servertime: ", time, "delta: ", delta);
     });
 
-    // TODO: consider what happens when the play-video function is fired when the lobby is already playing something :P
     this.socket.on("server:play-video", (nowPlaying) => {
       console.log("server:play-video: ", JSON.stringify(nowPlaying, false, 3));
       // we don't actually respond to changes to mediaid other than here 
-      this.player.playVideo(nowPlaying.mediaid, () => {
+      player.playVideo(nowPlaying.mediaid, () => {
         serverNowPlaying = new NowPlaying(nowPlaying);
         clearTimeout(transmitTimeoutRef);
         
+        // immediately try to play it :P 
         setTimeout(() => {
-          serverNowPlaying.apply(this.player.videoElem);
-        }, 4000);
+          serverNowPlaying.apply(player.videoElem);
+        }, 100);
         
+        // synchronize the current playback position with the server every 30 seconds
+        setInterval(() => {
+          // TODO: avoid updating now playing when it is already up-to date
+          if (player.videoElem.paused)
+            return ;
 
+          const video = player.videoElem;
+          console.log("updateResumeWatching - timer fired, submitting position: " + video.currentTime + " duration: " + video.duration);
+          user.updateResumeWatching(nowPlaying.mediaid, video.currentTime, video.duration);
+        }, 30 * 1000);
+        
         this.socket.on("server:update-now-playing", (nowPlaying) => {
           console.log("server:update-now-playing ", JSON.stringify(nowPlaying, false, 3));
           const newNowPlaying = new NowPlaying(nowPlaying);
@@ -175,46 +198,47 @@ class Lobby extends React.Component {
           console.log("\tapplying state update");
           serverNowPlaying = newNowPlaying;
           clearTimeout(transmitTimeoutRef);
-          serverNowPlaying.apply(this.player.videoElem);
+          serverNowPlaying.apply(player.videoElem);
         });
         
-        // prevent any state from propogating in the first 10 seconds
-        let settingUp = true;
-        setTimeout(() => settingUp = false, 10000);
-        
-        const updateState = () => {
-          if (settingUp)
-            return ;
-    
-          const newState = {
-            updateTime: curTimeMilliseconds(), // the time at which it was updated 
-            position: this.player.videoElem.currentTime, // the position when it was updated 
-            mediaid: serverNowPlaying.getMediaID(), // the media id playing 
-            state: this.player.videoElem.paused ? "paused" : "playing", // the state (can also be paused)
-          };
-    
-          console.log("player state updated...", JSON.stringify(newState, false, 3));
-    
-    
-          const newStateNowPlaying = new NowPlaying(newState);
-    
-          if (newStateNowPlaying.isSame(serverNowPlaying)) {
-            console.log("\tnot synchronizing state update, it is a result of a server message");
-            return ;
-          }
+        // disable sending state updates for the first 10 seconds 
+        setTimeout(() => {
+          serverNowPlaying.apply(player.videoElem);
 
-          if (transmitTimeoutRef)
-            clearTimeout(transmitTimeoutRef);
-          
-          transmitTimeoutRef = setTimeout(() => {
-            serverNowPlaying = newStateNowPlaying;
-            this.socket.emit("client:update-now-playing", newState);
-            console.log("SENDING MESSAGE TO SET PLAYER.currentTime to " +  new NowPlaying(newState).getPlaybackPosition());
-          }, 100);
-        }
-    
-        this.player.videoElem.addEventListener("playing", updateState);
-        this.player.videoElem.addEventListener("pause", updateState);
+          // prevent any state from propogating in the first 10 seconds
+          const updateState = () => {
+            const newState = {
+              updateTime: curTimeMilliseconds(), // the time at which it was updated 
+              position: player.videoElem.currentTime, // the position when it was updated 
+              mediaid: serverNowPlaying.getMediaID(), // the media id playing 
+              state: player.videoElem.paused ? "paused" : "playing", // the state (can also be paused)
+            };
+      
+            console.log("detected state update event from video player: ", JSON.stringify(newState, false, 3));
+            const newStateNowPlaying = new NowPlaying(newState);
+      
+            if (newStateNowPlaying.isSame(serverNowPlaying)) {
+              console.log("\tnot synchronizing state update, it is a result of a server message");
+              return ;
+            }
+
+            if (transmitTimeoutRef)
+              clearTimeout(transmitTimeoutRef);
+
+            transmitTimeoutRef = setTimeout(() => {
+              serverNowPlaying = newStateNowPlaying;
+              this.socket.emit("client:update-now-playing", newState);
+              console.log("SENDING MESSAGE TO SET PLAYER.currentTime to " +  new NowPlaying(newState).getPlaybackPosition());
+
+              const video = player.videoElem;
+              console.log("SENDING 'RESUME PLAYING STATE' TO SERVER: " + video.currentTime + " duration: " + video.duration);
+              user.updateResumeWatching(nowPlaying.mediaid, video.currentTime, video.duration);
+            }, 100);
+          }
+      
+          player.videoElem.addEventListener("playing", updateState);
+          player.videoElem.addEventListener("pause", updateState);
+        }, 10000);
       });
       
     });
@@ -225,19 +249,10 @@ class Lobby extends React.Component {
 
   render() {
     console.log("rendering the video player...");
-    const onRef = (elem) => {
-      this.player = elem;
-      const retry = () => {
-        if (!this.player || !this.player.videoElem)
-          return setTimeout(retry, 50);
-        this.setupMediaPlayer(elem);
-      }
-      retry();
-    };
 
     return (
       <div className="lobbyview">
-        <Player ref={onRef}/>
+        <Player ref={this.player}/>
         <ChatBox socket={this.socket} />
       </div>
     );

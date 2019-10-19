@@ -15,10 +15,10 @@ class Lobby {
     return (new Date).getTime() - this.createdTime;
   }
   
-  startPlaying(mediaid) {
+  startPlaying(mediaid, position=0) {
     this.nowPlaying = {
       updateTime: (new Date).getTime(), // the time at which it was updated 
-      position: 0, // the position when it was updated 
+      position: position, // the position when it was updated 
       mediaid: mediaid, // the media id playing 
       state: "playing", // the state (can also be paused)
     }

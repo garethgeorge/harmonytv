@@ -40,9 +40,27 @@ class Player extends React.Component {
     const videoContainer = this.videoContainer.current;
 
     const player = new shaka.Player(video);
+
+    // https://github.com/google/shaka-player/blob/d98543165cff6dc545eeaefcd660818d971cca33/demo/main.js#L91
+    const castProxy = new shaka.cast.CastProxy(video, player, "00A3C5E8");
       
     const ui = new shaka.ui.Overlay(player, videoContainer, video);
-    ui.getControls();
+    ui.configure({
+      "controlPanelElements": ["play_pause", "time_and_duration", "spacer", "mute", "volume", "fullscreen", "overflow_menu"],
+      "overflowMenuButtons": ["captions", "cast", "quality", "language", "picture_in_picture"],
+      "addBigPlayButton": false,
+    })
+    const controls = ui.getControls();
+
+    // setTimeout(() => {
+    //   if (!castProxy.canCast()) {
+    //     if (!castProxy._sender)
+    //       alert("no sender");
+    //     else 
+    //       alert("cast api ready? " + castProxy._sender.apiReady() + " hasReceivers? " + castProxy._sender.hasReceivers());
+    //   } else 
+    //     alert("can cast!");
+    // }, 10000);
 
     player.addEventListener('error', this.onErrorEvent);
 
@@ -93,130 +111,12 @@ class Player extends React.Component {
 
   render() {
     return (
-      <div className="shakaContainer" ref={this.videoContainer}>
-        <video ref={this.videoComponent}>
+      <div className="shakaContainer" data-shaka-player-container data-shaka-player-cast-receiver-id="07AEE832" ref={this.videoContainer}>
+        <video data-shaka-player autoplay playsinline ref={this.videoComponent}>
         </video>
       </div>
     )
   }
 }
-
-
-
-
-// https://shaka-player-demo.appspot.com/docs/api/tutorial-ui.html
-// let shakaUiLoaded = false;
-// document.addEventListener('shaka-ui-loaded', () => {
-//   shakaUiLoaded = true;
-// });
-
-
-
-
-
-/*
-class Player extends React.Component {
-  state = {}
-  
-  isDashSupported() {
-    const shaka = window.shaka;
-    return window.MediaSource && shaka.Player.isBrowserSupported();
-  }
-
-  installShaka(videoElem) {
-    console.log("installing shaka on element: ", videoElem);
-    this.videoElem = videoElem;
-
-    const shaka = window.shaka;
-    if (this.isDashSupported()) {
-      shaka.polyfill.installAll();
-      
-      const ui = videoElem['ui'];
-      const controls = ui.getControls();
-      const player = controls.getPlayer();
-
-      player.addEventListener('error', (error) => {
-        console.error("Shaka player error code ", error.detail.code, " object ", error);
-      });
-      
-      // use to contorl the network connection
-      // const nwEngine = player.getNetworkingEngine();
-
-      this.shakaPlayer = player;
-      this.shakaUi = ui;
-    } else {
-    }
-  }
-
-  playVideo(mediaid, callback=null) {
-    console.log("Player::playVideo(" + mediaid + ")");
-
-    if (!this.shakaPlayer) {
-      const fallbackUrl = config.apiHost + "/media/" + mediaid + "/files/fallback.mp4";
-      this.videoElem.src = fallbackUrl;
-      return ;
-    }
-
-    getMedia(mediaid).then(media => {
-      console.log("MEDIA INFO: " + JSON.stringify(media));
-      
-      const manifestUrl = config.apiHost + "/media/" + mediaid + "/files/stream.mpd";
-
-      const player = this.shakaPlayer;
-
-      player.load(manifestUrl).then(() => {
-        console.log('The video has now been loaded!');
-        
-        const metadata = media.metadata;
-        console.log("VIDEO METADATA: " + JSON.stringify(metadata));
-
-        console.log("loading subtitles");
-        for (const language of Object.keys(metadata.subtitles)) {
-          const subtitle = metadata.subtitles[language];
-          console.log("\tadding subtitle language: " + language + " - file url: " + (config.apiHost + "/media/" + mediaid + "/files/" + subtitle.file));
-
-          player.addTextTrack(
-            config.apiHost + "/media/" + mediaid + "/files/" + subtitle.file, 
-            language, "captions", "text/vtt"
-          );
-        }
-
-        if (callback)
-          callback();
-      }).catch((err) => {
-        console.error("Encountered an error loading the manifestUrl", err);
-      }); 
-
-    });
-  }
-
-  render() {
-    const onVideoRef = (elem) => {
-      if (elem === null) return ;
-      const retry = () => {
-        if (!shakaUiLoaded)
-          return setTimeout(retry, 50);
-        this.installShaka(elem);
-      }
-      retry();
-    } 
-
-    // if (this.isDashSupported()) {
-      return (
-        <div className="shakaContainer" data-shaka-player-container data-shaka-player-cast-receiver-id="7B25EC44">
-          <video data-shaka-player ref={onVideoRef}>
-          </video>
-        </div>
-      );
-    // } else {
-    //   return (
-    //     <div className="shakaContainer">
-    //       <video controls autoPlay={true} ref={onVideoRef}></video>;
-    //     </div>
-    //   )
-    // }
-  }
-}
-*/
 
 export default Player;
