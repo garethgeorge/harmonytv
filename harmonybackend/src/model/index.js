@@ -151,7 +151,7 @@ exports.getStreamObject = async (mediaid, objectid, conn=null) => {
       encryptionKey = res.rows[0].encryptionkey.trim();
   }
 
-  return await objectCacheLock.acquire(mediaid, (callback) => {
+  return await objectCacheLock.acquire(objectid, (callback) => {
     debug(`getStreamObject(${mediaid}, ${objectid})`);
 
     // check the cache 
