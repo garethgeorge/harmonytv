@@ -4,19 +4,19 @@ import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import SideNav from "./components/sidenav";
 import "./App.css";
 import Library from "./components/libraryview";
-import Player from "./components/player";
-import Lobby from "./components/lobbyview";
 import LoginView from "./components/loginview";
 import * as model from "./model/model";
+import {Box} from "grommet";
 
-const playerPage = (props) => {
-  const mediaid = props.match.params.mediaid;
-  return <Player mediaid={mediaid} />
-}
+const Lobby = React.lazy(() => import("./components/lobbyview")); 
 
 const lobbyPage = (props) => {
   const lobbyid = props.match.params.lobbyid;
-  return <Lobby lobbyid={lobbyid} />
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <Lobby lobbyid={lobbyid} />
+    </React.Suspense>
+  )
 }
 
 class App extends React.Component {
@@ -59,7 +59,7 @@ class App extends React.Component {
               <div className="sidenav-container">
                 <SideNav />
               </div>
-
+              
               <div className="content-container">
                 <Route path={`/library/:libraryid`} component={Library} />
               </div>

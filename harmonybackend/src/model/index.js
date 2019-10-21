@@ -17,6 +17,7 @@ let mediaStore = null;
 
 exports.pool = pool;
 exports.user = require("./user");
+exports.media = require("./media");
 
 exports.setup = async (conn = null) => {
   // bit of a race condition here but it makes life much easier to just live w/it 
@@ -166,8 +167,10 @@ exports.getStreamObject = async (mediaid, objectid, conn=null) => {
 
     // check the cache 
     const cacheObject = objectCache.get(objectid);
-    if (cacheObject)
+    if (cacheObject) {
+      debug("\tHIT THE CACHE :)");
       return callback(null, cacheObject);
+    }
 
     debug(`\tNOT CACHED :( fetching from backing store`);
     const object = mediaStore.getBlock(objectid, encryptionKey).then((object) => {

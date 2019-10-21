@@ -82,11 +82,21 @@ class User {
       return null;
     return res.rows.map((row) => {
       return {
-        mediaid: row.mediaid,
         position: parseInt(row.position), 
         total_duration: parseInt(row.total_duration),
       }
     })[0];
+  }
+
+  async markMediaUnplayed(mediaid, conn=null) {
+    await conn.query(pgformat(`
+      DELETE FROM user_resume_watching WHERE userid = %L AND mediaid = %L
+    `, mediaid));
+  }
+
+  async markMediaPlayed(mediaid, conn=null) {
+    // bit of a hack, will fake the duration of the media file :P
+    await this.setPlaybackPositionForMedia(mediaid, 100, 100); // mark it as totally played
   }
 }
 

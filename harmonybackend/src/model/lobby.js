@@ -1,26 +1,44 @@
 const uuidv4 = require("uuid/v4");
 const debug = require("debug")("model:lobby");
 
+let ionsp = null;
+
 const lobbies = {};
 
 class Lobby {
-  constructor() {
+  constructor(media) {
+    this.media = media;
+
     this.id = uuidv4();
-    this.nowPlaying = null; // the media file currently playing
     this.createdTime = (new Date).getTime(); 
     this.members = 0;
+
+    // set the initial playing time
+    this.nowPlaying = {
+      updateTime: (new Date).getTime(), // the time at which it was updated 
+      position: 0, // the position when it was updated 
+      mediaid: this.media.mediaid, // the media id playing 
+      state: "playing", // the state (can also be paused)
+    };
   }
 
   getAge() {
     return (new Date).getTime() - this.createdTime;
   }
   
-  startPlaying(mediaid, position=0) {
-    this.nowPlaying = {
-      updateTime: (new Date).getTime(), // the time at which it was updated 
-      position: position, // the position when it was updated 
-      mediaid: mediaid, // the media id playing 
-      state: "playing", // the state (can also be paused)
+  setPlaybackPosition(position) {
+    // broadcast the now playing position
+    const copy = Object.assign({}, this.nowPlaying);
+    copy.position = position;
+    this.setNowPlaying(copy);
+  }
+
+  setNowPlaying(nowPlaying, socket=null) {
+    this.nowPlaying = nowPlaying;
+    if (socket) {
+      socket.to(this.id).emit("server:update-now-playing", this.nowPlaying);
+    } else {
+      ionsp.in(this.id).emit("server:update-now-playing", this.nowPlaying);
     }
   }
 };
@@ -30,15 +48,18 @@ setInterval(() => {
   for (const lobbyId in lobbies) {
     const lobby = lobbies[lobbyId];
 
-    if (lobby.getAge() > 60 * 60 * 1000 && lobby.members === 0) {
+    if (lobby.getAge() > 8 * 3600 * 1000 && lobby.members === 0) {
       delete lobbies[lobbyId];
     }
   }
 }, 30 * 1000);
 
 module.exports = {
-  create: () => {
-    const lobby = new Lobby;
+  create: (media) => {
+    if (!media)
+      throw new Error("required media to be valid");
+
+    const lobby = new Lobby(media);
     lobbies[lobby.id] = lobby;
     return lobby;
   },
@@ -47,7 +68,9 @@ module.exports = {
     return lobbies[id] || null;
   },
 
-  socketio_setup: (ionsp) => {
+  socketio_setup: (_ionsp) => {
+    ionsp = _ionsp;
+
     setInterval(() => {
       ionsp.emit("server:curtime", (new Date).getTime());
     }, 30000);
@@ -91,27 +114,15 @@ module.exports = {
         }
       });
 
-      socket.on('client:play-video', (mediaid) => {
-        debug("socket.io /lobbyns:play-video lobbyid: " + lobbyid + " mediaid: " + mediaid);
-        if (!lobby) {
-          socket.emit("server:error", "you are not in a room yet");
-          return ;
-        }
-
-        lobby.startPlaying(mediaid);
-        ionsp.in(lobby.id).emit("server:play-video", lobby.nowPlaying);
-      });
-
       socket.on("client:update-now-playing", (nowPlaying) => {
         if (!lobby) {
           socket.emit("server:error", "you are not in a room yet");
           return ;
         }
-        lobby.nowPlaying = nowPlaying;
 
         debug("client:update-now-playing for lobby " + lobby.id, JSON.stringify(nowPlaying, false, 3));
 
-        socket.to(lobby.id).emit("server:update-now-playing", lobby.nowPlaying);
+        lobby.setNowPlaying(nowPlaying);
       });
 
       socket.on("client:message", (message) => {

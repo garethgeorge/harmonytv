@@ -17,8 +17,8 @@ const getCurrentUserInfo = async () => {
 
 const loginWithCredentials = async (username, password) => {
   const res = await axios.post(config.apiHost + "/login", {"username": username, "password": password});
-  console.log("LOGIN RESPONSE: " + JSON.stringify(res.data));
-  return res.data.user;
+  userInfo = res.data.user;
+  return userInfo;
 }
 
 const updateResumeWatching = async (mediaid, position, total_duration) => {

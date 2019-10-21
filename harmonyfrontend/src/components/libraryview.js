@@ -37,8 +37,6 @@ class EpisodeComponent extends React.Component {
               <span>S{zeroPad(episode.seasonnumber)}E{zeroPad(episode.episodenumber)}</span>
               {episode.name}
             </a>
-            {/* todo: add code to monitor the checked state and mark played/unplayed */}
-            <input type="checkbox" class="btn-mark-played" checked={completed} />
           </div>
           {progressBar}
         </div>

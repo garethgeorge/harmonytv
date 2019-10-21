@@ -8,11 +8,20 @@ route.get("/create", auth_required, async (req, res) => {
     return req.end(JSON.stringify({
       error: "no mediaid specified"
     }));
-  const lby = lobby.create()
 
-  const resume = await req.user.getResumeWatchingForMedia(req.query.mediaid)
+  const mediainfo = await model.media.getMediaInfo('' + req.query.mediaid);
+  if (!mediainfo) {
+    return req.end(JSON.stringify({
+      error: "media with mediaid '" + req.query.mediaid + '" does not exist.'
+    }));
+  }
+  debug("creating lobby for media: %o", mediainfo);
+
+  const resume = await req.user.getResumeWatchingForMedia(req.query.mediaid);
+  
   debug("created lobby to play video: " + req.query.mediaid + " resume watching state: ", resume);
-  lby.startPlaying(req.query.mediaid, resume ? resume.position : 0);
+  const lby = lobby.create(mediainfo);
+  lby.setPlaybackPosition(resume ? resume.position : 0);
   
   res.header("Content-Type", "application/json");
   res.end(JSON.stringify({
