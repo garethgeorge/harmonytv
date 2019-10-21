@@ -1,0 +1,50 @@
+version: '3'
+
+services:
+  db:
+    image: postgres:11
+    ports:
+      - 5432:5432
+    volumes:
+      - ./.db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_PASSWORD: 'postgres'
+  
+  apiserver:
+    image: node:12
+    user: node 
+    working_dir: /app/harmonybackend/
+    volumes:
+      - ./harmonybackend:/app/harmonybackend/
+      - $HOME/.config/myplex:/home/node/.config/myplex
+    environment:
+      - NODE_ENV=development 
+      - POSTGRES_HOST=db
+      - DEBUG=model*,web*
+    depends_on:
+      - db
+    command: "./node_modules/nodemon/bin/nodemon.js bin/web.js"
+    
+  webuiserver:
+    image: node:12
+    user: node 
+    working_dir: /app/harmonyfrontend/
+    volumes:
+      - ./harmonyfrontend:/app/harmonyfrontend/
+    command: "npm start"
+
+  web:
+    image: nginx
+    volumes:
+      - ./nginx/nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/mime.types:/etc/nginx/mime.types:ro
+      - ./harmonyfrontend/build/:/www/reactbuild/
+      - ./.certbot/conf:/etc/letsencrypt
+      - ./.certbot/www:/var/www/certbot
+    command: [nginx-debug, '-g', 'daemon off;']
+    ports: 
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - webuiserver 
+      - apiserver 

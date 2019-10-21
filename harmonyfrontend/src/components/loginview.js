@@ -1,9 +1,10 @@
 import React from "react";
 import "./loginview.css";
 import config from "../config";
-import * as model from "../model/model";
+import model from "../model/";
+import {observer} from "mobx-react";
 
-class LoginView extends React.Component {
+const LoginView = observer(class LoginView extends React.Component {
   state = {
     username: "",
     password: "",
@@ -11,13 +12,15 @@ class LoginView extends React.Component {
 
   async login() {
     console.log("trying to login...");
-    const userObj = await model.user.loginWithCredentials(this.state.username, this.state.password);
-
+    const {username, password} = this.state;
+    this.setState({
+      username: "",
+      password: ""
+    });
+    const userObj = await model.user.login(username, password);
     if (!userObj) {
       return alert("incorrect username or password");
     }
-
-    window.location = "/";
   }
 
   handleInputChange(input, event) {
@@ -49,6 +52,6 @@ class LoginView extends React.Component {
       </div>
     )
   }
-}
+});
 
 export default LoginView;

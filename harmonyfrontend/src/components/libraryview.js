@@ -177,14 +177,13 @@ class LibraryView extends React.Component {
   }
 
   componentDidMount() {
-    model.getLibraryManager().then(manager => {
-      this.setState({
-        manager: manager 
-      });
-    });
+    model.library.refreshLibraries(); // async function call
   }
 
   render() {
+    // TODO: finish implementing new rendering code
+    const library = model.state.libraries[this.props.match.params.libraryid];
+
     if (!this.state.manager) {
       return <h1></h1>
     } else {
@@ -221,5 +220,5 @@ export default (props) => {
           component={LibraryView}
         />
     </div>
-  )
+  );
 };
