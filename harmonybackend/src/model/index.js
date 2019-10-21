@@ -126,17 +126,6 @@ exports.libraryGetAllMedia = async (libraryId, conn = null) => {
   return res.rows;
 }
 
-exports.getMediaById = async (mediaid, conn = null) => {
-  if (!conn)
-    conn = pool;
-  const res = await conn.query(pgformat(
-    "SELECT * FROM media WHERE mediaId = %L", mediaid
-  ));
-  if (res.rows.length === 0)
-    return null;
-  return res.rows[0];
-}
-
 /*
   fetches object from the media store with 'mediaid' and 'objectid'
 */

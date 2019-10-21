@@ -2,7 +2,7 @@ const pgformat = require('pg-format');
 const pool = require("./db");
 const debug = require("debug")("model:media");
 
-module.exports.getMediaInfo = async (mediaid, conn) => {
+module.exports.getMediaInfo = async (mediaid, conn=null) => {
   if (!conn)
     conn = pool;
   

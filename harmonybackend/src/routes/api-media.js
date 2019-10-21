@@ -4,7 +4,7 @@ const route = require('express').Router();
 
 route.get("/:mediaid/info.json", async (req, res) => {
   debug("getting info for media: " + req.params.mediaid);
-  const media = await model.getMediaById(req.params.mediaid);
+  const media = await model.media.getMediaInfo(req.params.mediaid);
   debug("\tmedia: " + JSON.stringify(media, false, 3));
   if (media === null) {
     res.status(404);

@@ -167,6 +167,7 @@ class Lobby extends React.Component {
     this.socket.on("server:play-video", (nowPlaying) => {
       console.log("server:play-video: ", JSON.stringify(nowPlaying, false, 3));
       // we don't actually respond to changes to mediaid other than here 
+
       player.playVideo(nowPlaying.mediaid, () => {
         serverNowPlaying = new NowPlaying(nowPlaying);
         clearTimeout(transmitTimeoutRef);
