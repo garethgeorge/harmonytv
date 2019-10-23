@@ -7,6 +7,7 @@ import LibraryRouter from "./views/library/libraryrouter";
 import LoginView from "./views/login-view";
 import model from "./model/";
 import {observer} from "mobx-react";
+import Loading from "./components/loading";
 
 const Lobby = React.lazy(() => import("./views/lobby/lobbyview")); 
 
@@ -20,11 +21,19 @@ const lobbyPage = (props) => {
 }
 
 const App = observer(class App extends React.Component {
+  state = {
+    loading: true 
+  }
   componentDidMount() {
-    model.user.getCurrentUser(); 
+    model.user.getCurrentUser().then(() => {
+      this.setState({loading: false});
+    })
   }
 
   render() {
+    if (this.state.loading)
+      return <Loading />
+
     // block the view by rendering the login screen
     if (!model.state.user) {
       return (
