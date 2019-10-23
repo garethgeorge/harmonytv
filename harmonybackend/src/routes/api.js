@@ -10,6 +10,12 @@ auth_required = (req, res, next) => {
   next();
 }
 
+route.use((req, res, next) => {
+  res.setHeader("Content-Type", "application/json");
+  next();
+});
+
+
 route.post('/login',
   passport.authenticate('local', { successRedirect: '/api/user/',
                                   failureRedirect: '/api/user/',
