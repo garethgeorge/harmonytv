@@ -4,7 +4,7 @@ import SideNav from "./components/sidenav";
 import "./App.css";
 import "./fonts.css";
 import LibraryRouter from "./views/library/libraryrouter";
-import LoginView from "./components/loginview";
+import LoginView from "./views/login-view";
 import model from "./model/";
 import {observer} from "mobx-react";
 

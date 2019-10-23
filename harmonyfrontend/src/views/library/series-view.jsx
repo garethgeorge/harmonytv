@@ -3,6 +3,7 @@ import {autorun} from "mobx";
 import {observer} from "mobx-react";
 import model from "../../model";
 import EpisodeTV from "../../components/library/episode-tv";
+import Loading from "../../components/loading";
 
 export default observer(class SeriesView extends React.Component {
   state = {};
@@ -49,11 +50,11 @@ export default observer(class SeriesView extends React.Component {
   }
 
   render() {
-    if (!model.state.libraries) return null;
-    if (!model.state.libraries[this.props.libraryid]) return null;
+    if (!model.state.libraries) return <Loading />;
+    if (!model.state.libraries[this.props.libraryid]) return <Loading />;
     
     const library = model.state.libraries[this.props.libraryid];
-    if (!library.series) return null;
+    if (!library.series) return <Loading />;
     const series = library.series[this.props.seriesName];
     if (!series) {
       return <p>SERIES NOT FOUND {this.props.seriesName}</p>

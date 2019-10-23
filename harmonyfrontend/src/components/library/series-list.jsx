@@ -2,6 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import {action} from "mobx";
 import {observer} from "mobx-react";
+import Loading from "../../components/loading";
 import "./series-list.css";
 
 export default observer(class SeriesList extends React.Component {
@@ -17,7 +18,7 @@ export default observer(class SeriesList extends React.Component {
   render() {
     const series = this.props.library.series;
     if (!this.props.library.series || !this.props.library.media) {
-      return <p>LOADING...</p>
+      return <Loading />
     }
 
     const shows = [];

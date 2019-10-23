@@ -1,8 +1,9 @@
 import React from "react";
-import "./loginview.css";
+import "./login-view.css";
 import config from "../config";
-import model from "../model/";
+import model from "../model";
 import {observer} from "mobx-react";
+import Loading from "../components/loading";
 
 const LoginView = observer(class LoginView extends React.Component {
   state = {
@@ -10,17 +11,36 @@ const LoginView = observer(class LoginView extends React.Component {
     password: "",
   }
 
-  async login() {
+  async login(event) {
+    event.preventDefault();
     console.log("trying to login...");
     const {username, password} = this.state;
     this.setState({
+      loading: true,
       username: "",
       password: ""
     });
     const userObj = await model.user.login(username, password);
-    if (!userObj) {
-      return alert("incorrect username or password");
+
+    if (this.mounted) {
+      this.setState({
+        loading: false,
+        username: "",
+        password: "",
+      })
+
+      if (!userObj) {
+        return alert("incorrect username or password");
+      }
     }
+  }
+
+  componentWillMount() {
+    this.mounted = true;
+  }
+
+  componentWillUnmount() {
+    this.mounted = false;
   }
 
   handleInputChange(input, event) {
@@ -30,6 +50,12 @@ const LoginView = observer(class LoginView extends React.Component {
   }
 
   render() {
+
+    if (this.state.loading)
+      return (
+        <Loading />
+      );
+
     return (
       <div className="loginview">
         <center>
