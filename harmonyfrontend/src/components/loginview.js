@@ -36,7 +36,7 @@ const LoginView = observer(class LoginView extends React.Component {
           <h3>MyPlex</h3>
         </center>
 
-        <form className="ink-form" onSubmit={this.login.bind(this)} action="javascript:void(0);">
+        <form className="ink-form" onSubmit={this.login.bind(this)}>
           <div className="control-group">
             <label htmlFor="username">Username</label>
             <div className="control">

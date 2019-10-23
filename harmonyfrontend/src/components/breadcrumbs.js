@@ -12,7 +12,7 @@ export default observer((props) => {
       );
     } else {
       divs.push(
-        <li><Link to={seg.href} key={seg.href}>{seg.text}</Link></li>
+        <li key={seg.href}><Link to={seg.href}>{seg.text}</Link></li>
       );
     }
   }

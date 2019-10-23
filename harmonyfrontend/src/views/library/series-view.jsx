@@ -21,6 +21,10 @@ export default observer(class SeriesView extends React.Component {
     this._mobx_disposer = autorun(() => {
       if (!model.state.libraries) return ;
       const library = model.state.libraries[this.props.libraryid];
+      if (!library.media)
+        setImmediate(() => {
+          library.refreshMediaList();
+        });
 
       if (library) {
         // update breadcrumbs 
@@ -65,7 +69,7 @@ export default observer(class SeriesView extends React.Component {
     for (const episode of series) {
       // TODO: split out 'episode' into its own JSX component 
       episodes.push(
-        <EpisodeTV episode={episode} />
+        <EpisodeTV key={episode.mediaid} episode={episode} />
       )
     }
     
