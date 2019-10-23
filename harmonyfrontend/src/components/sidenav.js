@@ -1,44 +1,32 @@
 import React from "react";
-import {getLibraryManager} from "../model/model";
 import { Link } from "react-router-dom";
+import model from "../model";
+import {observer} from "mobx-react";
 
-class SideNav extends React.Component {
+export default observer(class SideNav extends React.Component {
   state = {}
 
-  constructor(props) {
-    console.log("constructed SideNav");
-    super(props);
-  }
-
   componentDidMount() {
-    getLibraryManager().then(manager => {
-      this.setState({
-        manager: manager,
-      });
-    });
+    model.library.refreshLibraries();
   }
 
   render() {
-    if (!this.state.manager) {
-      return <div></div>
-    }
-
     const links = [];
-    for (const libraryObj of Object.values(this.state.manager.libraries)) {
-      const library = libraryObj.library;
-
-      const selected = window.location.href.indexOf(library.libraryid) !== -1;
-      links.push(
-        <Link key={library.libraryid} 
-          className={selected ? "selected" : ""} 
-          to={"/library/" + library.libraryid}
-          onClick={() => {
-            setImmediate(() => {
-              this.forceUpdate();
-            });
-          }}
-          >{library.libraryname}</Link>
-      )
+    if (model.state.libraries) {
+      for (const library of Object.values(model.state.libraries)) {
+        const selected = window.location.href.indexOf("/" + library.id) !== -1;
+        links.push(
+          <Link key={library.id} 
+            className={selected ? "selected" : ""} 
+            to={"/library/" + library.id}
+            onClick={() => {
+              setImmediate(() => {
+                this.forceUpdate();
+              });
+            }}
+            >{library.name}</Link>
+        )
+      }
     }
 
     return (
@@ -52,6 +40,4 @@ class SideNav extends React.Component {
       </div>
     )
   }
-}
-
-export default SideNav;
+});

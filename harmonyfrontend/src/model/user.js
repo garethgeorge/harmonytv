@@ -23,7 +23,7 @@ export default {
     return res.data.user;
   },
 
-  updateResumeWatching: async (mediaid, position, total_duration) => {
+  refreshResumeWatchingList: async (mediaid, position, total_duration) => {
     const resp = await axios.post(config.apiHost + "/user/setPlaybackPosition", {
       position: position,
       total_duration: total_duration,
@@ -35,6 +35,18 @@ export default {
   // TODO: update this to be limited to the currently active library 
   refreshResumeWatchingList: async () => {
     const resp = await axios.get(config.apiHost + "/user/listResumeWatching");
-    model.state.resumeWatching = resp.resumeWatching;
+    const resumeWatching = model.state.resumeWatching;
+    for (const record of resp.data) {
+      resumeWatching[record.mediaid] = record;
+    }
   },
+
+  updateResumeWatching: async (mediaid, position, total_duration) => {
+    const resp = await axios.post(config.apiHost + "/user/setPlaybackPosition", {
+      position: position,
+      total_duration: total_duration,
+      mediaid: mediaid
+    });
+    return resp.data;
+  }
 }

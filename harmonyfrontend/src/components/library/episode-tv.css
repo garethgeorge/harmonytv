@@ -1,91 +1,62 @@
-@import url('https://fonts.googleapis.com/css?family=Roboto+Mono&display=swap');
-
-.libraryView > .seriesList {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
-}
-
-.show {
-    font-size: 1em;
-    padding: 10px;
-    margin: 5px;
-    width: 400px;
-    background-color: rgba(0,0,0,0.5);
-    text-decoration: none;
-}
-
-.show:hover {
-    background-color: rgba(15,15,15,0.5);
-    text-decoration: none;
-}
-
-.show > span {
-    font-size: 0.75em;
-    color: rgba(255,255,255,0.75);
-    width: 100%;
-}
-
-
 /* episode unwatched */
-.episode {
+.episode-tv {
     margin: 10px;
     color: white;
     background-color: rgba(0, 0, 0, 0.5);
 }
 
-.episode .inner {
+.episode-tv .inner {
     padding: 10px;
 }
 
-.episode a {
+.episode-tv a {
     text-decoration: none;
     background-color: none;
     color:rgb(200,200,200);
 }
 
-.episode a:hover {
+.episode-tv a:hover {
     text-decoration: none;
     background-color: none;
     color: rgb(255,255,255);
 }
 
-.episode span {
+.episode-tv span {
     color: rgba(200, 200, 200, 0.6);
     float: left;
     font-family: 'Roboto Mono', monospace;
     margin-right: 30px;
 }
 
-.episode input.btn-mark-played {
+.episode-tv input.btn-mark-played {
     float: right;
     background-color: rgb(155,150,150);
 }
 
 /* episode watched */
 
-.episode-watched {
+.episode-tv-watched {
     background-color: rgba(0, 0, 0, 0.7);
 }
 
-.episode-watched a {
+.episode-tv-watched a {
     color:rgb(100,100,100);
 }
 
-.episode-watched a:hover {
+.episode-tv-watched a:hover {
     text-decoration: none;
     background-color: none;
     color: rgb(150,150,150);
 }
 
-.episode-watched span {
+.episode-tv-watched span {
     color: rgba(180, 180, 180, 0.6);
     float: left;
     font-family: 'Roboto Mono', monospace;
     margin-right: 30px;
 }
 
-.episode-progress-bar {
+.episode-tv .episode-progress-bar {
     height: 2px;
     background-color: rgba(255,125,0,0.8);
 }

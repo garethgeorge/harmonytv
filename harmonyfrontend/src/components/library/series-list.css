@@ -1,0 +1,25 @@
+.seriesList {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+}
+
+.seriesList .show {
+    font-size: 1em;
+    padding: 10px;
+    margin: 5px;
+    width: 400px;
+    background-color: rgba(0,0,0,0.5);
+    text-decoration: none;
+}
+
+.seriesList .show:hover {
+    background-color: rgba(15,15,15,0.5);
+    text-decoration: none;
+}
+
+.seriesList .show span {
+    font-size: 0.75em;
+    color: rgba(255,255,255,0.75);
+    width: 100%;
+}

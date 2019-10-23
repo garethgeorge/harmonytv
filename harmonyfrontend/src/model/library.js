@@ -1,5 +1,6 @@
 import axios from "axios";
 import { action, extendObservable } from "mobx";
+import { computedFn } from "mobx-utils";
 import model from ".";
 import config from "../config";
 
@@ -13,12 +14,17 @@ class Library {
         return this._media;
       },
       get series() {
+        if (!this.media)
+          return null;
         const series = {};
         for (const mediaObj of this._media) {
           series[mediaObj.seriesname] = series[mediaObj.seriesname] || [];
           series[mediaObj.seriesname].push(mediaObj);
         }
         return series;
+      },
+      set media(media) {
+        this._media = media;
       }
     });
   }
@@ -28,29 +34,43 @@ class Library {
   }
 
   get id() {
-    return this._library.id;
+    return this._library.libraryid;
+  }
+
+  get type() {
+    return this._library.librarytype;
   }
 
   refreshMediaList() {
-    axios.get(config.apiHost + "/library/" + this.library.libraryid + "/getMedia")
-      .then(res => {
-        action((res) => {
-          this.media = res.data;
-        });
-      });
+    axios.get(config.apiHost + "/library/" + this._library.libraryid + "/getMedia")
+      .then(action(res => {
+        this.media = res.data;
+      }));
   }
 }
 
 export default {
+
+  findByName: computedFn((name) => {
+    if (name === null || !model.state.libraries) {
+      return null;
+    }
+    for (const library of Object.values(model.state.libraries)) {
+      if (library.name === name)
+        return library;
+    }
+    return null;
+  }),
+
   refreshLibraries: () => {
-    model.state.libraries = null;
     return axios.get(config.apiHost + "/library/getAll")
       .then(action((res) => {
         console.log("LibraryManager::refreshLibraries() - libraries list: ", JSON.stringify(res.data, false, 3));
-        model.state.libraries = {};
+        const newlibraries = {};
         for (const library of res.data) {
-          model.state.libraries[library.libraryid] = new Library(library);
+          newlibraries[library.libraryid] = new Library(library);
         }
+        model.state.libraries = newlibraries;
       }))
       .catch((err) => {
         console.log("ERROR FETCHING LIBRARIES");

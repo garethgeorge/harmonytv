@@ -1,6 +1,6 @@
 import React from "react";
 import config from "../config";
-import {getMediaInfo} from "../model/model";
+import model from "../model";
 import "./player.css";
 
 // load shaka, example from: https://github.com/amit08255/shaka-player-react-with-ui-config/blob/master/with-default-ui/src/components/VideoPlayer.js
@@ -76,7 +76,7 @@ class Player extends React.Component {
       return alert("attempted to playVideo(" + mediaid + ") before shakaPlayer was initialized (please wait for componentDidMount)");
     }
 
-    getMediaInfo(mediaid).then(media => {
+    model.media.getInfo(mediaid).then(media => {
       console.log("MEDIA INFO: " + JSON.stringify(media));
       
       const manifestUrl = config.apiHost + "/media/" + mediaid + "/files/stream.mpd";
@@ -112,7 +112,7 @@ class Player extends React.Component {
   render() {
     return (
       <div className="shakaContainer" data-shaka-player-container data-shaka-player-cast-receiver-id="07AEE832" ref={this.videoContainer}>
-        <video data-shaka-player autoplay playsinline ref={this.videoComponent}>
+        <video data-shaka-player autoPlay playsInline ref={this.videoComponent}>
         </video>
       </div>
     )

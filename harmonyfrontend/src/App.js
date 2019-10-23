@@ -1,38 +1,31 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
-// import SideNav from "./components/sidenav";
+import SideNav from "./components/sidenav";
 import "./App.css";
-import LibraryView from "./components/libraryview";
+import "./fonts.css";
+import LibraryRouter from "./views/library/libraryrouter";
 import LoginView from "./components/loginview";
 import model from "./model/";
 import {observer} from "mobx-react";
 
-// const Lobby = React.lazy(() => import("./components/lobbyview")); 
+const Lobby = React.lazy(() => import("./views/lobby/lobbyview")); 
 
-// const lobbyPage = (props) => {
-//   const lobbyid = props.match.params.lobbyid;
-//   return (
-//     <React.Suspense fallback={<div>Loading...</div>}>
-//       <Lobby lobbyid={lobbyid} />
-//     </React.Suspense>
-//   )
-// }
+const lobbyPage = (props) => {
+  const lobbyid = props.match.params.lobbyid;
+  return (
+    <React.Suspense fallback={<div>Loading...</div>}>
+      <Lobby lobbyid={lobbyid} />
+    </React.Suspense>
+  )
+}
 
 const App = observer(class App extends React.Component {
-  constructor(props) {
-    super(props);
-  }
-
   componentDidMount() {
     model.user.getCurrentUser(); 
   }
 
   render() {
-    const content = [];
-    for (let x = 0; x < 1000; ++x) {
-      content.push(<p>TEST</p>);
-    }
-
+    // block the view by rendering the login screen
     if (!model.state.user) {
       return (
         <div className="absolute-center-content">
@@ -41,13 +34,13 @@ const App = observer(class App extends React.Component {
       );
     }
     
-    return <h1>TEST TEST TEST</h1>
-
     return (
-      <Router basename="/web">
-        <Switch> {/* iterates its children and takes the first that matches */}
+      <Router basename="/">
+        <Switch> 
+          {/* iterates its children and takes the first that matches */}
           {/* <Route path={`/player/:mediaid`} component={playerPage} /> */}
-          {/* <Route path={`/lobby/:lobbyid`} component={lobbyPage} /> */}
+          <Route path={`/lobby/:lobbyid`} component={lobbyPage} />
+
           <Route path={`/`}>
             <div className="App">
               <div className="sidenav-container">
@@ -55,7 +48,7 @@ const App = observer(class App extends React.Component {
               </div>
               
               <div className="content-container">
-                <Route path={`/library/:libraryid`} component={LibraryView} />
+                <Route path={`/library/:libraryid`} component={LibraryRouter} />
               </div>
             </div>
           </Route>
