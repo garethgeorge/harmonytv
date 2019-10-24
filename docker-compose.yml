@@ -21,15 +21,16 @@ services:
       - DEBUG=model*,web*
     depends_on:
       - db
-    command: "./node_modules/nodemon/bin/nodemon.js bin/web.js"
+    restart: always 
+    command: "node bin/web.js"
     
-  webuiserver:
-    image: node:12
-    user: node 
-    working_dir: /app/harmonyfrontend/
-    volumes:
-      - ./harmonyfrontend:/app/harmonyfrontend/
-    command: "npm start"
+#  webuiserver:
+#    image: node:12
+#    user: node 
+#    working_dir: /app/harmonyfrontend/
+#    volumes:
+#      - ./harmonyfrontend:/app/harmonyfrontend/
+#    command: "npm start"
 
   web:
     image: nginx
@@ -44,7 +45,6 @@ services:
       - "80:80"
       - "443:443"
     depends_on:
-      - webuiserver 
       - apiserver 
 
   certbot:

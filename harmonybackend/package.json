@@ -19,6 +19,7 @@
     "express": "^4.17.1",
     "express-session": "^1.17.0",
     "fluent-ffmpeg": "^2.1.2",
+    "forever": "^1.0.0",
     "googleapis": "^43.0.0",
     "http-proxy": "^1.18.0",
     "lodash": "^4.17.15",

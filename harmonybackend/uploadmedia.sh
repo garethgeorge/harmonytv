@@ -7,4 +7,4 @@ while read path
 do 
 	echo $path;
 	node ./bin/cli-upload.js "TV Shows" "$path" | tee 
-done < <(node bin/cli-haveprocessed.js /mnt/gdrive/plex-data/TV/Silicon\ Valley/ tv)
+done < <(node bin/cli-haveprocessed.js /mnt/gdrive/plex-data/TV/Game\ of\ Thrones/ tv)
