@@ -35,7 +35,7 @@ export default observer(class SideNav extends React.Component {
           color: "grey",
           fontSize: "1.5em",
           padding: "15px",
-        }}>MyPlex</span>
+        }}>HarmonyTV</span>
         {links}
       </div>
     )
