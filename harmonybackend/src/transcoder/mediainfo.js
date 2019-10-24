@@ -1,7 +1,31 @@
+const sanatizeName = (name) => {
+  return name.split(" ").filter((segment) => {
+    if (segment.match(/.*(p|\[.*\])\.(mp4|mkv|flv|mov|webm|mkv\.original|mp4\.original|flv\.original)$/))
+      return false;
+    return true;
+  }).join(" ");
+}
+
+const extractResolution = (path) => {
+  // try a few things 
+  let match = null;
+  match = name.match(/\-(\d+)p/);
+  if (match)
+    return parseInt(match[1]);
+  match = name.match(/\[(\d+)x(\d+)\]/);
+  if (match)
+    return parseInt(match[1] * match[2]);
+  
+  return 0;
+}
+
 module.exports = {
-  // for TV libraries
+
   infoFromEpisodePath: (originPath) => {
-    const info = {};
+    const info = {
+      originPath: originPath,
+      qualityScore: extractQuality(originPath),
+    };
 
     const pathSegments = originPath.split("/").reverse();
 
@@ -23,17 +47,23 @@ module.exports = {
 
     const extensions = [".mp4", ".mkv"]
 
-    info.niceName = pathSegments[0].split(" ").filter((segment) => {
-      if (segment.match(/.*p\.(mp4|mkv|flv|mov|webm|mkv\.original|mp4\.original|flv\.original)$/))
-        return false;
-      if (segment.match(/.\[.*\]\.(mp4|mkv|flv|mov|webm|mkv\.original|mp4\.original|flv\.original)$/))
-        return false;
-      return true;
-    }).join(" ");
-
+    info.niceName = sanatizeName(pathSegments[0]);
     if (!info.niceName || !info.seasonNumber || !info.episodeNumber || !info.seriesName) {
       throw new Error("could not extract all episode information from path, info retrieved: " + JSON.stringify(info, false, 2));
     }
+    
+    return info;
+  },
+
+  infoFromMoviePath: (originPath) => {
+    const info = {
+      originPath: originPath,
+      qualityScore: extractQuality(originPath),
+    };
+
+    // the parent folder name is the name of the movie :P 
+    info.niceName = pathSegments[1];
+
     return info;
   }
 
