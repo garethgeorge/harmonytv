@@ -71,36 +71,31 @@ const mimetypes = {
       }));
       process.exit(1);
     }
-    const libraryId = library.libraryid;
     console.log("LIBRARY TYPE: " + library.librarytype);
 
-    let mediaName = null;
-    let seriesName = null;
-    let seasonNumber = null;
-    let episodeNumber = null;
+    let newMediaInfo = null;
 
+    const mediainfo = require("../src/transcoder/mediainfo");
     if (library.librarytype === "tv") {
-      const mediainfo = require("../src/transcoder/mediainfo");
-      const info = mediainfo.infoFromEpisodePath(args.originPath);
-      mediaName = info.niceName;
-      seriesName = info.seriesName;
-      seasonNumber = info.seasonNumber;
-      episodeNumber = info.episodeNumber;
+      newMediaInfo = mediainfo.infoFromEpisodePath(args.originPath);
+      console.log("PARSED PATH INFORMATION");
+      console.log("\tmedia name: " + newMediaInfo.niceName);
+      console.log("\tseries name: " + newMediaInfo.seriesName);
+      console.log("\tseason number: " + newMediaInfo.seasonNumber);
+      console.log("\tepisode number: " + newMediaInfo.episodeNumber);
+    } else if (library.librarytype === "movies") {
+      newMediaInfo = mediainfo.infoFromMoviePath(args.originPath);
+      console.log("PARSED PATH INFORMATION");
+      console.log("\tmedia name: " + newMediaInfo.niceName);
     } else 
-      throw new Error("no path parsing implemented for Movies at the moment");
+      throw new Error("no path parsing implemented for other library type: " + library.librarytype + " at the moment.");
     
-    console.log("PARSED PATH INFORMATION");
-    console.log("\tmedia name: " + mediaName);
-    console.log("\tseries name: " + seriesName);
-    console.log("\tseason number: " + seasonNumber);
-    console.log("\tepisode number: " + episodeNumber);
-
     /*
       optionally transcode if necessary
     */
     console.log("checking the originPath: " + args.originPath);
     if (!fs.lstatSync(args.originPath).isFile()) {
-      console.log("Fatal error: args.originalPath must be a file, transcoding is required");
+      console.log("Fatal error: args.originalPath must point to a valid file");
       return ;
     }
 
@@ -133,14 +128,24 @@ const mimetypes = {
 
     // creating a new media object
     const mediaId = uuidv4();
-    await client.query(pgformat(`
-      INSERT INTO media
-      (mediaId, libraryId, name, originPath, metadata, seriesName, seasonNumber, episodeNumber)
-      VALUES (%L, %L, %L, %L, %L, %L, %L, %L)
-    `, mediaId, libraryId, mediaName,
-       args.originPath, JSON.stringify(metadata),
-       seriesName, seasonNumber, episodeNumber)
-    );
+    if (library.librarytype === "tv") {
+      await client.query(pgformat(`
+        INSERT INTO media
+        (mediaId, libraryId, name, originPath, metadata, seriesName, seasonNumber, episodeNumber)
+        VALUES (%L, %L, %L, %L, %L, %L, %L, %L)
+      `, mediaId, library.libraryid, newMediaInfo.niceName,
+        args.originPath, JSON.stringify(metadata),
+        newMediaInfo.seriesName, newMediaInfo.seasonNumber, newMediaInfo.episodeNumber
+      ));
+    } else if (library.librarytype === "movies") {
+      await client.query(pgformat(`
+        INSERT INTO media
+        (mediaId, libraryId, name, originPath, metadata)
+        VALUES (%L, %L, %L, %L, %L)
+      `, mediaId, library.libraryid, newMediaInfo.niceName,
+        args.originPath, JSON.stringify(metadata)
+      ));
+    }
     
     console.log("inserted new media with id: " + mediaId);
 

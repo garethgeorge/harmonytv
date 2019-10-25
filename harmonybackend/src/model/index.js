@@ -58,7 +58,6 @@ exports.putStreamObject = async (mediaid, uploadDir, file, conn=null) => {
     throw new Error("mimetype not found for file " + path);
   }
 
-
   
   // retries for up to 100 seconds until it succeeds
   const encryptionKey = crypto.randomBytes(32).toString('hex');

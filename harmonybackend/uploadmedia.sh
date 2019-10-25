@@ -6,5 +6,5 @@ mkdir -p ./.upload-logs/
 while read path 
 do 
 	echo $path;
-	node ./bin/cli-upload.js "TV Shows" "$path" | tee 
-done < <(node bin/cli-haveprocessed.js /mnt/gdrive/plex-data/TV/Game\ of\ Thrones/ tv)
+	node ./bin/cli-upload.js "Movies" "$path" | tee 
+done < <(node bin/cli-haveprocessed-v2.js /mnt/gdrive/plex-data/Movies movies)
