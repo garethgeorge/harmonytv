@@ -176,8 +176,8 @@ module.exports = async (args) => {
     const calcBitrateForSize = (width, height) => {
       const baseMaxBitrate = 4000;
       const baseMaxBitrateFrameSize = 1920 * 1080;
-      const tmp = width * height / baseMaxBitrateFrameSize;
-      return Math.min(Math.round(baseMaxBitrate * tmp * tmp), 16000);
+      const resRatio = width * height / baseMaxBitrateFrameSize;
+      return Math.min(Math.round(baseMaxBitrate * resRatio), 16000);
     }
 
     // calculate an array of video sizes
@@ -187,14 +187,18 @@ module.exports = async (args) => {
       return height * videoStreamAspect;
     }
 
+    console.log("Original video stream width: " + videoStream.width + " height: " + videoStream.height + " aspect: " + videoStreamAspect);
+
     const sizes = [];
     // insert the minimum height stream 
     {
-      const videoMinHeight = Math.min(videoStream.height / 2, 480);
-      sizes.push({
-        height: videoMinHeight, 
-        bitrate: calcBitrateForSize(widthForHeight(videoMinHeight), videoMinHeight)
-      });
+      const videoMinHeight = 480; // always include a 480p stream 
+      if (videoMinHeight < videoStream.height * 0.8) {
+        sizes.push({
+          height: videoMinHeight, 
+          bitrate: calcBitrateForSize(widthForHeight(videoMinHeight), videoMinHeight)
+        });
+      }
     }
 
     // insert optional 1080p stream if video is greater than 1080p resolution
