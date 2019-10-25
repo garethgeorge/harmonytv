@@ -6,8 +6,6 @@ import {observer} from "mobx-react";
 import BreadCrumbs from "../../components/breadcrumbs";
 import model from "../../model";
 
-import "./libraryview.css";
-
 export default observer(() => {
   return (
     <div>

@@ -1,9 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import {action} from "mobx";
 import {observer} from "mobx-react";
 import Loading from "../../components/loading";
-import "./series-list.css";
+import "./library.css";
 
 export default observer(class SeriesList extends React.Component {
   componentDidMount() {
@@ -25,8 +24,10 @@ export default observer(class SeriesList extends React.Component {
     for (const seriesName of Object.keys(series)) {
       shows.push(
         <Link key={seriesName} className="show" to={"/library/" + this.props.library.id + "/series/" + encodeURIComponent(seriesName)} >
-          <div>{seriesName}</div>
-          <span>{series[seriesName].length} episodes</span>
+          <div className="inner">
+            <div>{seriesName}</div>
+            <span>{series[seriesName].length} episodes</span>
+          </div>
         </Link>
       );
     }

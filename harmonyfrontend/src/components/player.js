@@ -41,8 +41,9 @@ class Player extends React.Component {
 
     const player = new shaka.Player(video);
 
+    // read up on this for chrome cast: https://github.com/google/shaka-player/issues/1142
     // https://github.com/google/shaka-player/blob/d98543165cff6dc545eeaefcd660818d971cca33/demo/main.js#L91
-    const castProxy = new shaka.cast.CastProxy(video, player, "00A3C5E8");
+    // const castProxy = new shaka.cast.CastProxy(video, player, "00A3C5E8");
       
     const ui = new shaka.ui.Overlay(player, videoContainer, video);
     ui.configure({

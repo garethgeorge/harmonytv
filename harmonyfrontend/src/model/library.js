@@ -44,6 +44,9 @@ class Library {
   refreshMediaList() {
     axios.get(config.apiHost + "/library/" + this._library.libraryid + "/getMedia")
       .then(action(res => {
+        res.data.sort((a, b) => {
+          return (a > b) ? 1 : -1;
+        });
         this.media = res.data;
       }));
   }

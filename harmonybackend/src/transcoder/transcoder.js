@@ -173,35 +173,46 @@ module.exports = async (args) => {
     //   ]);
     
     console.log("generating dash manifest and video sequences");
-    const calcBitrateForSize = (size) => {
+    const calcBitrateForSize = (width, height) => {
       const baseMaxBitrate = 4000;
-      const baseMaxBitrateFrameSize = 1080;
-      if (size > baseMaxBitrateFrameSize) {
-        return Math.round(size / baseMaxBitrateFrameSize * baseMaxBitrate);
-      } else {
-        const tmp = size / baseMaxBitrateFrameSize;
-        return Math.round(baseMaxBitrate * tmp * tmp);
-      }
+      const baseMaxBitrateFrameSize = 1920 * 1080;
+      const tmp = width * height / baseMaxBitrateFrameSize;
+      return Math.min(Math.round(baseMaxBitrate * tmp * tmp), 16000);
     }
 
     // calculate an array of video sizes
-    const sizes = [
-      {
-        height: videoStream.height / 2, 
-        bitrate: calcBitrateForSize(videoStream.height / 2)
-      },
-      {
-        height: videoStream.height, 
-        bitrate: calcBitrateForSize(videoStream.height)
-      },
-    ];
+    const videoStreamAspect = videoStream.width / videoStream.height;
 
-    if (videoStream.height > 1080) {
+    const widthForHeight = (height) => {
+      return height * videoStreamAspect;
+    }
+
+    const sizes = [];
+    // insert the minimum height stream 
+    {
+      const videoMinHeight = Math.min(videoStream.height / 2, 480);
       sizes.push({
-        height: 1080, 
-        bitrate: calcBitrateForSize(1080)
+        height: videoMinHeight, 
+        bitrate: calcBitrateForSize(widthForHeight(videoMinHeight), videoMinHeight)
       });
     }
+
+    // insert optional 1080p stream if video is greater than 1080p resolution
+    {
+      if (videoStream.height > 1080) {
+        sizes.push({
+          height: 1080, 
+          bitrate: calcBitrateForSize(widthForHeight(1080), 1080)
+        });
+      }
+    }
+
+    // insert original resolution stream 
+    sizes.push({
+      height: videoStream.height,
+      bitrate: calcBitrateForSize(videoStream.height, videoStream.width)
+    },)
+
     sizes.sort((a, b) => {
       return a.height - b.height;
     });

@@ -1,5 +1,6 @@
 import React from "react";
 import SeriesList from "../../components/library/series-list";
+import MoviesList from "../../components/library/movies-list";
 
 import model from "../../model";
 import {autorun} from "mobx";
@@ -50,7 +51,11 @@ export default observer(class LibraryView extends React.Component {
           </div>
         );
       } else {
-        return <div>LIBRARY TYPE NOT IMPLEMENTED</div>
+        return (
+          <div className="libraryView">
+            <MoviesList library={library} />
+          </div>
+        )
       }
     }
   }
