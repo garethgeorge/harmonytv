@@ -15,10 +15,12 @@ export default observer(class Movie extends React.Component {
   render() {
     const movie = this.props.movie;
     const progress = model.state.resumeWatching[movie.mediaid];
+    if (progress)
+      console.log(progress.position);
 
     const completed = progress && progress.position > Math.max(progress.total_duration * 0.8, progress.total_duration - 5 * 60);
     const progressBar = (!completed && progress) ? (
-      <div className="episode-progress-bar" style={{width: (progress.position / progress.total_duration * 100.0) + '%' }}></div>
+      <div className="movie-progress-bar" style={{width: (progress.position / progress.total_duration * 100.0) + '%' }}></div>
     ) : null;
 
     return (

@@ -15,6 +15,7 @@ export default observer(class EpisodeTV extends React.Component {
   render() {
     const episode = this.props.episode;
     const progress = model.state.resumeWatching[this.props.episode.mediaid];
+    console.log(Object.keys(model.state.resumeWatching));
 
     const zeroPad = (num) => {
       const s = "00" + num;

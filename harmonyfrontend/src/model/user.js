@@ -23,16 +23,6 @@ export default {
     return res.data.user;
   },
 
-  refreshResumeWatchingList: async (mediaid, position, total_duration) => {
-    const resp = await axios.post(config.apiHost + "/user/setPlaybackPosition", {
-      position: position,
-      total_duration: total_duration,
-      mediaid: mediaid
-    });
-    return resp.data;
-  },
-
-  // TODO: update this to be limited to the currently active library 
   refreshResumeWatchingList: async () => {
     const resp = await axios.get(config.apiHost + "/user/listResumeWatching");
     const resumeWatching = model.state.resumeWatching;
