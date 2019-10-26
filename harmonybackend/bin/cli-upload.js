@@ -126,6 +126,9 @@ const mimetypes = {
     */
     await client.query("BEGIN");
 
+    // get the sizes of all the files
+    // TODO: use a fsutil here that can be tested independently :P 
+
     // creating a new media object
     const mediaId = uuidv4();
     if (library.librarytype === "tv") {

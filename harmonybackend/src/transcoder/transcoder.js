@@ -26,7 +26,9 @@ const extractSubtitleStream = async (sourcefn, streamno, outputSubsFile) => {
 
 const waitForFFmpeg = (proc) => {
   return new Promise((accept, reject) => {
-    const bar = new cliprogress.SingleBar({}, cliprogress.Presets.legacy);
+    const bar = new cliprogress.SingleBar({
+      etaBuffer: 100,
+    }, cliprogress.Presets.legacy);
     proc.on('start', function(commandLine) {
       console.log('Spawned ffmpeg with command: ' + commandLine);
       bar.start(100, 0);
@@ -184,7 +186,7 @@ module.exports = async (args) => {
     const videoStreamAspect = videoStream.width / videoStream.height;
 
     const widthForHeight = (height) => {
-      return height * videoStreamAspect;
+      return Math.round(height * videoStreamAspect);
     }
 
     console.log("Original video stream width: " + videoStream.width + " height: " + videoStream.height + " aspect: " + videoStreamAspect);
@@ -196,6 +198,7 @@ module.exports = async (args) => {
       if (videoMinHeight < videoStream.height * 0.8) {
         sizes.push({
           height: videoMinHeight, 
+          width: widthForHeight(videoMinHeight),
           bitrate: calcBitrateForSize(widthForHeight(videoMinHeight), videoMinHeight)
         });
       }
@@ -206,6 +209,7 @@ module.exports = async (args) => {
       if (videoStream.height > 1080) {
         sizes.push({
           height: 1080, 
+          width: widthForHeight(1080),
           bitrate: calcBitrateForSize(widthForHeight(1080), 1080)
         });
       }
@@ -214,6 +218,7 @@ module.exports = async (args) => {
     // insert original resolution stream 
     sizes.push({
       height: videoStream.height,
+      width: videoStream.width,
       bitrate: calcBitrateForSize(videoStream.height, videoStream.width)
     },)
 
@@ -250,11 +255,15 @@ module.exports = async (args) => {
     for (const size of sizes) {
       let index = sizes.indexOf(size);
 
+      const bitrate = size.bitrate;
+
       proc
         .outputOptions([
           `-filter_complex [0]format=pix_fmts=yuv420p[temp${index}];[temp${index}]scale=-2:${size.height}[A${index}]`,
           `-map [A${index}]:v`,
-          `-b:v:${index} ${size.bitrate}k`,
+          `-crf 24`,
+          `-maxrate ${bitrate}k`,
+          `-bufsize ${bitrate * 2}k`
         ]);
     }
 
