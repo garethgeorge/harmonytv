@@ -11,3 +11,5 @@ module.exports.getMediaInfo = async (mediaid, conn=null) => {
     return null;
   return res.rows[0];
 }
+
+module.exports.getStreamObject

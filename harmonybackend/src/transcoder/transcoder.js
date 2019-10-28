@@ -52,7 +52,7 @@ const waitForFFmpeg = (proc) => {
 }
 
 // NOTE: can only be one 'preprocess' process at a time :P
-rimraf.sync(path.join(os.tmpdir(), "/plex_preprocess/"));
+// rimraf.sync(path.join(os.tmpdir(), "/plex_preprocess/"));
 
 module.exports = async (args) => {
   args = Object.assign({}, args);
@@ -176,7 +176,7 @@ module.exports = async (args) => {
     
     console.log("generating dash manifest and video sequences");
     const calcBitrateForSize = (width, height) => {
-      const baseMaxBitrate = 4000;
+      const baseMaxBitrate = 6000;
       const baseMaxBitrateFrameSize = 1920 * 1080;
       const resRatio = width * height / baseMaxBitrateFrameSize;
       return Math.min(Math.round(baseMaxBitrate * resRatio), 16000);

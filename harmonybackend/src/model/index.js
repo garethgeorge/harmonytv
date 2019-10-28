@@ -62,16 +62,21 @@ exports.putStreamObject = async (mediaid, uploadDir, file, conn=null) => {
   // retries for up to 100 seconds until it succeeds
   const encryptionKey = crypto.randomBytes(32).toString('hex');
   let blockId = null;
-  for (let i = 0; i < 10; ++i) {
+  let retry_time = 2;
+  while (true) {
     try {
       const objectStream = fs.createReadStream(path.join(uploadDir, file));
       blockId = await mediaStore.putBlock(objectStream, mimetype, encryptionKey);
       break ;
     } catch (e) {
-      console.log(`putStreamObject(${mediaid}, ${file}, ...) encountered an error: ${e}, retrying ${i}`);
+      if (retry_time > 15 * 60) {
+        throw e;
+      }
+      console.log(`putStreamObject(${mediaid}, ${file}, ...) encountered an error: ${e}, retrying in ${retry_time} seconds`);
       await new Promise((accept, reject) => {
-        setTimeout(accept, 10 * 1000);
+        setTimeout(accept, retry_time);
       });
+      retry_time *= 2;
     }
   }
   
