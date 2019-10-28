@@ -9,6 +9,8 @@ const cliprogress = require('cli-progress');
 const mkdirpsync = require('mkdirpsync');
 const uuidv4 = require('uuid/v4');
 const rimraf = require('rimraf');
+const fsutil = require('../util/fsutil');
+const prettyBytes = require('pretty-bytes');
 
 
 // a helper function to extract a subtitle stream
@@ -63,6 +65,13 @@ module.exports = async (args) => {
   console.log("working directory: " + tmpDir);
   mkdirpsync(tmpDir);
 
+  process.on('SIGINT', function() {
+    console.log("cleaning up after ourselves.");
+    try {
+      rimraf.sync(tmpDir);
+    } catch (e) { };
+  });
+
   try {
     /*
       analyze the video file
@@ -71,9 +80,15 @@ module.exports = async (args) => {
     console.log(JSON.stringify(mediaInfo, false, 2));
 
     const metadata = {
-      fallback: null,
+      transcoder_version: "0.1.0",
       dashStream: "stream.mpd",
+      hlsStream: "master.m3u8",
       subtitles: {},
+      capabilities: [
+        "dash",
+        "hls",
+        "subtitles",
+      ]
     };
 
     // scan for subtitles
@@ -146,7 +161,6 @@ module.exports = async (args) => {
     });
     
     // console.log("setting up fallback.mp4 generation");
-
     // proc
     //   .output(path.join(tmpDir, `fallback.mp4`))
     //   .format('mp4')
@@ -173,7 +187,11 @@ module.exports = async (args) => {
     //     }).length,
     //     '-b:a 196k',
     //   ]);
-    
+  
+    /*
+      calculate thes sizes and bitrates for this video 
+    */
+
     console.log("generating dash manifest and video sequences");
     const calcBitrateForSize = (width, height) => {
       const baseMaxBitrate = 6000;
@@ -192,7 +210,6 @@ module.exports = async (args) => {
     console.log("Original video stream width: " + videoStream.width + " height: " + videoStream.height + " aspect: " + videoStreamAspect);
 
     const sizes = [];
-    // insert the minimum height stream 
     {
       const videoMinHeight = 480; // always include a 480p stream 
       if (videoMinHeight < videoStream.height * 0.8) {
@@ -246,10 +263,10 @@ module.exports = async (args) => {
         '-use_timeline 1',
         '-b_strategy 0',
         '-bf 1',
-        '-map 0:a:' + _.filter(mediaInfo.streams, (stream) => {
-          return stream.index < audioStreamIdx && stream.codec_type === "audio"
-        }).length,
+        '-map 0:a',
         '-b:a 196k',
+        '-hls_playlist 1',
+        // '-seg_duration 10',
       ]);
 
     for (const size of sizes) {
@@ -261,13 +278,25 @@ module.exports = async (args) => {
         .outputOptions([
           `-filter_complex [0]format=pix_fmts=yuv420p[temp${index}];[temp${index}]scale=-2:${size.height}[A${index}]`,
           `-map [A${index}]:v`,
-          `-crf 24`,
+          `-crf 23`,
           `-maxrate ${bitrate}k`,
           `-bufsize ${bitrate * 2}k`
         ]);
     }
 
     await waitForFFmpeg(proc);
+
+    // compute the size of the output files 
+    {
+      const files = fsutil.dirtree(tmpDir);
+      metadata.stream_size_bytes = 0;
+
+      for (const filepath of files) {
+        metadata.stream_size_bytes += fs.statSync(filepath).size;
+      }
+
+      console.log(`transcoding complete, stream is ${prettyBytes(metadata.stream_size_bytes)} MB`);
+    }
 
     try {
       rimraf(args.outputdir);

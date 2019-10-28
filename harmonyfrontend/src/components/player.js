@@ -35,9 +35,17 @@ class Player extends React.Component {
   }
 
   componentDidMount() {
-    //Getting reference to video and video container on DOM
+   
     const video = this.videoComponent.current;
+    this.videoElem = video;
     const videoContainer = this.videoContainer.current;
+
+    //Getting reference to video and video container on DOM
+    if (!shaka.Player.isBrowserSupported()) {
+      this.videoElem = this.videoComponent.current;
+      return
+    }
+
 
     const player = new shaka.Player(video);
 
@@ -64,8 +72,6 @@ class Player extends React.Component {
     // }, 10000);
 
     player.addEventListener('error', this.onErrorEvent);
-
-    this.videoElem = video;
     this.shakaUi = ui;
     this.shakaPlayer = player;
   }
@@ -73,14 +79,16 @@ class Player extends React.Component {
   playVideo(mediaid, callback=null) {
     console.log("Player::playVideo(" + mediaid + ")");
 
-    if (!this.shakaPlayer) {
-      return alert("attempted to playVideo(" + mediaid + ") before shakaPlayer was initialized (please wait for componentDidMount)");
-    }
-
     model.media.getInfo(mediaid).then(media => {
       console.log("MEDIA INFO: " + JSON.stringify(media));
       
-      const manifestUrl = config.apiHost + "/media/" + mediaid + "/files/stream.mpd";
+      if (!this.shakaPlayer) {
+        alert("updated video component's src to use hls playback fallback");
+        this.videoComponent.current.src = config.apiHost + "/media/" + mediaid + "/files/" + media.metadata.hlsStream;
+        return 
+      }
+
+      const manifestUrl = config.apiHost + "/media/" + mediaid + "/files/" + media.metadata.dashStream;
 
       const player = this.shakaPlayer;
 
@@ -113,8 +121,8 @@ class Player extends React.Component {
   render() {
     return (
       <div className="shakaContainer" data-shaka-player-container data-shaka-player-cast-receiver-id="07AEE832" ref={this.videoContainer}>
-        <video data-shaka-player autoPlay playsInline ref={this.videoComponent}>
-        </video>
+        <video data-shaka-player autoPlay playsInline controls
+          ref={this.videoComponent} />
       </div>
     )
   }

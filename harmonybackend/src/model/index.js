@@ -47,7 +47,9 @@ const mimetypes = {
   ".mpd": "application/dash+xml",
   ".m4s": "video/iso.segment",
   ".vtt": "text/vtt",
+  ".m3u8": "application/x-mpegURL", 
 };
+exports.mimetypes = mimetypes;
 
 exports.putStreamObject = async (mediaid, uploadDir, file, conn=null) => {
   if (!conn)

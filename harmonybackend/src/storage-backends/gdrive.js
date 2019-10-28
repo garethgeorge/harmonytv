@@ -170,6 +170,31 @@ class GDriveBlockStore {
       });
     });
   }
+
+  async *listAllBlocks() {
+    let nextPageToken = null;
+    do {
+      const files = await new Promise((accept, reject) => {
+        this.gapi.files.list({
+          q: "'" + this.gdriveBlockFolderId + "' in parents and trashed = false",
+          fields: 'nextPageToken, files(id, mimeType)',
+          spaces: 'drive',
+          pageSize: 512,
+          pageToken: nextPageToken
+        }, (err, res) => {
+          if (err)
+            return reject(err);
+
+          nextPageToken = res.data.nextPageToken;
+          accept(res.data.files);
+        });
+      });
+      for (const file of files) {
+        yield file;
+      }
+    } while (!!nextPageToken)
+  }
+  
   
   putManifest(key, contents) {
     return this.putNamedFileStream(key, StringStreamReadable(contents));
@@ -257,7 +282,7 @@ class GDriveBlockStore {
   }
 
   /*
-    helpers 
+    helpers - not really used beyond google drive api
   */
   async getMetadata(id, fields=null) {
     if (fields === null) 

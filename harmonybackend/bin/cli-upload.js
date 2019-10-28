@@ -38,12 +38,7 @@ const args = parser.parseArgs();
 args.originPath = path.resolve(args.originPath);
 
 // mimetypes
-const mimetypes = {
-  ".mp4": "video/mp4",
-  ".mpd": "application/dash+xml",
-  ".m4s": "video/iso.segment",
-  ".vtt": "text/vtt",
-};
+const mimetypes = model.mimetypes;
 
 (async () => {
   // const series = await tvdb.getSeriesByName('Breaking Bad');
@@ -160,6 +155,7 @@ const mimetypes = {
           const mimetype = mimetypes[path.extname(file)];
           if (!mimetype) {
             console.log("\tskipping file " + file + " mimetype not recognized");
+            callback(new Error("\tskipping file " + file + " mimetype not recognized"));
             return ;
           }
 

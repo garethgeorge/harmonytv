@@ -15,8 +15,6 @@ export default observer(class Movie extends React.Component {
   render() {
     const movie = this.props.movie;
     const progress = model.state.resumeWatching[movie.mediaid];
-    if (progress)
-      console.log(progress.position);
 
     const completed = progress && progress.position > Math.max(progress.total_duration * 0.8, progress.total_duration - 5 * 60);
     const progressBar = (!completed && progress) ? (
@@ -25,7 +23,7 @@ export default observer(class Movie extends React.Component {
 
     return (
       <div>
-        <div className={completed ? "movie" : "movie"} key={movie.mediaid}>
+        <div className={completed ? "movie movie-watched" : "movie"} key={movie.mediaid}>
           <div className="inner">
             <a href="#" onClick={this.onClick.bind(this)}>
               {movie.name}
