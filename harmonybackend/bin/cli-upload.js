@@ -38,7 +38,6 @@ const args = parser.parseArgs();
 args.originPath = path.resolve(args.originPath);
 
 // mimetypes
-const mimetypes = model.mimetypes;
 
 (async () => {
   // const series = await tvdb.getSeriesByName('Breaking Bad');
@@ -152,7 +151,7 @@ const mimetypes = model.mimetypes;
     const uploadQueue = async.queue((file, callback) => {
       (async () => {
         try {
-          const mimetype = mimetypes[path.extname(file)];
+          const mimetype = model.media.mimetypes[path.extname(file)];
           if (!mimetype) {
             console.log("\tskipping file " + file + " mimetype not recognized");
             callback(new Error("\tskipping file " + file + " mimetype not recognized"));
@@ -160,7 +159,7 @@ const mimetypes = model.mimetypes;
           }
 
           console.log(`uploading file ${file} with mimetype ${mimetype}`);
-          const blockId = await model.putStreamObject(mediaId, uploadDir, file, client);
+          const blockId = await model.media.putStreamObject(mediaId, uploadDir, file, client);
           callback();
         } catch (e) {
           console.log(`UPLOAD ENCOUNTERED ERROR ON FILE: ${file}, error: ${e}`);

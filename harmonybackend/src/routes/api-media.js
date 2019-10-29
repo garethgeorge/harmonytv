@@ -20,7 +20,7 @@ route.get("/:mediaid/files/:path", async (req, res) => {
   const path = req.params.path;
 
   debug(`fetching media object ${mediaId} ${path}`);
-  const mediaObjId = await model.getStreamObjectIdFromPath(mediaId, path);
+  const mediaObjId = await model.media.mediaObjectIdByPath(mediaId, path);
 
   if (!mediaObjId) {
     debug("\tobject not found");
@@ -45,7 +45,7 @@ route.get("/:mediaid/files/:path", async (req, res) => {
     debug("should try to only fetch range: ", range, " OPERATION NOT YET SUPPORTED");
   }
 
-  const obj = await model.getStreamObject(mediaId, mediaObjId);
+  const obj = await model.media.getStreamObject(mediaId, mediaObjId);
   res.setHeader("Content-Type", obj.mimetype);
   obj.stream.pipe(res);
 });

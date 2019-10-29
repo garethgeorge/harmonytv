@@ -13,16 +13,6 @@ const SCOPES = config.gdrive.scopes;
 const TOKEN_PATH = config.gdrive.tokenPath;
 const credentials = config.gdrive.credentials;
 
-// iv used for encryption, this is just a hard coded initialization vector
-// the client provided key is where the real security comes from 
-const cryptIv = Buffer.from([
-  216, 136, 140, 214, 
-  185, 212, 139, 199, 
-  47, 99, 229, 205, 
-  22, 50, 75, 230, 
-]);
-const cryptKey = crypto.createHash('sha256').update(config.gdrive.encryptionKey).digest().slice(0, 32);
-
 async function authenticate(credentials) {
   const {client_secret, client_id, redirect_uris} = credentials.installed;
   const oAuth2Client = new google.auth.OAuth2(
@@ -74,40 +64,15 @@ async function getAuthenticationToken(credentials) {
 
 // NOTE: this is all legacy code from plexfs
 class GDriveBlockStore {
-  constructor(drive) {
+  constructor(drive, rootFolderId) {
     this.gapi = drive;
-    this.gdriveRootFolderId = null; // the ID of the top level folder below which all data is stored
-    this.gdriveManifestFiles = {}; // cache of the file name / id mappings of objects in the top level folder
-  }
-
-  async setGdriveRootFolderId(gdriveRootFolderId) {
-    console.log("setting google drive root folder to: " + gdriveRootFolderId);
-
-    let nextPageToken = null;
-    
-    this.gdriveRootFolderId = gdriveRootFolderId;
-    this.gdriveManifestFiles = await this.getFilesInFolder(gdriveRootFolderId);
-
-    if (this.gdriveManifestFiles["blocks"] == undefined) {
-      this.gdriveBlockFolderId = await this.createFolderInFolder(this.gdriveRootFolderId, "blocks");
-      this.gdriveManifestFiles = await this.getFilesInFolder(gdriveRootFolderId);
-    } else {
-      this.gdriveBlockFolderId = this.gdriveManifestFiles["blocks"].id;
-    }
-
-    console.log("BLOCK FOLDER ID: " + this.gdriveBlockFolderId);
-    console.log("MANIFEST FILES: ", Object.values(this.gdriveManifestFiles).map((obj) => obj.name).join(", "));
+    this.rootFolderId = rootFolderId;
   }
 
   /* 
     block store api
   */
   getBlock(blockId, encryptionKey=null) {
-    if (encryptionKey == null) {
-      encryptionKey = cryptKey;
-    } else 
-      encryptionKey = crypto.createHash('sha256').update(encryptionKey).digest().slice(0, 32);
-
     return new Promise((accept, reject) => {
       this.gapi.files.get({
         fileId: blockId,
@@ -115,15 +80,11 @@ class GDriveBlockStore {
       }, {
         responseType: 'stream'
       }, (err, res) => {
-        if (err) {
+        if (err)
           return reject(err);
-        }
-        // decrypt the block and return it 
-        const resultStream = crypto.createDecipheriv('aes-256-ctr', encryptionKey, cryptIv);
-        res.data.pipe(resultStream);
-
+        
         accept({
-          stream: resultStream,
+          stream: res.data,
           mimetype: res.headers["content-type"],
           length: parseInt(res.headers['content-length']),
         });
@@ -131,21 +92,12 @@ class GDriveBlockStore {
     });
   }
 
-  putBlock(srcPipe, mimetype=null, encryptionKey=null) { // returns the block's id
-    // encrypt the block 
-    if (encryptionKey == null) {
-      encryptionKey = cryptKey;
-    } else 
-      encryptionKey = crypto.createHash('sha256').update(encryptionKey).digest().slice(0, 32);
-
-    const sourceStream = crypto.createCipheriv('aes-256-ctr', encryptionKey, cryptIv);
-    srcPipe.pipe(sourceStream);
-
+  putBlock(srcPipe, mimetype) { // returns the block's id
     return new Promise((accept, reject) => {
       this.gapi.files.create({
         resource: {
           name: uuidv4(), // the name doesn't actually matter it should not be used to retrieve the file but can 
-          parents: [this.gdriveBlockFolderId],
+          parents: [this.rootFolderId],
           mimeType: mimetype || "application/octet-stream",
         },
         media: {
@@ -170,7 +122,7 @@ class GDriveBlockStore {
       });
     });
   }
-
+  
   async *listAllBlocks() {
     let nextPageToken = null;
     do {
@@ -195,94 +147,9 @@ class GDriveBlockStore {
     } while (!!nextPageToken)
   }
   
-  
-  putManifest(key, contents) {
-    return this.putNamedFileStream(key, StringStreamReadable(contents));
-  }
-  
-  putManifestStream(key, stream) {
-    // encrypt the block 
-    const cryptStream = crypto.createCipheriv('aes-256-ctr', cryptKey, cryptIv);
-    stream.pipe(cryptStream);
-    stream = cryptStream;
-
-    return new Promise((accept, reject) => {
-      const callback = (err, res) => {
-        if (err)
-          return reject(err);
-
-        // update the root folder object mapping 
-        this.gdriveManifestFiles[key] = {
-          id: res.data.id,
-          name: key,
-        };
-
-        accept(res.data.id);
-      };
-
-      // NOTE: if it already exists we should update it instead
-      if (!!(this.gdriveManifestFiles[key])) {
-        this.gapi.files.update({
-          fileId: this.gdriveManifestFiles[key].id,
-          media: {
-            body: stream
-          },
-          fields: 'id',
-        }, callback);
-      } else {
-        this.gapi.files.create({
-          resource: {
-            name: key, // the name doesn't actually matter as it should not be used to retrieve the file but can be
-            parents: [this.gdriveRootFolderId],
-            mimeType: "application/octet-stream",
-          },
-          media: {
-            body: stream
-          },
-          fields: 'id',
-        }, callback);
-      }
-    });
-  }
-
-  // returns a string 
-  getManifest(key, contents) {
-    if (!this.gdriveManifestFiles[key]) {
-      const error = new Error("file not found '" + key + "'");
-      error.code = 404;
-      throw error;
-    }
-
-    return new Promise((accept, reject) => {
-      this.gapi.files.get({
-        fileId: this.gdriveManifestFiles[key].id,
-        alt: 'media',
-      }, {
-        responseType: 'stream'
-      }, (err, res) => {
-        if (err)
-          return reject(err);
-
-        // decrypt the stream
-        const resultStream = crypto.createDecipheriv('aes-256-ctr', cryptKey, cryptIv);
-        res.data.pipe(resultStream);
-        res.data = resultStream;
-
-        // pipe it to a string 
-        res.data.on('end', function () {
-          accept(null);
-        })
-        .on('error', function (err) {
-          reject(err);
-        })
-          .pipe()
-          .pipe(StreamStringWriter(accept));
-      });
-    });
-  }
-
   /*
-    helpers - not really used beyond google drive api
+    the below functions are google drive specific and are, therefore,
+    not used in the application at the moment 
   */
   async getMetadata(id, fields=null) {
     if (fields === null) 
@@ -345,8 +212,8 @@ class GDriveBlockStore {
   }
 };
 
-module.exports = async () => {
+module.exports = async (rootFolderId) => {
   const oAuth2Client = await authenticate(credentials);
   const drive = google.drive({version: 'v3', auth: oAuth2Client});
-  return new GDriveBlockStore(drive);
+  return new GDriveBlockStore(drive, rootFolderId);
 }

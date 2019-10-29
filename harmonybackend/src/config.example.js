@@ -15,6 +15,8 @@ module.exports = {
   inMemoryObjectCacheSize: 4000 * 1000 * 1000, // 1 GB in bytes
   inMemoryObjectCacheDuration: 3600, // keep it for an hour
 
+  baseEncryptionKey: "<your encryption key>", // NOTE: in recent versions this isn't acutally used, rather each file is encrypted with its own key
+
   // gets combined with object id's to generate unique encryption keys for 
   // media objects and other files, changing this will corrupt all stored data
   pg: {
