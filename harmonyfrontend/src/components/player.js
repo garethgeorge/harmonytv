@@ -41,8 +41,9 @@ class Player extends React.Component {
     const videoContainer = this.videoContainer.current;
 
     //Getting reference to video and video container on DOM
-    if (!shaka.Player.isBrowserSupported()) {
+    if (!this.isDashSupported()) {
       this.videoElem = this.videoComponent.current;
+      this.videoElem.controls = true;
       return
     }
 
@@ -83,7 +84,6 @@ class Player extends React.Component {
       console.log("MEDIA INFO: " + JSON.stringify(media));
       
       if (!this.shakaPlayer) {
-        alert("updated video component's src to use hls playback fallback");
         this.videoComponent.current.src = config.apiHost + "/media/" + mediaid + "/files/" + media.metadata.hlsStream;
         return 
       }
@@ -121,7 +121,7 @@ class Player extends React.Component {
   render() {
     return (
       <div className="shakaContainer" data-shaka-player-container data-shaka-player-cast-receiver-id="07AEE832" ref={this.videoContainer}>
-        <video data-shaka-player autoPlay playsInline controls
+        <video data-shaka-player autoPlay playsInline
           ref={this.videoComponent} />
       </div>
     )

@@ -7,19 +7,29 @@ const async = require("async");
 (async () => {
   await model.setup();
 
-  let count = 0;
-
-  const queue = async.queue((file, callback) => {
-    model.mediaStore.rmBlock
-  });
+  const queue = async.queue((blockid, callback) => {
+    model.mediaStore.rmBlock(blockid)
+      .then(() => {
+        console.log("\tremoved blockid: " + blockid);
+        callback()
+      })
+      .catch((e) => {
+        console.error("error on removing block: " + blockid + " e: " + e);
+        callback();
+      });
+  }, 4);
 
   for await (let blockInfo of model.mediaStore.listAllBlocks()) {
     const blockid = blockInfo.id;
     const res = await model.media.objectGetParentMedia(blockInfo.id);
     console.log(blockid + ":", res);
-    if (!res) {
-      await model.mediaStore.rmBlock(blockid);
-      console.log("\tremoved block");
+    
+    if (res === null) {
+      queue.push(blockid);
+    }
+
+    if (queue.length() > 128) {
+      await queue.drain();
     }
   }
 })();

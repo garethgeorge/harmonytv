@@ -266,7 +266,7 @@ module.exports = async (args) => {
         '-map 0:a',
         '-b:a 196k',
         '-hls_playlist 1',
-        // '-seg_duration 10',
+        '-seg_duration 10',
       ]);
 
     for (const size of sizes) {
@@ -278,7 +278,7 @@ module.exports = async (args) => {
         .outputOptions([
           `-filter_complex [0]format=pix_fmts=yuv420p[temp${index}];[temp${index}]scale=-2:${size.height}[A${index}]`,
           `-map [A${index}]:v`,
-          `-crf 23`,
+          `-crf 24`,
           `-maxrate ${bitrate}k`,
           `-bufsize ${bitrate * 2}k`
         ]);
