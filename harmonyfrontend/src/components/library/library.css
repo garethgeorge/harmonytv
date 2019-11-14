@@ -9,12 +9,18 @@
     font-size: 1em;
     margin: 5px;
     width: 400px;
-    background-color: rgba(0,0,0,0.5);
     text-decoration: none;
+}
+
+.seriesList .show {
+    background-color: rgba(0,0,0,0.5);
 }
 
 .seriesList .show .inner, .moviesList .movie .inner {
     padding: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .seriesList .show:hover, .moviesList .movie:hover {
@@ -70,7 +76,7 @@
 }
 
 .episode-tv-watched a, .movie-watched a {
-    color:rgb(100,100,100);
+    color: rgb(100,100,100);
 }
 
 .episode-tv-watched a:hover, .movie-watched a:hover {

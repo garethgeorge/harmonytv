@@ -43,7 +43,7 @@ const waitForFFmpeg = (proc) => {
         bar.stop();
         accept();
       })
-      // .on("stderr", console.log)
+      .on("stderr", console.log)
       // .on("stdout", console.log)
       .on('error', (err) => {
         bar.stop();
@@ -127,18 +127,11 @@ module.exports = async (args) => {
     }
 
     // select the audio stream to keep 
-    let audioStreamIdx = -1;
     let videoStreamIdx = -1;
     for (const stream of mediaInfo.streams) {
       if (stream.codec_type === "video") {
         videoStreamIdx = stream.index;
-      } else if (stream.codec_type === "audio") {
-        if (stream.tags.language.toLowerCase() === "und" && audioStreamIdx === -1) {
-          audioStreamIdx = stream.index;
-        } else if (stream.tags.language.toLowerCase() === "eng") {
-          audioStreamIdx = stream.index;
-        }
-      }
+      } 
     }
 
     const videoStream = mediaInfo.streams[videoStreamIdx];
@@ -153,7 +146,7 @@ module.exports = async (args) => {
       console.log("Image subtitles at index: " + imageSubtitlesIdx + ", at somepoint we need to decide how to handle these.");
     }
     
-    console.log("using video at stream #" + videoStreamIdx + " and audio at stream #" + audioStreamIdx);
+    console.log("using video at stream #" + videoStreamIdx + ".");
 
     const proc = ffmpeg({
       source: args.filename,
@@ -267,6 +260,7 @@ module.exports = async (args) => {
         '-b:a 196k',
         '-hls_playlist 1',
         '-seg_duration 10',
+        '-max_muxing_queue_size 1024', // fixes a bug with some files
       ]);
 
     for (const size of sizes) {

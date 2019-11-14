@@ -1,4 +1,5 @@
 const crypto = require("crypto");
+const debug = require("debug")("storage-backend:crypt");
 
 /*
   encryption iv is hard coded -- this is fine b/c we use a unique encryption key
@@ -17,7 +18,12 @@ class CryptBackend {
   }
 
   listAllBlocks() {
+    debug("CryptBackend:listAllBlocks() -- listing all blocks");
     return this.base.listAllBlocks();
+  }
+
+  rmBlock(blockId) {
+    return this.base.rmBlock(blockId);
   }
 
   putBlock(srcPipe, mimetype, encryptionKey) {

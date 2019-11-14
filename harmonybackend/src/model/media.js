@@ -1,9 +1,10 @@
 const pgformat = require('pg-format');
+const path = require("path");
+const fs = require("fs");
 const pool = require("./db");
 const debug = require("debug")("model:media");
 const config = require("../config");
 const crypto = require("crypto");
-const LRU = require('lru-cache');
 const AsyncLock = require('async-lock');
 const StreamCache = require('stream-cache');
 
@@ -48,6 +49,7 @@ const mimetypes = {
   ".m4s": "video/iso.segment",
   ".vtt": "text/vtt",
   ".m3u8": "application/x-mpegURL", 
+  ".js": "application/javascript",
 };
 exports.mimetypes = mimetypes;
 exports.putStreamObject = async (mediaid, uploadDir, file, conn=null) => {
@@ -61,7 +63,7 @@ exports.putStreamObject = async (mediaid, uploadDir, file, conn=null) => {
 
   
   // retries for up to 100 seconds until it succeeds
-  const encryptionKey = crypto.randomBytes(32).toString('base16');
+  const encryptionKey = crypto.randomBytes(32).toString('hex');
 
   let blockId = null;
   let retry_time = 2;
@@ -95,13 +97,42 @@ exports.putStreamObject = async (mediaid, uploadDir, file, conn=null) => {
 /*
   fetches object from the media store with 'mediaid' and 'objectid'
 */
-const objectCache = new LRU({
-  max: config.inMemoryObjectCacheSize, // 64 megabyte in memory object cache
-  maxAge: 1000 * config.inMemoryObjectCacheDuration,
-  length: (obj) => {
-    return obj.length;
+class Cache {
+  constructor(timeout) {
+    this.cache = {};
+    this.timeout = timeout; 
   }
-});
+
+  set(key, value) {
+    if (this.cache[key]) 
+      clearTimeout(this.cache[key].timeout);
+
+    this.cache[key] = {
+      timeout: setTimeout(() => {
+        delete this.cache[key];
+      }, this.timeout),
+      value: value,
+    }
+  }
+
+  get(key) {
+    if (!this.cache[key])
+      return null;
+
+    clearTimeout(this.cache[key].timeout);
+    this.cache[key].timeout = setTimeout(() => {
+      delete this.cache[key];
+    }, this.timeout);
+
+    return this.cache[key].value;
+  }
+
+  size() {
+    return Object.keys(this.cache).length;
+  }
+}
+
+const objectCache = new Cache(config.inMemoryObjectCacheDuration);
 const objectCacheLock = new AsyncLock();
 
 exports.getStreamObject = async (mediaid, objectid, conn=null) => {
@@ -135,6 +166,7 @@ exports.getStreamObject = async (mediaid, objectid, conn=null) => {
 
       debug(`\t\tfetched object ${objectid} successfully, caching it and returning it`);
       objectCache.set(objectid, object);
+      debug(`\t\tthere are ${objectCache.size()} items in the cache`);
 
       callback(null, object);
     }).catch(callback);

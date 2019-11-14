@@ -5,10 +5,12 @@ const process = require("process");
 const async = require("async");
 
 (async () => {
+  console.log("model.setup()");
   await model.setup();
 
+  console.log("begin garbage collection");
   const queue = async.queue((blockid, callback) => {
-    model.mediaStore.rmBlock(blockid)
+    model.media.storageBackend.rmBlock(blockid)
       .then(() => {
         console.log("\tremoved blockid: " + blockid);
         callback()
@@ -19,7 +21,7 @@ const async = require("async");
       });
   }, 4);
 
-  for await (let blockInfo of model.mediaStore.listAllBlocks()) {
+  for await (let blockInfo of model.media.storageBackend.listAllBlocks()) {
     const blockid = blockInfo.id;
     const res = await model.media.objectGetParentMedia(blockInfo.id);
     console.log(blockid + ":", res);

@@ -6,6 +6,7 @@ const util = require('util');
 const uuidv4 = require('uuid/v4');
 const _ = require("lodash");
 const crypto = require('crypto');
+const debug = require("debug")("storage-backend:gdrive");
 
 const {StreamStringWriter, StringStreamReadable} = require("../util/stream_helpers");
 
@@ -101,7 +102,7 @@ class GDriveBlockStore {
           mimeType: mimetype || "application/octet-stream",
         },
         media: {
-          body: sourceStream
+          body: srcPipe,
         },
         fields: 'id',
       }, function(err, res) {
@@ -124,16 +125,21 @@ class GDriveBlockStore {
   }
   
   async *listAllBlocks() {
+    debug("GDriveBlockStore::listAllBlocks() -- root folder id: " + this.rootFolderId);
+
     let nextPageToken = null;
     do {
       const files = await new Promise((accept, reject) => {
         this.gapi.files.list({
-          q: "'" + this.gdriveBlockFolderId + "' in parents and trashed = false",
+          q: "'" + this.rootFolderId + "' in parents and trashed = false",
           fields: 'nextPageToken, files(id, mimeType)',
           spaces: 'drive',
           pageSize: 512,
           pageToken: nextPageToken
         }, (err, res) => {
+          console.log("WTF? ", err, res);
+
+
           if (err)
             return reject(err);
 

@@ -25,6 +25,7 @@
     "lodash": "^4.17.15",
     "lru-cache": "^5.1.1",
     "mkdirpsync": "^0.1.0",
+    "mocha": "^6.2.2",
     "morgan": "^1.9.1",
     "node-tvdb": "^4.1.0",
     "nodemon": "^1.19.4",

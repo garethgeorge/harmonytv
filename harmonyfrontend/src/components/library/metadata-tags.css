@@ -1,0 +1,19 @@
+.metadata-tags {
+    float: right !important;
+    width: auto !important;
+}
+
+.metadata-tags .tag {
+    font-family: 'Roboto Mono', monospace !important;
+    font-size: 0.7em !important;
+
+    border-style: solid;
+    border-width: 1px;
+    border-color: rgba(255,255,255,0.2);
+    border-radius: 5px;
+    color: rgba(255,255,255,0.2);
+    font-weight: 1em;
+    width: auto !important;
+    margin-right: 5px;
+    padding: 1px;
+}
