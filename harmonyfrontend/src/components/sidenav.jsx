@@ -33,11 +33,7 @@ export default observer(class SideNav extends React.Component {
 
     return (
       <div className="sidenav">
-        <div className="sidenav-title" style={{
-          color: "rgba(255,255,255,0.7)",
-          fontSize: "1.5em",
-          padding: "15px",
-        }}>HarmonyTV</div>
+        <div className="sidenav-title">HarmonyTV</div>
         {links}
       </div>
     )
