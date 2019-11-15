@@ -31,11 +31,11 @@ export default observer(class SideNav extends React.Component {
 
     return (
       <div className="sidenav">
-        <span style={{
-          color: "grey",
+        <div className="sidenav-title" style={{
+          color: "rgba(255,255,255,0.7)",
           fontSize: "1.5em",
           padding: "15px",
-        }}>HarmonyTV</span>
+        }}>HarmonyTV</div>
         {links}
       </div>
     )
