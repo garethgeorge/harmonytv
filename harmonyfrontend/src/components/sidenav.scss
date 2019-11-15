@@ -1,63 +1,22 @@
+@import "../variables.scss";
+
 .sidenav {
   display: flex;
   flex-direction: column;
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: $color-translucent-dark-background;
   height: 100%;
   width: 100%;
   border-right: 1px solid rgba(0, 0, 0, 0.4);
+  @include dropshadow();
 }
 
 .sidenav-title {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  padding: 15px;
-  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 1.5em;
-}
-
-.sidenav-title::before {
-  content: "";
-  display: block;
-  height: 1.5em;
-  width: 1.5em;
-  background-image: url("/assets/img/logo512.png");
-  background-size: contain;
-  margin: 0.15em;
-}
-
-.sidenav a {
-  font-size: 1.2em;
-  color: rgb(220, 220, 220);
-  text-decoration: none;
   padding: 15px;
-}
-
-.sidenav a:hover {
-  color: rgb(255, 255, 255);
-  text-decoration: none;
-  background-color: rgba(255, 255, 255, 0.05);
-  border-left: 4px solid rgba(191, 0, 63, 0.4);
-}
-
-.sidenav a.selected {
-  border-left: 4px solid rgba(191, 0, 63, 0.9);
-  background-color: rgba(255, 235, 200, 0.05);
-}
-
-.sidenav {
-  display: flex;
-  flex-direction: column;
-  background-color: rgba(0, 0, 0, 0.5);
-  height: 100%;
-  width: 100%;
-  border-right: 1px solid rgba(0, 0, 0, 0.4);
-}
-
-.sidenav-title {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
 }
 
 .sidenav-title::before {
@@ -80,16 +39,14 @@
 .sidenav a:hover {
   color: rgb(255, 255, 255);
   text-decoration: none;
-  background-color: rgba(255, 255, 255, 0.05);
-  /* background: linear-gradient(55deg, rgba(63,0,255,0.1), rgba(255,0,191,0.1)); */
-  /* border-left: 4px solid rgba(255,155,0, 0.5); */
-  border-left: 4px solid rgba(191, 0, 63, 0.4);
+  background-color: $color-sidenav-highlight;
+  border-left: 4px solid transparentize($color-primary-accent, 0.5);
 }
 
 .sidenav a.selected {
   /* border-left: 4px solid rgba(255,155,0,1); */
-  border-left: 4px solid rgba(191, 0, 63, 0.9);
-  background-color: rgba(255, 235, 200, 0.05);
+  border-left: $color-primary-accent 4px solid;
+  background-color: transparentize($color-sidenav-highlight, 0.05);
 }
 
 .absolute-center-content {

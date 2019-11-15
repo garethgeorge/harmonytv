@@ -1,109 +1,112 @@
-/* series list css */
-.seriesList, .moviesList {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: wrap;
+@import "../../variables.scss";
+
+.seriesList,
+.moviesList,
+.episodeList {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  margin: 10px;
 }
 
-.seriesList .show, .moviesList .movie {
-    font-size: 1em;
-    margin: 5px;
-    width: 400px;
-    text-decoration: none;
+.episodeList {
+  flex-direction: column;
 }
 
-.seriesList .show {
-    background-color: rgba(0,0,0,0.5);
-}
+.seriesList .show,
+.moviesList .movie,
+.episodeList .episode-tv {
+  position: relative;
+  font-size: 1em;
+  margin: 5px;
+  text-decoration: none !important;
+  background-color: $color-translucent-dark-background;
+  @include dropshadow();
 
-.seriesList .show .inner, .moviesList .movie .inner {
+  .inner {
     padding: 10px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  a {
+    color: rgba(200, 200, 200, 1);
+  }
+
+  &:hover {
+    background-color: $color-media-highlight;
+    a {
+      color: white;
+      &:hover {
+        text-decoration: none;
+      }
+    }
+  }
+
+  &.watched {
+    background-color: change-color(
+      darken($color-translucent-dark-background, 50%),
+      $alpha: 0.9
+    );
+    a {
+      color: grey;
+    }
+  }
+
+  &.watched:hover {
+    background-color: $color-media-highlight;
+  }
 }
 
-.seriesList .show:hover, .moviesList .movie:hover, .episode-tv:hover {
-    background-color: rgba(255,0,47,0.25);
-    text-decoration: none;
-}
-
-.seriesList .show span, .moviesList .movie span {
-    font-size: 0.75em;
-    color: rgba(255,255,255,0.75);
-    width: 100%;
-}
-
-/* episode unwatched */
-.episode-tv, .movie {
-    margin: 10px;
-    color: white;
-    background-color: rgba(0, 0, 0, 0.5);
-    position: relative;
-}
-
-.episode-tv .inner, .movie .inner {
-    padding: 10px;
-}
-
-.episode-tv a, .movie a {
-    text-decoration: none;
-    background-color: none;
-    color:rgb(200,200,200);
-}
-
-.episode-tv a::before, .movie a::before {
-    content: '';
-    display: block;
-    position: absolute;
-    top: 0;
-    left: 0;
-    bottom: 0;
-    right: 0;
-}
-
-.episode-tv a:hover, .movie a:hover {
-    text-decoration: none;
-    background-color: none;
-    color: rgb(255,255,255);
-}
-
-.episode-tv span, .movie span {
-    color: rgba(200, 200, 200, 0.6);
-    float: left;
-    font-family: 'Roboto Mono', monospace;
-    margin-right: 30px;
-}
-
-.episode-tv input.btn-mark-played {
+.seriesList .show,
+.moviesList .movie {
+  span {
+    font-family: "Roboto Mono", monospace;
     float: right;
-    background-color: rgb(155,150,150);
+    color: rgba(220, 220, 220, 0.5);
+    font-size: 0.75em;
+  }
 }
 
-/* episode watched */
-
-.episode-tv-watched, .movie-watched {
-    background-color: rgba(0, 0, 0, 0.7);
+.episodeList .episode-tv {
+  width: 100%;
+  span {
+    font-family: "Roboto Mono", monospace;
+    color: rgba(155, 155, 155, 0.75);
+    width: 100%;
+    margin-right: 2em;
+  }
 }
 
-.episode-tv-watched a, .movie-watched a {
-    color: rgb(100,100,100);
+.metadata-tags {
+  float: right !important;
+  width: auto !important;
 }
 
-.episode-tv-watched a:hover, .movie-watched a:hover {
-    text-decoration: none;
-    background-color: none;
-    color: rgb(150,150,150);
+.metadata-tags .tag {
+  font-family: "Roboto Mono", monospace !important;
+  font-size: 0.7em !important;
+
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  color: rgba(255, 255, 255, 0.2);
+  font-weight: 1em;
+  width: auto !important;
+  margin-right: 5px;
+  padding: 1px;
 }
 
-.episode-tv-watched span, .movie-watched span {
-    color: rgba(180, 180, 180, 0.6);
-    float: left;
-    font-family: 'Roboto Mono', monospace;
-    margin-right: 30px;
-}
+.progress-bar-wrapper {
+  position: absolute;
+  width: 100%;
+  background-color: black;
+  bottom: 0%;
 
-.episode-tv .episode-progress-bar, .movie .movie-progress-bar {
-    height: 2px;
-    background-color: rgba(255,125,0,0.8);
+  .progress-bar {
+    height: 0.2em;
+    background-color: change-color($color-primary-accent, $alpha: 0.7);
+  }
 }

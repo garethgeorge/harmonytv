@@ -1,5 +1,4 @@
 import React from "react";
-import "./metadata-tags.css"
 
 const betterThanResolution = (sizes, resolution) => {
   for (const size of sizes) {
@@ -17,9 +16,9 @@ export default (props) => {
 
   if (metadata.sizes && betterThanResolution(metadata.sizes, 1920)) {
     flags.push(
-      <div className="tag">4K</div>
+      <div key={"4K"} className="tag">4K</div>
     )
-  } 
+  }
 
   return (
     <div className="metadata-tags">

@@ -1,3 +1,5 @@
+@import "./variables.scss";
+
 html,
 body,
 .App {
@@ -7,7 +9,6 @@ body,
 
 body {
   background-color: rgb(50, 52, 58);
-  background: linear-gradient(55deg, rgb(32, 0, 127), rgb(127, 0, 95));
 }
 
 .App * {
@@ -17,7 +18,11 @@ body {
 .App {
   display: flex;
   flex-direction: row;
-  background-color: rgba(50, 50, 50, 0.7);
+  background: linear-gradient(
+    55deg,
+    mix($color-primary-1, $background-muting-color, 30%),
+    mix($color-primary-2, $background-muting-color, 30%)
+  );
 }
 
 .sidenav-container {

@@ -22,6 +22,14 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+var whitelist = ['https://harmonytv.lastpengu.in', 'http://localhost', 'http://localhost:3000']
+var corsOptions = {
+  origin: true, 
+  credentials: true
+}
+
+app.use(require("cors")(corsOptions));
+
 // TODO: finish implementing the passport strategy
 passport.use(
   new PassportLocalStrategy((username, password, cb) => {
