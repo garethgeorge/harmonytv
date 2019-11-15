@@ -1,7 +1,7 @@
 import React from "react";
 import config from "../config";
 import model from "../model";
-import "./player.css";
+import "./player.scss";
 
 // load shaka, example from: https://github.com/amit08255/shaka-player-react-with-ui-config/blob/master/with-default-ui/src/components/VideoPlayer.js
 import 'shaka-player/dist/controls.css';
@@ -35,7 +35,7 @@ class Player extends React.Component {
   }
 
   componentDidMount() {
-   
+
     const video = this.videoComponent.current;
     this.videoElem = video;
     const videoContainer = this.videoContainer.current;
@@ -61,7 +61,7 @@ class Player extends React.Component {
     // read up on this for chrome cast: https://github.com/google/shaka-player/issues/1142
     // https://github.com/google/shaka-player/blob/d98543165cff6dc545eeaefcd660818d971cca33/demo/main.js#L91
     const castProxy = new shaka.cast.CastProxy(video, player, "00A3C5E8");
-      
+
     const ui = new shaka.ui.Overlay(player, videoContainer, video);
     ui.configure({
       "controlPanelElements": ["play_pause", "time_and_duration", "spacer", "mute", "volume", "fullscreen", "overflow_menu"],
@@ -85,15 +85,15 @@ class Player extends React.Component {
     this.shakaPlayer = player;
   }
 
-  playVideo(mediaid, callback=null) {
+  playVideo(mediaid, callback = null) {
     console.log("Player::playVideo(" + mediaid + ")");
 
     model.media.getInfo(mediaid).then(media => {
       console.log("MEDIA INFO: " + JSON.stringify(media));
-      
+
       if (!this.shakaPlayer) {
         this.videoComponent.current.src = config.apiHost + "/media/" + mediaid + "/files/" + media.metadata.hlsStream;
-        return 
+        return
       }
 
       const manifestUrl = config.apiHost + "/media/" + mediaid + "/files/" + media.metadata.dashStream;
@@ -102,7 +102,7 @@ class Player extends React.Component {
 
       player.load(manifestUrl).then(() => {
         console.log('The video has now been loaded!');
-        
+
         const metadata = media.metadata;
         console.log("VIDEO METADATA: " + JSON.stringify(metadata));
 
@@ -112,7 +112,7 @@ class Player extends React.Component {
           console.log("\tadding subtitle language: " + language + " - file url: " + (config.apiHost + "/media/" + mediaid + "/files/" + subtitle.file));
 
           player.addTextTrack(
-            config.apiHost + "/media/" + mediaid + "/files/" + subtitle.file, 
+            config.apiHost + "/media/" + mediaid + "/files/" + subtitle.file,
             language, "captions", "text/vtt"
           );
         }

@@ -1,7 +1,6 @@
 import React from "react";
-import "./loading.css";
 import Loader from 'react-loader-spinner'
-
+import "./loading.scss";
 
 export default () => {
   return (

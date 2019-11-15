@@ -1,9 +1,10 @@
 import React from "react";
-import "./login-view.css";
 import config from "../config";
 import model from "../model";
 import { observer } from "mobx-react";
 import Loading from "../components/loading";
+
+import "./login-view.scss";
 
 const LoginView = observer(
   class LoginView extends React.Component {

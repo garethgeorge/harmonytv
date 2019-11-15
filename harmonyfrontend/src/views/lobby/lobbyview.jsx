@@ -2,8 +2,8 @@ import React from "react";
 import io from 'socket.io-client'
 import Player from "../../components/player";
 import model from "../../model/";
-import "./lobbyview.css";
 import config from "../../config";
+import "./lobbyview.scss";
 
 let delta = 0;
 
