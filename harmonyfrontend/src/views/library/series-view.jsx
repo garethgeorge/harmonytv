@@ -75,7 +75,7 @@ export default observer(class SeriesView extends React.Component {
     }
 
     return (
-      <div>
+      <div className="episodeList">
         <div style={{ margin: "10px" }}>Episodes</div>
         {episodes}
       </div>

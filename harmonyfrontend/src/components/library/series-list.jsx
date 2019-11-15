@@ -25,8 +25,7 @@ export default observer(class SeriesList extends React.Component {
       shows.push(
         <Link key={seriesName} className="show" to={"/library/" + this.props.library.id + "/series/" + encodeURIComponent(seriesName)} >
           <div className="inner">
-            <div>{seriesName}</div>
-            <span>{series[seriesName].length} episodes</span>
+            <div>{seriesName} <span>{series[seriesName].length} episodes</span></div>
           </div>
         </Link>
       );

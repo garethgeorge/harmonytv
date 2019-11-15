@@ -7,6 +7,7 @@
   height: 100%;
   width: 100%;
   border-right: 1px solid rgba(0, 0, 0, 0.4);
+  @include dropshadow();
 }
 
 .sidenav-title {
@@ -45,7 +46,7 @@
 .sidenav a.selected {
   /* border-left: 4px solid rgba(255,155,0,1); */
   border-left: $color-primary-accent 4px solid;
-  background-color: $color-sidenav-highlight;
+  background-color: transparentize($color-sidenav-highlight, 0.05);
 }
 
 .absolute-center-content {
