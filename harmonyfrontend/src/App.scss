@@ -20,8 +20,8 @@ body {
   flex-direction: row;
   background: linear-gradient(
     55deg,
-    mix($color-primary-1, $background-muting-color, 30%),
-    mix($color-primary-2, $background-muting-color, 30%)
+    mix($color-primary-1, $background-muting-color, $background-muting-percent),
+    mix($color-primary-2, $background-muting-color, $background-muting-percent)
   );
 }
 
