@@ -1,6 +1,6 @@
 const debug = require("debug")("web:api/media");
 const model = require("../model");
-const route = require('express').Router();
+const route = require("express").Router();
 
 route.get("/:mediaid/info.json", async (req, res) => {
   debug("getting info for media: " + req.params.mediaid);
@@ -26,23 +26,29 @@ route.get("/:mediaid/files/:path", async (req, res) => {
     debug("\tobject not found");
     res.status(404);
     res.end("404 Object Not Found");
-    return ;
+    return;
   }
 
   debug("\tfound object, streaming back to requester");
 
   let range;
   if (req.headers.range) {
-    let bytesPart = req.headers.range.substr(req.headers.range.indexOf("=") + 1);
+    let bytesPart = req.headers.range.substr(
+      req.headers.range.indexOf("=") + 1
+    );
     const segments = bytesPart.split("-");
     let startRange = parseInt(segments[0]);
     let stopRange = parseInt(segments[1]);
     range = {
       start: startRange,
-      stop: stopRange,
-    }
+      stop: stopRange
+    };
 
-    debug("should try to only fetch range: ", range, " OPERATION NOT YET SUPPORTED");
+    debug(
+      "should try to only fetch range: ",
+      range,
+      " OPERATION NOT YET SUPPORTED"
+    );
   }
 
   const obj = await model.media.getStreamObject(mediaId, mediaObjId);

@@ -5,18 +5,18 @@ function StreamStringWriter(callback) {
   let bufferedData = [];
   return new stream.Writable({
     write: function(chunk, encoding, next) {
-      bufferedData.push(chunk)
+      bufferedData.push(chunk);
       next();
     },
     final: function(cb) {
       cb();
-      callback(bufferedData.join(''));
+      callback(bufferedData.join(""));
     }
   });
 }
 
 function StringStreamReadable(string) {
-  const Readable = require('stream').Readable;
+  const Readable = require("stream").Readable;
   const s = new Readable();
   s._read = () => {}; // redundant? see update below
   s.push(string);
@@ -27,5 +27,5 @@ function StringStreamReadable(string) {
 
 module.exports = {
   StreamStringWriter: StreamStringWriter,
-  StringStreamReadable: StringStreamReadable,
+  StringStreamReadable: StringStreamReadable
 };

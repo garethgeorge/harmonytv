@@ -2,7 +2,7 @@ import React from "react";
 import io from 'socket.io-client'
 import Player from "../../components/player";
 import model from "../../model/";
-import "./lobbyview.css"; 
+import "./lobbyview.css";
 import config from "../../config";
 
 let delta = 0;
@@ -25,14 +25,14 @@ class NowPlaying {
     if (nowPlaying.state === "playing") {
       // return ((new Date).getTime() - nowPlaying.updateTime + delta) / 1000 + nowPlaying.position;
       return (curTimeMilliseconds() - nowPlaying.updateTime) / 1000 + nowPlaying.position;
-    } else 
+    } else
       return nowPlaying.position;
   }
 
   isSame(other) {
     return (
       Math.abs(this.getPlaybackPosition() - other.getPlaybackPosition()) < 5 &&
-      this.nowPlaying.state === other.nowPlaying.state 
+      this.nowPlaying.state === other.nowPlaying.state
     );
   }
 
@@ -103,9 +103,9 @@ class ChatBox extends React.Component {
       <div className="chatbox">
         {messages}
         {/* functionally this is padding */}
-        <div style={{height: "30px", color: "red"}}></div> 
+        <div style={{ height: "30px", color: "red" }}></div>
         {/* this is the actual text input */}
-        <input className="chatboxTextEntry" type="text" 
+        <input className="chatboxTextEntry" type="text"
           value={this.state.composition}
           onChange={(e) => {
             const state = Object.assign({}, this.state);
@@ -123,7 +123,7 @@ class ChatBox extends React.Component {
                 this.props.socket.emit("client:message", message);
               });
             }
-          }}/>
+          }} />
       </div>
     )
   }
@@ -131,7 +131,7 @@ class ChatBox extends React.Component {
 
 class Lobby extends React.Component {
   state = {}
-  
+
   constructor(props) {
     super(props);
     console.log("Lobby::constructor - lobbyid: " + props.lobbyid);
@@ -167,37 +167,37 @@ class Lobby extends React.Component {
       player.playVideo(nowPlaying.mediaid, () => {
         serverNowPlaying = new NowPlaying(nowPlaying);
         clearTimeout(transmitTimeoutRef);
-        
+
         // immediately try to play it :P 
         setTimeout(() => {
           serverNowPlaying.apply(player.videoElem);
         }, 100);
-        
+
         // synchronize the current playback position with the server every 30 seconds
         setInterval(() => {
           // TODO: avoid updating now playing when it is already up-to date
           if (player.videoElem.paused)
-            return ;
+            return;
 
           const video = player.videoElem;
           console.log("updateResumeWatching - timer fired, submitting position: " + video.currentTime + " duration: " + video.duration);
           model.user.updateResumeWatching(nowPlaying.mediaid, video.currentTime, video.duration);
         }, 30 * 1000);
-        
+
         this.socket.on("server:update-now-playing", (nowPlaying) => {
           console.log("server:update-now-playing ", JSON.stringify(nowPlaying, false, 3));
           const newNowPlaying = new NowPlaying(nowPlaying);
           if (serverNowPlaying.isSame(newNowPlaying)) {
             console.log("\tskipping server state update, it is the same");
-            return ;
-          } 
+            return;
+          }
 
           console.log("\tapplying state update");
           serverNowPlaying = newNowPlaying;
           clearTimeout(transmitTimeoutRef);
           serverNowPlaying.apply(player.videoElem);
         });
-        
+
         // disable sending state updates for the first 10 seconds 
         setTimeout(() => {
           serverNowPlaying.apply(player.videoElem);
@@ -210,13 +210,13 @@ class Lobby extends React.Component {
               mediaid: serverNowPlaying.getMediaID(), // the media id playing 
               state: player.videoElem.paused ? "paused" : "playing", // the state (can also be paused)
             };
-      
+
             console.log("detected state update event from video player: ", JSON.stringify(newState, false, 3));
             const newStateNowPlaying = new NowPlaying(newState);
-      
+
             if (newStateNowPlaying.isSame(serverNowPlaying)) {
               console.log("\tnot synchronizing state update, it is a result of a server message");
-              return ;
+              return;
             }
 
             if (transmitTimeoutRef)
@@ -225,19 +225,19 @@ class Lobby extends React.Component {
             transmitTimeoutRef = setTimeout(() => {
               serverNowPlaying = newStateNowPlaying;
               this.socket.emit("client:update-now-playing", newState);
-              console.log("SENDING MESSAGE TO SET PLAYER.currentTime to " +  new NowPlaying(newState).getPlaybackPosition());
+              console.log("SENDING MESSAGE TO SET PLAYER.currentTime to " + new NowPlaying(newState).getPlaybackPosition());
 
               const video = player.videoElem;
               console.log("SENDING 'RESUME PLAYING STATE' TO SERVER: " + video.currentTime + " duration: " + video.duration);
               model.user.updateResumeWatching(nowPlaying.mediaid, video.currentTime, video.duration);
             }, 100);
           }
-      
+
           player.videoElem.addEventListener("playing", updateState);
           player.videoElem.addEventListener("pause", updateState);
         }, 4000);
       });
-      
+
     });
 
     // NOTES: https://github.com/google/shaka-player/issues/416
@@ -248,7 +248,7 @@ class Lobby extends React.Component {
 
     return (
       <div className="lobbyview">
-        <Player ref={this.player}/>
+        <Player ref={this.player} />
         <ChatBox socket={this.socket} />
       </div>
     );

@@ -1,13 +1,13 @@
 import React from "react";
-import {autorun} from "mobx";
-import {observer} from "mobx-react";
+import { autorun } from "mobx";
+import { observer } from "mobx-react";
 import model from "../../model";
 import EpisodeTV from "../../components/library/episode-tv";
 import Loading from "../../components/loading";
 
 export default observer(class SeriesView extends React.Component {
   state = {};
-  
+
   constructor(props) {
     super(props);
   }
@@ -20,7 +20,7 @@ export default observer(class SeriesView extends React.Component {
       model.library.refreshLibraries();
 
     this._mobx_disposer = autorun(() => {
-      if (!model.state.libraries) return ;
+      if (!model.state.libraries) return;
       const library = model.state.libraries[this.props.libraryid];
       if (!library.media)
         setImmediate(() => {
@@ -32,7 +32,7 @@ export default observer(class SeriesView extends React.Component {
         model.state.breadcrumbs = [
           {
             text: library.name,
-            href: "/library/" + library.id 
+            href: "/library/" + library.id
           },
           {
             text: this.props.seriesName,
@@ -52,7 +52,7 @@ export default observer(class SeriesView extends React.Component {
   render() {
     if (!model.state.libraries) return <Loading />;
     if (!model.state.libraries[this.props.libraryid]) return <Loading />;
-    
+
     const library = model.state.libraries[this.props.libraryid];
     if (!library.series) return <Loading />;
     const series = library.series[this.props.seriesName];
@@ -73,10 +73,10 @@ export default observer(class SeriesView extends React.Component {
         <EpisodeTV key={episode.mediaid} episode={episode} />
       )
     }
-    
+
     return (
       <div>
-        <div style={{margin: "10px"}}>Episodes</div>
+        <div style={{ margin: "10px" }}>Episodes</div>
         {episodes}
       </div>
     )

@@ -8,7 +8,7 @@ export default () => {
     <div className="loading-splash absolute-center-content">
       <div>
         <center>Loading...</center>
-        <br/>
+        <br />
         <Loader type="Oval" color="rgb(155,155,155)" height={80} width={80} />
       </div>
     </div>
