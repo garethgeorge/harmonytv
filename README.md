@@ -14,18 +14,13 @@ HarmonyTV can be placed behind a load balancer or reverse proxy, some specific r
  - step 1
 ```
 git clone https://github.com/garethgeorge/harmonytv.git
+cd harmonytv/harmonybackend/ && npm i && cd ../harmonyfrontend/ && npm i && cd ..
 ```
  - step 2: edit configuration files in 
 ```
 harmonybackend/src/config.example.js -> harmonyfrontend/src/config.js
-```
- - step 3: start harmonybackend on the host machine to configure google drive
-```
- - cd harmonybackend && node bin/web.js 
-```
-follow the prompts to configure google drive
-
- - step 4: start the development website
+harmonyfrontend/src/config.example.js -> harmonyfrontend/src/config.js
+ - step 3: start the development website
 ```
 docker-compose -f docker-compose.dev.yml up 
 ```
