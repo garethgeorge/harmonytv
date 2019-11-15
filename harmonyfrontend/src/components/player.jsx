@@ -61,7 +61,8 @@ class Player extends React.Component {
     // read up on this for chrome cast: https://github.com/google/shaka-player/issues/1142
     // https://github.com/google/shaka-player/blob/d98543165cff6dc545eeaefcd660818d971cca33/demo/main.js#L91
     const castProxy = new shaka.cast.CastProxy(video, player, "00A3C5E8");
-
+      
+    // CAST ID 1: 00A3C5E8, ID 2: 07AEE832 ID 3: 7B25EC44
     const ui = new shaka.ui.Overlay(player, videoContainer, video);
     ui.configure({
       "controlPanelElements": ["play_pause", "time_and_duration", "spacer", "mute", "volume", "fullscreen", "overflow_menu"],
@@ -126,12 +127,18 @@ class Player extends React.Component {
     });
   }
 
+  // CHROME CAST SUPPORT TUTORIAL: https://github.com/google/shaka-player/blob/827e5d813f88d54f675e40beb444a3d9fd990dc6/docs/tutorials/ui.md
+
   render() {
     return (
-      <div className="shakaContainer" data-shaka-player-container data-shaka-player-cast-receiver-id="07AEE832" ref={this.videoContainer}>
-        <video data-shaka-player autoPlay playsInline
-          ref={this.videoComponent} />
+      <div id="videoContainer" className="shakaContainer" ref={this.videoContainer}>
+        <video id="video" ref={this.videoComponent} />
       </div>
+
+      // <div id="videoContainer" className="shakaContainer" data-shaka-player-container data-shaka-player-cast-receiver-id="7B25EC44" ref={this.videoContainer}>
+      //   <video id="video" data-shaka-player autoPlay playsInline
+      //     ref={this.videoComponent} />
+      // </div>
     )
   }
 }
