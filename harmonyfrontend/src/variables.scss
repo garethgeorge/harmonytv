@@ -1,15 +1,19 @@
 // these are the primary background colors
 // $color-primary-1: darken(rgb(32 * 2, 0, 127 * 2), 5%);
 // $color-primary-2: darken(rgb(127 * 2, 0, 95 * 2), 5%);
-$color-primary-1: #411f05;
-$color-primary-2: #537895;
+// $color-primary-1: #411f05;
+// $color-primary-2: #537895;
 // $color-primary-1: #09203f;
 // $color-primary-2: #537895;
 
+$color-primary-1: rgb(63, 0, 255);
+$color-primary-2: rgb(255, 0, 191);
+
 $background-muting-color: rgb(20, 20, 20);
+$background-muting-percent: 10%;
 
 // used in the UI when a bright accent color is needed
-$color-primary-accent: #ff6600;
+$color-primary-accent: rgb(255, 0, 95);
 
 // used as a dark background color for various panels
 $color-translucent-dark-background: rgba(0, 0, 0, 0.6);

@@ -54,24 +54,35 @@ class ChatBox extends React.Component {
     composition: "",
     messages: [],
     users: 1,
+    docked: false,
+    side: "left",
   }
 
-  addMessage(message) {
-    const removeAMessage = (delay) => {
+  addMessage(messagetext, opts={}) {
+    // const index = this.state.messages.length;
+    const options = Object.assign({kind: "message"}, opts);
+
+    const removeMessage = (message, delay) => {
       setTimeout(() => {
-        const state = Object.assign({}, this.state);
-        state.messages = this.state.messages.slice(0);
-        state.messages.shift();
-        this.setState(state);
+        // const state = Object.assign({}, this.state);
+        // state.messages = this.state.messages.slice(0);
+        // state.messages.shift();
+        // this.setState(state);
+        //
+        message.data.classlist.push('old');
+        this.setState(this.state);
+        // console.log('MESSAGE:', this.state.messages[index]);
       }, delay);
     }
 
     const state = Object.assign({}, this.state);
+    var message = {text: messagetext, kind: options.kind, data: {classlist: []}};
     state.messages = this.state.messages.slice(0);
     state.messages.push(message);
     this.setState(state);
 
-    removeAMessage(15000);
+    removeMessage(message, 15000);
+    return message;
   }
 
   constructor(props) {
@@ -85,7 +96,7 @@ class ChatBox extends React.Component {
       const state = Object.assign({}, this.state);
       state.users = users;
       this.setState(state, () => {
-        this.addMessage(users + " total users are now connected.");
+        this.addMessage(users + " total users are now connected.", {kind: "notification"});
       });
     });
   }
@@ -96,12 +107,12 @@ class ChatBox extends React.Component {
 
     const messages = [];
     for (const message of this.state.messages) {
-      messages.push(<span className="message" key={Math.random()}>{message}</span>);
+      messages.push(<span className={"chat-text " + message.kind + " " + message.data.classlist.join(" ")} key={Math.random()}>{message.text}</span>);
     }
 
     return (
-      <div className="chatbox">
-        {messages}
+      <div className={"chatbox " + (this.state.docked ? "docked " : "") + this.state.side}>
+        <div className="messages">{messages}</div>
         {/* functionally this is padding */}
         <div style={{ height: "30px", color: "red" }}></div>
         {/* this is the actual text input */}
@@ -120,7 +131,27 @@ class ChatBox extends React.Component {
               this.setState(state, () => {
                 const message = model.state.user.username + ": " + composition;
                 this.addMessage(message);
-                this.props.socket.emit("client:message", message);
+                // send the message if it is not a special command
+                if (composition[0] != "\\") {
+                  this.props.socket.emit("client:message", message);
+                } else { // do the command if it is known
+                  const args = composition.split(' ');
+                  const command = args[0].substr(1);
+                  const argnum = args.length;
+                  if (command == "dock" || command == "float") {
+                    this.state.docked = (command=="dock"); // dock on "dock", undock on "float".
+                    if (argnum > 1) {
+                      if (args[1] == "left" || args[1] == "right") {
+                        this.state.side = args[1];
+                      }
+                    }
+                    this.addMessage('Chatbox '+command+'ed '+this.state.side+'.', {kind: "notification"});
+                  } else if (command == "?" || command == "help") {
+                    this.addMessage('Commands you can use: \n \\help - this list \n \\dock [side] - dock the chat \n \\float [side] - float the chat', {kind: "notification"});
+                  } else {
+                    this.addMessage('Unknown command "'+composition+'".', {kind: "notification"});
+                  }
+                }
               });
             }
           }} />
@@ -162,13 +193,13 @@ class Lobby extends React.Component {
 
     this.socket.on("server:play-video", (nowPlaying) => {
       console.log("server:play-video: ", JSON.stringify(nowPlaying, false, 3));
-      // we don't actually respond to changes to mediaid other than here 
+      // we don't actually respond to changes to mediaid other than here
 
       player.playVideo(nowPlaying.mediaid, () => {
         serverNowPlaying = new NowPlaying(nowPlaying);
         clearTimeout(transmitTimeoutRef);
 
-        // immediately try to play it :P 
+        // immediately try to play it :P
         setTimeout(() => {
           serverNowPlaying.apply(player.videoElem);
         }, 100);
@@ -198,16 +229,16 @@ class Lobby extends React.Component {
           serverNowPlaying.apply(player.videoElem);
         });
 
-        // disable sending state updates for the first 10 seconds 
+        // disable sending state updates for the first 10 seconds
         setTimeout(() => {
           serverNowPlaying.apply(player.videoElem);
 
           // prevent any state from propogating in the first 10 seconds
           const updateState = () => {
             const newState = {
-              updateTime: curTimeMilliseconds(), // the time at which it was updated 
-              position: player.videoElem.currentTime, // the position when it was updated 
-              mediaid: serverNowPlaying.getMediaID(), // the media id playing 
+              updateTime: curTimeMilliseconds(), // the time at which it was updated
+              position: player.videoElem.currentTime, // the position when it was updated
+              mediaid: serverNowPlaying.getMediaID(), // the media id playing
               state: player.videoElem.paused ? "paused" : "playing", // the state (can also be paused)
             };
 
