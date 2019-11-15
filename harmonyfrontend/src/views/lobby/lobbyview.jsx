@@ -63,6 +63,7 @@ class ChatBox extends React.Component {
   constructor(props) {
     super(props);
 
+    this.messages = React.createRef();
     this.registerCommands();
 
     setTimeout(() => {
@@ -139,7 +140,10 @@ class ChatBox extends React.Component {
     };
     state.messages = this.state.messages.slice(0);
     state.messages.push(message);
-    this.setState(state);
+    this.setState(state, () => {
+      if (this.messages.current)
+        this.messages.current.scrollTop = this.messages.current.scrollHeight + 1000;
+    });
 
     setTimeout(() => {
       message.data.classlist.push('old');
@@ -280,126 +284,6 @@ class ChatBox extends React.Component {
       }
       this.addMessage('Toggling fullscreen.', { kind: "success" });
     });
-
-    /*
-    else if (command == "clear") {
-      if (argnum > 1) {
-        const messages_number = this.state.messages.length;
-        if (args[1] == "all") {
-          this.state.messages = [];
-          this.addMessage('Cleared ' + args[1] + ' of ' + messages_number + ' messages.', { kind: "success" });
-        } else if (Number(args[1])) {
-          this.state.messages.splice(0, Number(args[1]));
-          this.addMessage('Cleared ' + args[1] + ' of ' + messages_number + ' messages.', { kind: "success" });
-        } else {
-          this.addMessage('Failed to clear messages. You must specify a number or "all".', { kind: "warning" });
-        }
-      } else {
-        this.addMessage('Failed to clear messages. You must specify a number or "all".', { kind: "warning" });
-      }
-    }
-    // \PLAY, \PAUSE, \MUTE, \UNMUTE, \VOLUME, \SEEK, \SKIP, \FULLSCREEN
-    else if (command == "play") {
-      document.getElementById('video').play();
-      this.addMessage('Playing the video.', { kind: "success" });
-    }
-    else if (command == "pause") {
-      document.getElementById('video').pause();
-      this.addMessage('Pausing the video.', { kind: "success" });
-    }
-    else if (command == "mute") {
-      document.getElementById('video').muted = !document.getElementById('video').muted;
-      this.addMessage('Video ' + (document.getElementById('video').muted ? '' : 'un') + 'muted.', { kind: "success" });
-    }
-    else if (command == "unmute") {
-      document.getElementById('video').muted = false;
-      this.addMessage('Video unmuted.', { kind: "success" });
-    }
-    else if (command == "skip") {
-      if (argnum > 1 && Number(args[1])) {
-        document.getElementById('video').currentTime += Number(args[1]);
-        if (Number(args[1]) > 0) {
-          this.addMessage('Skipped forward ' + Number(args[1]) + ' seconds.', { kind: "success" });
-        }
-        else if (Number(args[1]) < 0) {
-          this.addMessage('Skipped back ' + (-Number(args[1])) + ' seconds.', { kind: "success" });
-        }
-      }
-      else {
-        this.addMessage('Failed to skip. Must provide a number of seconds.', { kind: "warning" });
-      }
-    }
-    else if (command == "seek") {
-      if (argnum > 1 && args[1].split(':').length == 2 && Number(args[1].split(':')[0]) && Number(args[1].split(':')[1])) {
-        document.getElementById('video').currentTime = 60 * Number(args[1].split(':')[0]) + Number(args[1].split(':')[1]);
-        this.addMessage('Seeked to ' + args[1] + '.', { kind: "success" });
-      }
-      else {
-        this.addMessage('Failed to skip. Must provide a timestamp argument.', { kind: "warning" });
-      }
-    }
-    else if (command == "volume") {
-      const prev_volume = document.getElementById('video').volume;
-      if (argnum > 1) {
-        if (args[1] == "up") {
-          document.getElementById('video').muted = false;
-          document.getElementById('video').volume = Math.min(prev_volume + 0.1, 1);
-          this.addMessage('Volume increased.', { kind: "success" });
-        }
-        else if (args[1] == "down") {
-          document.getElementById('video').muted = false;
-          document.getElementById('video').volume = Math.max(prev_volume - 0.1, 0);
-          this.addMessage('Volume decreased.', { kind: "success" });
-        }
-        else if (args[1] == "mute") {
-          document.getElementById('video').muted = true;
-          this.addMessage('Volume muted.', { kind: "success" });
-        }
-        else if (args[1] == "unmute") {
-          document.getElementById('video').muted = false;
-          this.addMessage('Volume unmuted.', { kind: "success" });
-        }
-        else if (Number(args[1]) && 0 <= Number(args[1]) && Number(args[1]) <= 100) {
-          document.getElementById('video').muted = false;
-          document.getElementById('video').volume = Number(args[1]) / 100;
-          this.addMessage('Volume set to ' + Number(args[1]) + '.', { kind: "success" });
-        }
-        else {
-          this.addMessage('Failed volume change. Must provide an argument.', { kind: "warning" });
-        }
-      }
-    }
-    else if (command == "fullscreen") {
-      const elem = document.getElementById('root') || document.documentElement;
-      if (!document.fullscreenElement && !document.mozFullScreenElement &&
-        !document.webkitFullscreenElement && !document.msFullscreenElement) {
-        if (elem.requestFullscreen) {
-          elem.requestFullscreen();
-        } else if (elem.msRequestFullscreen) {
-          elem.msRequestFullscreen();
-        } else if (elem.mozRequestFullScreen) {
-          elem.mozRequestFullScreen();
-        } else if (elem.webkitRequestFullscreen) {
-          elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
-        }
-      } else {
-        if (document.exitFullscreen) {
-          document.exitFullscreen();
-        } else if (document.msExitFullscreen) {
-          document.msExitFullscreen();
-        } else if (document.mozCancelFullScreen) {
-          document.mozCancelFullScreen();
-        } else if (document.webkitExitFullscreen) {
-          document.webkitExitFullscreen();
-        }
-      }
-      this.addMessage('Toggling fullscreen.', { kind: "success" });
-    }
-    // UNKNOWN COMMAND
-    else {
-      this.addMessage('Unknown command "' + composition + '".', { kind: "warning" });
-    }
-    */
   }
 
   render() {
@@ -420,7 +304,7 @@ class ChatBox extends React.Component {
 
     return (
       <div className={"chatbox " + (this.state.docked ? "docked " : "") + this.state.side}>
-        <div className="messages">{messages}</div>
+        <div className="messages" ref={this.messages}>{messages}</div>
         {/* functionally this is padding */}
         <div style={{ height: "30px", color: "red" }}></div>
         {/* this is the actual text input */}
