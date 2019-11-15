@@ -28,24 +28,25 @@
     position: relative;
     bottom: 1px;
     left: 1px;
+    // background-color: rgba(15,15,15,1);
+    background-color: rgb(7,7,7);
 }
 
 .chatbox .messages {
   width: 300px;
-  padding: 0.5em;
+  padding: 0 0.5em;
   display: flex;
   flex-direction: column;
-  background-color: rgba(0, 0, 0, 0.3);
+  // background-color: rgba(0, 0, 0, 0.5);
 }
 .chatbox.docked .messages {
   flex-grow: 1;
   width: 300px;
   overflow-y: scroll;
   padding: 0.5em;
-  margin-bottom: 0.5em;
+  // margin-bottom: 0.5em;
   display: flex;
   flex-direction: column;
-
 }
 
 .chatbox .chat-text {
@@ -57,7 +58,6 @@
     line-height: 30px;
     vertical-align: middle;
     color: rgba(255,255,255,0.7);
-
 }
 
 .chatbox .chat-text.old {
@@ -67,9 +67,49 @@
   display: initial;
 }
 
-.chatbox .notification {
-    font-style: italic;
-    color: rgba(255, 255, 127, 0.5)
+@mixin notification {
+  font-style: italic;
+}
+
+.chatbox .info {
+    @include notification;
+    color: rgba(127, 127, 255, 0.7);
+}
+
+.chatbox .warning {
+    @include notification;
+    color: rgba(255, 255, 127, 0.7);
+}
+
+.chatbox .success {
+    @include notification;
+    color: rgba(127, 255, 127, 0.7);
+}
+
+.chatbox .error {
+    @include notification;
+    color: rgba(255, 127, 127, 0.7);
+}
+
+.chatbox .command-list {
+  list-style-type: none;
+  padding-left: 0.5em;
+  margin: 0;
+  font-size: 0.75em;
+  background-color: rgba(0,0,0,0.5);
+  border: 1px solid rgba(63,63,63,0.3);
+  border-radius: 0.4em;
+  padding: 0.2em;
+}
+
+.chatbox .command {
+  font-family: monospace;
+  border-radius: 0.15em;
+  background-color: rgba(255,255,255,0.1);
+  color: rgba(191,0,191,1);
+  font-style: normal;
+  font-size: 0.9em;
+  padding: 0.1em;
 }
 
 .chatbox .chatboxTextEntry {
@@ -97,5 +137,5 @@
 }
 
 .lobbyview .chatboxTextEntry:focus {
-    background-color: rgba(0, 0, 0, 0.3);
+    background-color: rgba(0, 0, 0, 0.8);
 }

@@ -58,22 +58,16 @@ class ChatBox extends React.Component {
     side: "left",
   }
 
+  ageMessage(message, delay=15000) {
+    setTimeout(() => {
+      message.data.classlist.push('old');
+      this.setState(this.state);
+    }, delay);
+  }
+
   addMessage(messagetext, opts={}) {
     // const index = this.state.messages.length;
     const options = Object.assign({kind: "message"}, opts);
-
-    const removeMessage = (message, delay) => {
-      setTimeout(() => {
-        // const state = Object.assign({}, this.state);
-        // state.messages = this.state.messages.slice(0);
-        // state.messages.shift();
-        // this.setState(state);
-        //
-        message.data.classlist.push('old');
-        this.setState(this.state);
-        // console.log('MESSAGE:', this.state.messages[index]);
-      }, delay);
-    }
 
     const state = Object.assign({}, this.state);
     var message = {text: messagetext, kind: options.kind, data: {classlist: []}};
@@ -81,12 +75,172 @@ class ChatBox extends React.Component {
     state.messages.push(message);
     this.setState(state);
 
-    removeMessage(message, 15000);
+    this.ageMessage(message);
     return message;
+  }
+
+  chatCommand(composition) {
+    const args = composition.split(' ');
+    const argnum = args.length;
+    const command = args[0].substr(1);
+
+    // \DOCK, \FLOAT
+    if (command == "dock" || command == "float") {
+      this.state.docked = (command=="dock"); // dock on "dock", undock on "float".
+      if (argnum > 1) {
+        if (args[1] == "left" || args[1] == "right") {
+          this.state.side = args[1];
+        }
+      }
+      this.addMessage('Chatbox '+command+'ed '+this.state.side+'.', {kind: "success"});
+    }
+    // \HELP, \?
+    else if (command == "?" || command == "help") {
+      this.addMessage(
+        <div>
+          Commands:
+          <ul className="command-list">
+            <li><span className="command">\help</span>, <span className="command">\?</span> brings up this info.</li>
+            <li><span className="command">\dock [side]</span> docks the chat.</li>
+            <li><span className="command">\float [side]</span> floats (undocks) the chat.</li>
+            <li><span className="command">\clear [num]</span> deletes the top [num] messages from the chat.</li>
+            <li><span className="command">\play</span> play the video.</li>
+            <li><span className="command">\pause</span> pause the video.</li>
+            <li><span className="command">\mute</span> mute or unmute the video.</li>
+            <li><span className="command">\unmute</span> unmute the video.</li>
+            <li><span className="command">\volume [change]</span> change volume to a number 0-100, "up", "down", "mute", or "unmute".</li>
+            <li><span className="command">\seek [time]</span> seek to [time].</li>
+            <li><span className="command">\skip [num]</span> skip ahead [num] seconds.</li>
+            <li><span className="command">\fullscreen</span> toggle fullscreen.</li>
+          </ul>
+        </div>, {kind: "info"});
+    }
+    // \CLEAR
+    else if (command == "clear") {
+      if (argnum > 1) {
+        const messages_number = this.state.messages.length;
+        if (args[1] == "all") {
+          this.state.messages = [];
+          this.addMessage('Cleared '+args[1]+' of '+messages_number+' messages.', {kind: "success"});
+        } else if (Number(args[1])) {
+          this.state.messages.splice(0,Number(args[1]));
+          this.addMessage('Cleared '+args[1]+' of '+messages_number+' messages.', {kind: "success"});
+        } else {
+          this.addMessage('Failed to clear messages. You must specify a number or "all".', {kind: "warning"});
+        }
+      } else {
+        this.addMessage('Failed to clear messages. You must specify a number or "all".', {kind: "warning"});
+      }
+    }
+    // \PLAY, \PAUSE, \MUTE, \UNMUTE, \VOLUME, \SEEK, \SKIP, \FULLSCREEN
+    else if (command == "play") {
+      document.getElementById('video').play();
+      this.addMessage('Playing the video.', {kind: "success"});
+    }
+    else if (command == "pause") {
+      document.getElementById('video').pause();
+      this.addMessage('Pausing the video.', {kind: "success"});
+    }
+    else if (command == "mute") {
+      document.getElementById('video').muted = !document.getElementById('video').muted;
+      this.addMessage('Video '+(document.getElementById('video').muted ? '' : 'un')+'muted.', {kind: "success"});
+    }
+    else if (command == "unmute") {
+      document.getElementById('video').muted = false;
+      this.addMessage('Video unmuted.', {kind: "success"});
+    }
+    else if (command == "skip") {
+      if (argnum > 1 && Number(args[1])) {
+        document.getElementById('video').currentTime += Number(args[1]);
+        if (Number(args[1]) > 0) {
+          this.addMessage('Skipped forward '+Number(args[1])+' seconds.', {kind: "success"});
+        }
+        else if (Number(args[1]) < 0) {
+          this.addMessage('Skipped back '+(-Number(args[1]))+' seconds.', {kind: "success"});
+        }
+      }
+      else {
+        this.addMessage('Failed to skip. Must provide a number of seconds.', {kind: "warning"});
+      }
+    }
+    else if (command == "seek") {
+      if (argnum > 1 && args[1].split(':').length==2 && Number(args[1].split(':')[0]) && Number(args[1].split(':')[1])) {
+        document.getElementById('video').currentTime = 60*Number(args[1].split(':')[0])+Number(args[1].split(':')[1]);
+        this.addMessage('Seeked to '+args[1]+'.', {kind: "success"});
+      }
+      else {
+        this.addMessage('Failed to skip. Must provide a timestamp argument.', {kind: "warning"});
+      }
+    }
+    else if (command == "volume") {
+      const prev_volume = document.getElementById('video').volume;
+      if (argnum > 1) {
+        if (args[1] == "up") {
+          document.getElementById('video').muted = false;
+          document.getElementById('video').volume = Math.min(prev_volume+0.1,1);
+          this.addMessage('Volume increased.', {kind: "success"});
+        }
+        else if (args[1] == "down") {
+          document.getElementById('video').muted = false;
+          document.getElementById('video').volume = Math.max(prev_volume-0.1,0);
+          this.addMessage('Volume decreased.', {kind: "success"});
+        }
+        else if (args[1] == "mute") {
+          document.getElementById('video').muted = true;
+          this.addMessage('Volume muted.', {kind: "success"});
+        }
+        else if (args[1] == "unmute") {
+          document.getElementById('video').muted = false;
+          this.addMessage('Volume unmuted.', {kind: "success"});
+        }
+        else if (Number(args[1]) && 0<=Number(args[1]) && Number(args[1])<=100) {
+          document.getElementById('video').muted = false;
+          document.getElementById('video').volume = Number(args[1])/100;
+          this.addMessage('Volume set to '+Number(args[1])+'.', {kind: "success"});
+        }
+        else {
+          this.addMessage('Failed volume change. Must provide an argument.', {kind: "warning"});
+        }
+      }
+    }
+    else if (command == "fullscreen") {
+      const elem = document.getElementById('root') || document.documentElement;
+      if (!document.fullscreenElement && !document.mozFullScreenElement &&
+        !document.webkitFullscreenElement && !document.msFullscreenElement) {
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+          elem.msRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+          elem.mozRequestFullScreen();
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+      this.addMessage('Toggling fullscreen.', {kind: "success"});
+    }
+    // UNKNOWN COMMAND
+    else {
+      this.addMessage('Unknown command "'+composition+'".', {kind: "warning"});
+    }
   }
 
   constructor(props) {
     super(props);
+
+    setTimeout(() => {
+      this.addMessage(<div>Type <span className="command">\?</span> for a list of commands.</div>, {kind: "info"});
+    }, 0);
 
     this.props.socket.on("server:message", (message) => {
       this.addMessage(message);
@@ -96,7 +250,7 @@ class ChatBox extends React.Component {
       const state = Object.assign({}, this.state);
       state.users = users;
       this.setState(state, () => {
-        this.addMessage(users + " total users are now connected.", {kind: "notification"});
+        this.addMessage(users + " total users are now connected.", {kind: "info"});
       });
     });
   }
@@ -124,33 +278,18 @@ class ChatBox extends React.Component {
             this.setState(state);
           }}
           onKeyDown={(e) => {
-            if (e.key === "Enter") {
+            if (e.key === "Enter" && this.state.composition.length > 0) {
               const state = Object.assign({}, this.state)
               const composition = this.state.composition;
               state.composition = "";
               this.setState(state, () => {
-                const message = model.state.user.username + ": " + composition;
-                this.addMessage(message);
                 // send the message if it is not a special command
                 if (composition[0] != "\\") {
+                  const message = model.state.user.username + ": " + composition;
+                  this.addMessage(message);
                   this.props.socket.emit("client:message", message);
                 } else { // do the command if it is known
-                  const args = composition.split(' ');
-                  const command = args[0].substr(1);
-                  const argnum = args.length;
-                  if (command == "dock" || command == "float") {
-                    this.state.docked = (command=="dock"); // dock on "dock", undock on "float".
-                    if (argnum > 1) {
-                      if (args[1] == "left" || args[1] == "right") {
-                        this.state.side = args[1];
-                      }
-                    }
-                    this.addMessage('Chatbox '+command+'ed '+this.state.side+'.', {kind: "notification"});
-                  } else if (command == "?" || command == "help") {
-                    this.addMessage('Commands you can use: \n \\help - this list \n \\dock [side] - dock the chat \n \\float [side] - float the chat', {kind: "notification"});
-                  } else {
-                    this.addMessage('Unknown command "'+composition+'".', {kind: "notification"});
-                  }
+                  this.chatCommand(composition);
                 }
               });
             }
