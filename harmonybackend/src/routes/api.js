@@ -22,6 +22,10 @@ route.post('/login',
                                   failureFlash: false })
 );
 
+route.post("/logout", (req, res) => {
+  req.logout();
+})
+
 route.use("/library/", auth_required, require("./api-library"));
 route.use("/media/", auth_required, require("./api-media"));
 route.use("/lobby/", auth_required, require("./api-lobby"));
