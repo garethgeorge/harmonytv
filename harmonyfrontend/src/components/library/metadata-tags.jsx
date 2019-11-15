@@ -16,7 +16,7 @@ export default (props) => {
 
   if (metadata.sizes && betterThanResolution(metadata.sizes, 1920)) {
     flags.push(
-      <div className="tag">4K</div>
+      <div key={"4K"} className="tag">4K</div>
     )
   }
 

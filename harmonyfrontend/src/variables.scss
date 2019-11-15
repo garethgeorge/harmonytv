@@ -1,18 +1,22 @@
 // these are the primary background colors
-$color-primary-1: darken(rgb(32, 0, 127), 5%);
-$color-primary-2: darken(rgb(127, 0, 95), 5%);
-$background-muting-color: rgb(50, 50, 50);
+// $color-primary-1: darken(rgb(32 * 2, 0, 127 * 2), 5%);
+// $color-primary-2: darken(rgb(127 * 2, 0, 95 * 2), 5%);
+$color-primary-1: #411f05;
+$color-primary-2: #537895;
+// $color-primary-1: #09203f;
+// $color-primary-2: #537895;
+
+$background-muting-color: rgb(20, 20, 20);
 
 // used in the UI when a bright accent color is needed
-$color-primary-accent: rgb(255, 0, 100);
+$color-primary-accent: #ff6600;
 
 // used as a dark background color for various panels
 $color-translucent-dark-background: rgba(0, 0, 0, 0.6);
 
 // highlight colors of various strengths
 $color-sidenav-highlight: rgba(220, 220, 220, 0.1);
-$color-media-highlight: rgba(220, 220, 220, 0.2);
-
+$color-media-highlight: mix($color-translucent-dark-background, white, 90%);
 // a mixin function to be applied to add a dropshadow to a component
 @mixin dropshadow() {
   box-shadow: 3px 3px 3px rgba(0, 0, 0, 0.3);

@@ -19,7 +19,6 @@
   position: relative;
   font-size: 1em;
   margin: 5px;
-  width: 400px;
   text-decoration: none !important;
   background-color: $color-translucent-dark-background;
   @include dropshadow();
@@ -53,6 +52,10 @@
     a {
       color: grey;
     }
+  }
+
+  &.watched:hover {
+    background-color: $color-media-highlight;
   }
 }
 
@@ -103,7 +106,7 @@
   bottom: 0%;
 
   .progress-bar {
-    height: 0.25em;
+    height: 0.2em;
     background-color: change-color($color-primary-accent, $alpha: 0.7);
   }
 }

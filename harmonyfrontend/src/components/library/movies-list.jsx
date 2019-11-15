@@ -6,16 +6,44 @@ import Movie from "./movie";
 import "./library.scss";
 
 export default observer(class MoviesList extends React.Component {
+  state = {
+    width: 400
+  }
+
+  constructor(props) {
+    super(props);
+    this.container = null;
+
+    this.resizeHook = () => {
+      if (!this.container)
+        return;
+      const canFitCount = Math.floor(this.container.clientWidth / 400);
+      const newWidth = this.container.clientWidth / canFitCount - 15;
+      if (newWidth != this.state.width) {
+        this.setState({
+          width: newWidth
+        });
+      }
+    };
+  }
+
   componentDidMount() {
+    window.addEventListener("resize", this.resizeHook);
+
+    if (!this.props.library.series)
+      this.props.library.refreshMediaList()
+  }
+
+  componentDidUpdate() {
     // always refresh resume watching
     model.user.refreshResumeWatchingList();
 
     if (!this.props.library.series)
       this.props.library.refreshMediaList();
   }
-  componentDidUpdate() {
-    if (!this.props.library.series)
-      this.props.library.refreshMediaList();
+
+  componentWillUnmount() {
+    window.removeEventListener("resize", this.resizeHook);
   }
 
   render() {
@@ -31,11 +59,14 @@ export default observer(class MoviesList extends React.Component {
 
     const movies = [];
     for (const mediaItem of media) {
-      movies.push(<Movie key={mediaItem.mediaid} movie={mediaItem} />)
+      movies.push(<Movie key={mediaItem.mediaid} movie={mediaItem} style={{ width: this.state.width + "px" }} />)
     }
 
     return (
-      <div className="moviesList">
+      <div className="moviesList" ref={(elem) => {
+        this.container = elem;
+        this.resizeHook();
+      }}>
         {movies}
       </div>
     );
