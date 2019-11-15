@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Route, Switch } from "react-router-dom";
 import SideNav from "./components/sidenav";
 import "./App.scss";
-import "./fonts.css";
+import "./fonts.scss";
 import LibraryRouter from "./views/library/libraryrouter";
 import LoginView from "./views/login-view";
 import model from "./model";
