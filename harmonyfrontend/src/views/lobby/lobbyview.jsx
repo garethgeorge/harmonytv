@@ -3,6 +3,7 @@ import io from 'socket.io-client'
 import Player from "../../components/player";
 import model from "../../model/";
 import "./lobbyview.css"; 
+import config from "../../config";
 
 let delta = 0;
 
@@ -134,8 +135,11 @@ class Lobby extends React.Component {
   constructor(props) {
     super(props);
     console.log("Lobby::constructor - lobbyid: " + props.lobbyid);
-    
-    this.socket = io("/lobbyns");
+
+    this.socket = io(config.host + "/lobbyns");
+    this.socket.on("error", console.error);
+    console.log("\tlobby connecting to socket: " + config.apiHost + "/lobbyns");
+    // this.socket.connect(config.apiHost);
     this.player = React.createRef();
   }
 
