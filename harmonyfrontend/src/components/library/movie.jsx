@@ -19,12 +19,14 @@ export default observer(class Movie extends React.Component {
 
     const completed = progress && progress.position > Math.max(progress.total_duration * 0.8, progress.total_duration - 5 * 60);
     const progressBar = (!completed && progress && progress.position > 120) ? (
-      <div className="movie-progress-bar" style={{ width: (progress.position / progress.total_duration * 100.0) + '%' }}></div>
+      <div className="progress-bar-wrapper">
+        <div className="progress-bar" style={{ width: (progress.position / progress.total_duration * 100.0) + '%' }}></div>
+      </div>
     ) : null;
 
     return (
       <div>
-        <div className={completed ? "movie movie-watched" : "movie"} key={movie.mediaid}>
+        <div className={completed ? "movie watched" : "movie"} key={movie.mediaid}>
           <div className="inner">
             <a href="#" onClick={this.onClick.bind(this)}>
               {movie.name}

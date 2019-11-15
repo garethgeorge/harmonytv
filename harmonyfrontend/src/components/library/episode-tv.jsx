@@ -24,12 +24,14 @@ export default observer(class EpisodeTV extends React.Component {
 
     const completed = progress && progress.position > Math.max(progress.total_duration * 0.8, progress.total_duration - 5 * 60);
     const progressBar = (!completed && progress && progress.position > 120) ? (
-      <div className="episode-progress-bar" style={{ width: (progress.position / progress.total_duration * 100.0) + '%' }}></div>
+      <div className="progress-bar-wrapper">
+        <div className="progress-bar" style={{ width: (progress.position / progress.total_duration * 100.0) + '%' }}></div>
+      </div>
     ) : null;
 
     return (
       <div>
-        <div className={completed ? "episode-tv episode-tv-watched" : "episode-tv"} key={episode.mediaid}>
+        <div className={completed ? "episode-tv watched" : "episode-tv"} key={episode.mediaid}>
           <div className="inner">
             <span>S{zeroPad(episode.seasonnumber)}E{zeroPad(episode.episodenumber)}</span>
             <a href="#" onClick={this.onClick.bind(this)}>

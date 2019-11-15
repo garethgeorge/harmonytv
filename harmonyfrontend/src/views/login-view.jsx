@@ -55,43 +55,45 @@ const LoginView = observer(
       if (this.state.loading) return <Loading />;
 
       return (
-        <div className="loginview">
-          <center>
-            <h3>HarmonyTV</h3>
-          </center>
+        <div className="login-view-container absolute-center-content">
+          <div className="loginview">
+            <center>
+              <h3>HarmonyTV</h3>
+            </center>
 
-          <form className="ink-form" onSubmit={this.login.bind(this)}>
-            <div className="control-group">
-              <label htmlFor="username">Username</label>
-              <div className="control">
-                <input
-                  id="username"
-                  name="username"
-                  type="text"
-                  placeholder="username"
-                  value={this.state["username"] || ""}
-                  onChange={this.handleInputChange.bind(this, "username")}
-                />
+            <form className="ink-form" onSubmit={this.login.bind(this)}>
+              <div className="control-group">
+                <label htmlFor="username">Username</label>
+                <div className="control">
+                  <input
+                    id="username"
+                    name="username"
+                    type="text"
+                    placeholder="username"
+                    value={this.state["username"] || ""}
+                    onChange={this.handleInputChange.bind(this, "username")}
+                  />
+                </div>
+                <label htmlFor="password">Password</label>
+                <div className="control">
+                  <input
+                    id="password"
+                    name="password"
+                    type="password"
+                    placeholder="password"
+                    value={this.state["password"] || ""}
+                    onChange={this.handleInputChange.bind(this, "password")}
+                  />
+                </div>
               </div>
-              <label htmlFor="password">Password</label>
-              <div className="control">
-                <input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="password"
-                  value={this.state["password"] || ""}
-                  onChange={this.handleInputChange.bind(this, "password")}
-                />
-              </div>
-            </div>
-            <input
-              type="submit"
-              value="Login"
-              className="button"
-              style={{ width: "100%" }}
-            />
-          </form>
+              <input
+                type="submit"
+                value="Login"
+                className="button"
+                style={{ width: "100%" }}
+              />
+            </form>
+          </div>
         </div>
       );
     }

@@ -1,9 +1,19 @@
+@import "../variables.scss";
+
+.login-view-container {
+  background: linear-gradient(
+    55deg,
+    mix($color-primary-1, $background-muting-color, 60%),
+    mix($color-primary-2, $background-muting-color, 60%)
+  );
+}
+
 .loginview {
   color: white;
   width: 300px;
-  padding: 20px;
-  border-radius: 0.7em;
-  background-color: rgba(0, 0, 0, 0.1);
+  padding: 1em;
+  border-radius: 2em;
+  background-color: $color-translucent-dark-background;
 }
 
 .loginview h3 {

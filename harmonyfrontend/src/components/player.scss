@@ -1,13 +1,13 @@
 /* properly layout the container and makesure its backfill is black */
 .shakaContainer {
-    background-color: black;
-    height: 100%;
-    width: 100%;
-    text-align: center;
+  background-color: black;
+  height: 100%;
+  width: 100%;
+  text-align: center;
 }
 
 /* make sure the video fills the container */
 .shakaContainer > video {
-    width: 100%;
-    height: 100%;
+  width: 100%;
+  height: 100%;
 }

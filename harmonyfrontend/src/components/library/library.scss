@@ -16,6 +16,7 @@
 .seriesList .show,
 .moviesList .movie,
 .episodeList .episode-tv {
+  position: relative;
   font-size: 1em;
   margin: 5px;
   width: 400px;
@@ -43,6 +44,16 @@
       }
     }
   }
+
+  &.watched {
+    background-color: change-color(
+      darken($color-translucent-dark-background, 50%),
+      $alpha: 0.9
+    );
+    a {
+      color: grey;
+    }
+  }
 }
 
 .seriesList .show,
@@ -62,5 +73,37 @@
     color: rgba(155, 155, 155, 0.75);
     width: 100%;
     margin-right: 2em;
+  }
+}
+
+.metadata-tags {
+  float: right !important;
+  width: auto !important;
+}
+
+.metadata-tags .tag {
+  font-family: "Roboto Mono", monospace !important;
+  font-size: 0.7em !important;
+
+  border-style: solid;
+  border-width: 1px;
+  border-color: rgba(255, 255, 255, 0.2);
+  border-radius: 5px;
+  color: rgba(255, 255, 255, 0.2);
+  font-weight: 1em;
+  width: auto !important;
+  margin-right: 5px;
+  padding: 1px;
+}
+
+.progress-bar-wrapper {
+  position: absolute;
+  width: 100%;
+  background-color: black;
+  bottom: 0%;
+
+  .progress-bar {
+    height: 0.25em;
+    background-color: change-color($color-primary-accent, $alpha: 0.7);
   }
 }

@@ -37,9 +37,7 @@ const App = observer(class App extends React.Component {
     // block the view by rendering the login screen
     if (!model.state.user) {
       return (
-        <div className="absolute-center-content">
-          <LoginView />
-        </div>
+        <LoginView />
       );
     }
 
