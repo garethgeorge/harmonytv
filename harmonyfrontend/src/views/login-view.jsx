@@ -59,7 +59,7 @@ const LoginView = observer(class LoginView extends React.Component {
     return (
       <div className="loginview">
         <center>
-          <h3>MyPlex</h3>
+          <h3>HarmonyTV</h3>
         </center>
 
         <form className="ink-form" onSubmit={this.login.bind(this)}>

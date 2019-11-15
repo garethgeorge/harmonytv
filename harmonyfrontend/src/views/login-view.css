@@ -1,9 +1,9 @@
 .loginview {
     color: white;
     width: 300px;
-    background-color: rgba(0,0,0,0.3);
     padding: 20px;
     border-radius: 0.7em;
+    background-color: rgba(0,0,0, 0.1);
 }
 
 .loginview h3 {

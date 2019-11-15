@@ -1,6 +1,7 @@
 import React from "react";
 import {observer} from "mobx-react";
 import { Link } from "react-router-dom";
+import "./breadcrumbs.css";
 
 export default observer((props) => {
   const divs = [];
@@ -18,8 +19,8 @@ export default observer((props) => {
   }
 
   return (
-    <nav className="ink-navigation">
-      <ul className="breadcrumbs black">
+    <nav className="ink-navigation navbar-top">
+      <ul className="breadcrumbs">
         {divs}
       </ul>
     </nav>
