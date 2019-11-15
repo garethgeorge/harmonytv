@@ -11,10 +11,10 @@ const scanFiles = (dir, results) => {
       results.push(fullpath);
     }
   }
-}
+};
 
 module.exports = {
-  dirtree: (dir) => {
+  dirtree: dir => {
     const results = [];
     scanFiles(dir, results);
     return results;

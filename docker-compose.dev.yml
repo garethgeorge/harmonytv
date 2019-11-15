@@ -1,4 +1,4 @@
-version: '3'
+version: "3"
 
 services:
   db:
@@ -8,30 +8,30 @@ services:
     volumes:
       - ./.db_data:/var/lib/postgresql/data
     environment:
-      POSTGRES_PASSWORD: 'postgres'
-  
+      POSTGRES_PASSWORD: "postgres"
+
   apiserver:
     image: node:12
-    user: node 
+    user: node
     working_dir: /app/harmonybackend/
     volumes:
       - ./harmonybackend:/app/harmonybackend/
       - $HOME/.config/myplex:/home/node/.config/myplex
     environment:
-      - NODE_ENV=development 
+      - NODE_ENV=development
       - POSTGRES_HOST=db
       - DEBUG=model*,web*
     depends_on:
       - db
     command: "./node_modules/nodemon/bin/nodemon.js bin/web.js"
-    
+
   webuiserver:
     image: node:12
-    user: node 
+    user: node
     working_dir: /app/harmonyfrontend/
     volumes:
       - ./harmonyfrontend:/app/harmonyfrontend/
-    command: "npm start"
+    command: bash -c "npm rebuild && npm start"
 
   web:
     image: nginx
@@ -41,10 +41,10 @@ services:
       - ./harmonyfrontend/build/:/www/reactbuild/
       - ./.certbot/conf:/etc/letsencrypt
       - ./.certbot/www:/var/www/certbot
-    command: [nginx-debug, '-g', 'daemon off;']
-    ports: 
+    command: [nginx-debug, "-g", "daemon off;"]
+    ports:
       - "80:80"
       - "443:443"
     depends_on:
-      - webuiserver 
-      - apiserver 
+      - webuiserver
+      - apiserver

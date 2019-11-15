@@ -1,9 +1,9 @@
 import React from "react";
 import model from "../../model";
-import {observer} from "mobx-react";
+import { observer } from "mobx-react";
 import Loading from "../../components/loading";
 import Movie from "./movie";
-import "./library.css";
+import "./library.scss";
 
 export default observer(class MoviesList extends React.Component {
   componentDidMount() {

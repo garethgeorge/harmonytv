@@ -1,8 +1,8 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import {observer} from "mobx-react";
+import { observer } from "mobx-react";
 import Loading from "../../components/loading";
-import "./library.css";
+import "./library.scss";
 
 export default observer(class SeriesList extends React.Component {
   componentDidMount() {

@@ -1,0 +1,44 @@
+html,
+body,
+.App {
+  height: 100%;
+  width: 100%;
+}
+
+body {
+  background-color: rgb(50, 52, 58);
+  background: linear-gradient(55deg, rgb(32, 0, 127), rgb(127, 0, 95));
+}
+
+.App * {
+  color: white;
+}
+
+.App {
+  display: flex;
+  flex-direction: row;
+  background-color: rgba(50, 50, 50, 0.7);
+}
+
+.sidenav-container {
+  width: 17em;
+  height: 100%;
+}
+
+/* a viewport sized div which wraps all of the content for the application's main pages */
+/* this EXCUDES the sidenav */
+.content-container {
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
+  overflow-x: hidden;
+}
+
+.absolute-center-content {
+  height: 10em;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}

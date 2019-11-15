@@ -1,8 +1,8 @@
 import React from "react";
-import {observer} from "mobx-react";
+import { observer } from "mobx-react";
 import model from "../../model/";
 
-import "./library.css";
+import "./library.scss";
 import MetadataTags from "./metadata-tags";
 
 export default observer(class EpisodeTV extends React.Component {
@@ -12,7 +12,7 @@ export default observer(class EpisodeTV extends React.Component {
       window.location.href = "/lobby/" + lobbyid;
     });
   }
-  
+
   render() {
     const episode = this.props.episode;
     const progress = model.state.resumeWatching[this.props.episode.mediaid];
@@ -24,7 +24,7 @@ export default observer(class EpisodeTV extends React.Component {
 
     const completed = progress && progress.position > Math.max(progress.total_duration * 0.8, progress.total_duration - 5 * 60);
     const progressBar = (!completed && progress && progress.position > 120) ? (
-      <div className="episode-progress-bar" style={{width: (progress.position / progress.total_duration * 100.0) + '%' }}></div>
+      <div className="episode-progress-bar" style={{ width: (progress.position / progress.total_duration * 100.0) + '%' }}></div>
     ) : null;
 
     return (

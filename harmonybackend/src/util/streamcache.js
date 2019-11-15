@@ -1,6 +1,6 @@
-var Util   = require('util');
-var Stream = require('stream').Stream;
-const rimraf = require('rimraf');
+var Util = require("util");
+var Stream = require("stream").Stream;
+const rimraf = require("rimraf");
 const path = require("path");
 const os = require("os");
 const fs = require("fs");
@@ -19,8 +19,8 @@ function StreamCache() {
   this.readable = true;
 
   this._buffers = [];
-  this._dests   = [];
-  this._ended   = false;
+  this._dests = [];
+  this._ended = false;
 
   this.flushingToDisk = false;
   this.bytesOnDisk = 0;
@@ -33,7 +33,6 @@ StreamCache.prototype.write = function(buffer) {
   this._dests.forEach(function(dest) {
     dest.write(buffer);
   });
-  
 
   // if we exceed 32 megabytes
   if (this.getLength() > 32 * 1000 * 1000 && !this.flushingToDisk) {
@@ -47,7 +46,7 @@ StreamCache.prototype.write = function(buffer) {
 
 StreamCache.prototype.pipe = function(dest, options) {
   if (options) {
-    throw Error('StreamCache#pipe: options are not supported yet.');
+    throw Error("StreamCache#pipe: options are not supported yet.");
   }
 
   this._buffers.forEach(function(buffer) {

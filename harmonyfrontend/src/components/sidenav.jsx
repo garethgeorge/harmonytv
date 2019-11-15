@@ -1,7 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import model from "../model";
-import {observer} from "mobx-react";
+import { observer } from "mobx-react";
+
+import "./sidenav.scss"
 
 export default observer(class SideNav extends React.Component {
   state = {}
@@ -16,15 +18,15 @@ export default observer(class SideNav extends React.Component {
       for (const library of Object.values(model.state.libraries)) {
         const selected = window.location.href.indexOf("/" + library.id) !== -1;
         links.push(
-          <Link key={library.id} 
-            className={selected ? "selected" : ""} 
+          <Link key={library.id}
+            className={selected ? "selected" : ""}
             to={"/library/" + library.id}
             onClick={() => {
               setImmediate(() => {
                 this.forceUpdate();
               });
             }}
-            >{library.name}</Link>
+          >{library.name}</Link>
         )
       }
     }
