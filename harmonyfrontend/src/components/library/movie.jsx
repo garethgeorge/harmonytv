@@ -12,7 +12,7 @@ export default observer(class Movie extends React.Component {
       window.location.href = "/lobby/" + lobbyid;
     });
   }
-  
+
   render() {
     const movie = this.props.movie;
     const progress = model.state.resumeWatching[movie.mediaid];
