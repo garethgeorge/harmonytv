@@ -53,14 +53,13 @@ body {
   background-color: rgba(255,255,255,0.05);
   /* background: linear-gradient(55deg, rgba(63,0,255,0.1), rgba(255,0,191,0.1)); */
   /* border-left: 4px solid rgba(255,155,0, 0.5); */
-  border-left: 4px solid rgba(191,0,63,0.2);
+  border-left: 4px solid rgba(191,0,63,0.4);
 }
 
 .sidenav a.selected {
   /* border-left: 4px solid rgba(255,155,0,1); */
-  border-left: 4px solid rgba(191,0,63,0.5);
+  border-left: 4px solid rgba(191,0,63,0.9);
   background-color: rgba(255,235,200,0.05);
-  /* background: linear-gradient(55deg, rgba(63,0,255,0.3), rgba(255,0,191,0.3)); */
 }
 
 .absolute-center-content {
