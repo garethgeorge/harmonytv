@@ -1,3 +1,5 @@
+@import "../../variables.scss";
+
 /* series list css */
 .seriesList,
 .moviesList {
@@ -15,7 +17,7 @@
 }
 
 .seriesList .show {
-  background-color: rgba(0, 0, 0, 0.5);
+  background-color: $color-translucent-dark-background;
 }
 
 .seriesList .show .inner,
@@ -27,8 +29,9 @@
 }
 
 .seriesList .show:hover,
-.moviesList .movie:hover {
-  background-color: rgba(15, 15, 15, 0.5);
+.moviesList .movie:hover,
+.episode-tv:hover {
+  background-color: $color-media-highlight;
   text-decoration: none;
 }
 
@@ -45,6 +48,7 @@
   margin: 10px;
   color: white;
   background-color: rgba(0, 0, 0, 0.5);
+  position: relative;
 }
 
 .episode-tv .inner,

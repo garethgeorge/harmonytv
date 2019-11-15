@@ -6,8 +6,14 @@ $color-primary-accent: rgb(191, 0, 63);
 $color-translucent-shadow: rgba(0, 0, 0, 0.1);
 $color-translucent-dark-background: rgba(0, 0, 0, 0.5);
 
-$color-translucent-highlight: mix(
+$color-sidenav-highlight: mix(
   rgba(255, 255, 255, 0.1),
   change-color($color-primary-accent, $alpha: 0.1),
   80%
+);
+
+$color-media-highlight: mix(
+  $color-sidenav-highlight,
+  $color-translucent-dark-background,
+  10%
 );

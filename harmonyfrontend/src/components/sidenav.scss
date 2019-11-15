@@ -13,6 +13,9 @@
   display: flex;
   flex-wrap: wrap;
   align-items: center;
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 1.5em;
+  padding: 15px;
 }
 
 .sidenav-title::before {
@@ -35,14 +38,14 @@
 .sidenav a:hover {
   color: rgb(255, 255, 255);
   text-decoration: none;
-  background-color: $color-translucent-highlight;
+  background-color: $color-sidenav-highlight;
   border-left: 4px solid transparentize($color-primary-accent, 0.5);
 }
 
 .sidenav a.selected {
   /* border-left: 4px solid rgba(255,155,0,1); */
   border-left: $color-primary-accent 4px solid;
-  background-color: $color-translucent-highlight;
+  background-color: $color-sidenav-highlight;
 }
 
 .absolute-center-content {
