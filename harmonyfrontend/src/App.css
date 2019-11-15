@@ -5,7 +5,8 @@ html, body, .App {
 
 body {
   background-color: rgb(50, 52, 58);
-  background: linear-gradient(55deg, rgb(63,0,255), rgb(255,0,191));
+  /* background: linear-gradient(55deg, rgb(63,0,255), rgb(255,0,191)); */
+  background: linear-gradient(55deg, rgb(32,0,127), rgb(127,0,95));
 }
 
 .App * {
@@ -15,7 +16,7 @@ body {
 .App {
   display: flex;
   flex-direction: row;
-  background-color: rgba(0,0,0,0.7);
+  background-color: rgba(50,50,50,0.5);  
 }
 
 .sidenav-container {
@@ -37,7 +38,7 @@ body {
   flex-direction: column;
   background-color: rgba(0, 0, 0, 0.5);
   height: 100%;
-  border-right: 1px solid rgba(0, 0, 0, 0.2);
+  border-right: 1px solid rgba(0, 0, 0, 0.4);
 }
 
 .sidenav a {
