@@ -1,3 +1,5 @@
+@import "./variables.scss";
+
 html,
 body,
 .App {
@@ -7,7 +9,7 @@ body,
 
 body {
   background-color: rgb(50, 52, 58);
-  background: linear-gradient(55deg, rgb(32, 0, 127), rgb(127, 0, 95));
+  background: linear-gradient(55deg, $color-primary-1, $color-primary-2);
 }
 
 .App * {
