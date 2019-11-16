@@ -32,13 +32,13 @@ export default observer(class EpisodeTV extends React.Component {
     return (
       <div>
         <div className={completed ? "episode-tv watched" : "episode-tv"} key={episode.mediaid}>
-          <div className="inner">
-            <span>S{zeroPad(episode.seasonnumber)}E{zeroPad(episode.episodenumber)}</span>
-            <a href="#" onClick={this.onClick.bind(this)}>
+          <a href="#" onClick={this.onClick.bind(this)}>
+            <div className="inner">
+              <span>S{zeroPad(episode.seasonnumber)}E{zeroPad(episode.episodenumber)}</span>
               {episode.name}
-            </a>
-            <MetadataTags metadata={episode.metadata} />
-          </div>
+              <MetadataTags metadata={episode.metadata} />
+            </div>
+          </a>
           {progressBar}
         </div>
       </div>

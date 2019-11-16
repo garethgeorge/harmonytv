@@ -28,12 +28,12 @@ export default observer(class Movie extends React.Component {
 
     return (
       <div className={completed ? "movie watched" : "movie"} key={movie.mediaid} style={this.props.style}>
-        <div className="inner">
-          <a href="#" onClick={this.onClick.bind(this)}>
+        <a href="#" onClick={this.onClick.bind(this)}>
+          <div className="inner">
             {movie.name}
-          </a>
-          <MetadataTags metadata={movie.metadata} />
-        </div>
+            <MetadataTags metadata={movie.metadata} />
+          </div>
+        </a>
         {progressBar}
       </div>
     );
