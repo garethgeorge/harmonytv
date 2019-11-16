@@ -10,7 +10,7 @@ export default observer(class ChatBox extends React.Component {
     composition: "",
     messages: [],
     users: 1,
-    docked: false,
+    docked: true,
     side: "left",
   }
 
@@ -19,12 +19,36 @@ export default observer(class ChatBox extends React.Component {
   constructor(props) {
     super(props);
 
-    const dockmode = cookies.get("harmonytv-chatbox-dockmode");
-    if (dockmode === "left" || dockmode === "right") {
+    const docked = cookies.get("harmonytv-chatbox-docked");
+    if (docked) {
       this.state.docked = true;
-      this.state.side = dockmode;
     } else
       this.state.docked = false;
+
+    const side = cookies.get("harmonytv-chatbox-side");
+    if (side === "left" || side === "right") {
+      this.state.side = side;
+    }
+
+    this.textEntry = React.createRef();
+    document.addEventListener('keydown', (e) => {
+      if (e.key === "Enter" && !(e.ctrlKey || e.metaKey)) {
+        if (document.activeElement != this.textEntry) {
+          this.textEntry.current.focus();
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    });
+    // document.addEventListener('keyup', (e) => {
+    //   if (e.key === "Enter" && !(e.ctrlKey || e.metaKey)) {
+    //     if (document.activeElement != this.textEntry) {
+    //       this.textEntry.current.focus();
+    //       e.preventDefault();
+    //       e.stopPropagation();
+    //     }
+    //   }
+    // });
 
     this.messages = React.createRef();
     this.registerCommands();
@@ -48,15 +72,29 @@ export default observer(class ChatBox extends React.Component {
 
   registerCommand(command, handler, opts = null) {
     if (!opts)
-      opts = []
+      opts = {};
 
+    // if an array is passed, apply the handler to each element
     if (command instanceof Array) {
       for (const cmd of command) {
-        this.registerCommand(cmd, handler);
+        this.registerCommand(cmd, handler, opts);
       }
       return;
     }
 
+    // generate html for command usage
+    let arglist = null;
+    if (!arglist && opts.args) {
+      arglist = opts.args.map(arg => {
+        if (arg.optional) {
+          return <span className="command-arg optional">{"["+arg.name+"]"}</span>;
+        }
+        return <span className="command-arg">{"<"+arg.name+">"}</span>;
+      });
+    }
+    const usage = <span className="command">{"\\" + command}{arglist ? " " : ""}{arglist}</span>;
+
+    // Determine number of required args
     if (opts && opts.args) {
       opts.requiredArgs = 0;
       for (const arg of opts.args) {
@@ -66,25 +104,42 @@ export default observer(class ChatBox extends React.Component {
       }
     }
 
+    // Allow named reference to args
+    let oldHandler = handler;
+    const argHandler = (args) => {
+      let newArgs = {};
+      for (let i in args) {
+        newArgs[i] = args[i];
+      }
+      for (let i in opts.args) {
+        newArgs[opts.args[i].name] = args[i];
+      }
+      newArgs.length = args.length;
+      oldHandler(newArgs);
+    }
+
+    // Preliminary error checking on number of required args
+    let countHandler = argHandler;
     if (opts && opts.requiredArgs) {
-      const oldHandler = handler;
-      handler = (args) => {
+      countHandler = (args) => {
         if (args.length < opts.requiredArgs) {
           this.addMessage(
-            `Expected ${opts.requiredArgs} arguments - usage: ` +
-            opts.args.map((arg, idx) => "<" + (arg.name || "arg" + idx) + ">").join(', '),
+            <span>Expected {opts.requiredArgs} argument(s). Usage: <br/> {usage}</span>,
             { kind: "warning" }
           );
           return;
         }
-        oldHandler(args);
+        argHandler(args);
       }
     }
+
+    handler = countHandler;
 
     this.commands[command] = {
       "command": command,
       "handler": handler,
-      "opts": opts
+      "opts": opts,
+      "usage": usage,
     }
   }
 
@@ -122,7 +177,7 @@ export default observer(class ChatBox extends React.Component {
     const command = args[0].substr(1);
 
     if (!this.commands[command]) {
-      this.addMessage('Unknown command "' + composition + '".', { kind: "warning" });
+      this.addMessage(<span>Unknown command <span className="command">{composition}</span>.</span>, { kind: "warning" });
     } else {
       this.commands[command].handler(args.slice(1));
     }
@@ -132,20 +187,15 @@ export default observer(class ChatBox extends React.Component {
 
     this.registerCommand("?", (args) => {
       const commands = Object.values(this.commands).map(command => {
+        if (command.opts.secret) {
+          return ;
+        }
         let text = null;
         if (!text && command.opts.help)
           text = command.opts.help
-        let usage = null;
-        if (!usage && command.opts.args) {
-          usage = " usage: " + command.opts.args.map(arg => {
-            if (arg.optional)
-              return "[" + arg.name + "]"
-            return "<" + arg.name + ">"
-          }).join(" ");
-        }
 
         return (
-          <li><span className="command">{"\\" + command.command}</span> {text} {usage}</li>
+          <li>{command.usage} {text}</li>
         )
       });
 
@@ -157,21 +207,25 @@ export default observer(class ChatBox extends React.Component {
           </ul>
         </div>
         , { kind: "info" });
+    }, {
+      help: 'show this list'
     });
 
     this.registerCommand("dock", (args) => {
       const stateCpy = Object.assign({}, this.state);
       stateCpy.docked = true;
+      cookies.set("harmonytv-chatbox-docked", stateCpy.docked);
+      console.log(args);
       if (args.length > 0) {
         if (args[0] == "left" || args[0] == "right") {
-          cookies.set("harmonytv-chatbox-dockmode", args[0]);
+          cookies.set("harmonytv-chatbox-side", args[0]);
           stateCpy.side = args[0];
         } else {
           this.addMessage("side must be one of \'left\' or \'right\'", { kind: "success" });
         }
       }
       this.setState(stateCpy, () => {
-        this.addMessage(`Chatbox docked to side ${stateCpy.side}.`, { kind: "success" });
+        this.addMessage(`Chatbox docked to ${stateCpy.side} side.`, { kind: "success" });
       });
     }, {
       help: "docks the chat",
@@ -183,15 +237,29 @@ export default observer(class ChatBox extends React.Component {
       ]
     });
 
-    this.registerCommand("float", (args) => {
+    this.registerCommand(["float", "undock"], (args) => {
       const stateCpy = Object.assign({}, this.state);
       stateCpy.docked = false;
-      cookies.set("harmonytv-chatbox-dockmode", "none");
+      cookies.set("harmonytv-chatbox-docked", stateCpy.docked);
+      if (args.length > 0) {
+        if (args[0] == "left" || args[0] == "right") {
+          cookies.set("harmonytv-chatbox-side", args[0]);
+          stateCpy.side = args[0];
+        } else {
+          this.addMessage("side must be one of \'left\' or \'right\'", { kind: "success" });
+        }
+      }
       this.setState(stateCpy, () => {
-        this.addMessage(`Undocked chatbox`, { kind: "success" });
+        this.addMessage(`Chatbox undocked to ${stateCpy.side} side.`, { kind: "success" });
       });
     }, {
-      help: "undocks the chat"
+      help: "undocks the chat",
+      args: [
+        {
+          name: "side",
+          optional: true
+        }
+      ]
     });
 
     this.registerCommand("clear", (args) => {
@@ -216,11 +284,99 @@ export default observer(class ChatBox extends React.Component {
       help: "pauses the video"
     });
 
-    this.registerCommand("toggle_audio", (args) => {
-      document.getElementById('video').muted = !document.getElementById('video').muted;
-      this.addMessage('Video ' + (document.getElementById('video').muted ? '' : 'un') + 'muted.', { kind: "success" });
+    this.registerCommand("skip", (args) => {
+      if (Number(args[0])) {
+        document.getElementById('video').currentTime += Number(args[0]);
+        if (Number(args[0]) > 0) {
+          this.addMessage('Skipped forward '+Number(args[0])+' seconds.', {kind: "success"});
+        }
+        else if (Number(args[0]) < 0) {
+          this.addMessage('Skipped back '+(-Number(args[0]))+' seconds.', {kind: "success"});
+        }
+        else {
+          this.addMessage('Failed to skip. Must provide a number of seconds.', {kind: "warning"});
+        }
+      }
     }, {
-      help: "toggles audio on / off",
+      help: "skip forward by seconds",
+      args: [{
+        name: "seconds",
+        optional: false
+      }]
+    });
+
+    this.registerCommand("seek", (args) => {
+      if (args[0].split(':').length==2 && Number(args[0].split(':')[0]) && Number(args[0].split(':')[1])) {
+        document.getElementById('video').currentTime = 60*Number(args[0].split(':')[0])+Number(args[0].split(':')[1]);
+        this.addMessage('Seeked to '+args[0]+'.', {kind: "success"});
+      }
+      else {
+        this.addMessage('Failed to seek. Must provide a timestamp argument.', {kind: "warning"});
+      }
+    }, {
+      help: "seek to a timestamp",
+      args: [{
+        name: "timestamp",
+        optional: false
+      }]
+    });
+
+    this.registerCommand("volume", (args) => {
+      const prev_volume = document.getElementById('video').volume;
+      const arg = args.change;
+      if (arg == "up") {
+        document.getElementById('video').muted = false;
+        document.getElementById('video').volume = Math.min(prev_volume+0.2,1);
+        this.addMessage('Volume increased.', {kind: "success"});
+      }
+      else if (arg == "down") {
+        document.getElementById('video').muted = false;
+        document.getElementById('video').volume = Math.max(prev_volume-0.2,0);
+        this.addMessage('Volume decreased.', {kind: "success"});
+      }
+      else if (arg == "mute") {
+        document.getElementById('video').muted = true;
+        this.addMessage('Volume muted.', {kind: "success"});
+      }
+      else if (arg == "unmute") {
+        document.getElementById('video').muted = false;
+        this.addMessage('Volume unmuted.', {kind: "success"});
+      }
+      else if (Number(arg) && 0<=Number(arg) && Number(arg)<=100) {
+        document.getElementById('video').muted = false;
+        document.getElementById('video').volume = Number(arg)/100;
+        this.addMessage('Volume set to '+Number(arg)+'.', {kind: "success"});
+      }
+      else {
+        this.addMessage('change must be one of \'up\', \'down\', \'mute\', \'unmute\' or a number 0-100.', {kind: "warning"});
+      }
+    }, {
+      help: "change volume (up, down, mute, unmute, 0-100)",
+      args: [
+        {
+          name: "change",
+          optional: false
+        }
+      ]
+    });
+
+    this.registerCommand("mute", (args) => {
+      document.getElementById('video').muted = true;
+      this.addMessage('Video muted.', { kind: "success" });
+    }, {
+      secret: true,
+      help: "mutes the video",
+    });
+
+    this.registerCommand("unmute", (args) => {
+      document.getElementById('video').muted = false;
+      if (document.getElementById('video').volume < 0.2) {
+        document.getElementById('video').volume = 0.2;
+      }
+      this.addMessage('Video unmuted.', { kind: "success" });
+    }, {
+      secret: true,
+      help: "unmutes the video",
     });
 
     this.registerCommand("fullscreen", (args) => {
@@ -248,6 +404,8 @@ export default observer(class ChatBox extends React.Component {
         }
       }
       this.addMessage('Toggling fullscreen.', { kind: "success" });
+    }, {
+      help: "toggle fullscreen"
     });
   }
 
@@ -273,7 +431,7 @@ export default observer(class ChatBox extends React.Component {
         {/* functionally this is padding */}
         <div style={{ height: "30px", color: "red" }}></div>
         {/* this is the actual text input */}
-        <input className="chatboxTextEntry" type="text"
+        <input ref={this.textEntry} className={"chatboxTextEntry " + (this.state.composition[0]=="\\" ? "command" : "")} type="text"
           value={this.state.composition}
           onChange={(e) => {
             const state = Object.assign({}, this.state);
@@ -281,20 +439,26 @@ export default observer(class ChatBox extends React.Component {
             this.setState(state);
           }}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && this.state.composition.length > 0) {
-              const state = Object.assign({}, this.state)
-              const composition = this.state.composition;
-              state.composition = "";
-              this.setState(state, () => {
-                // send the message if it is not a special command
-                if (composition[0] != "\\") {
-                  const message = model.state.user.username + ": " + composition;
-                  this.addMessage(message);
-                  this.props.socket.emit("client:message", message);
-                } else { // do the command if it is known
-                  this.chatCommand(composition);
+            if (e.key === "Enter") {
+              if (this.state.composition.length > 0) {
+                const state = Object.assign({}, this.state)
+                const composition = this.state.composition;
+                state.composition = "";
+                this.setState(state, () => {
+                  // send the message if it is not a special command
+                  if (composition[0] != "\\") {
+                    const message = model.state.user.username + ": " + composition;
+                    this.addMessage(message);
+                    this.props.socket.emit("client:message", message);
+                  } else { // do the command if it is known
+                    this.chatCommand(composition);
+                  }
+                });
+              } else {
+                if (!this.state.docked) {
+                  this.textEntry.current.blur();
                 }
-              });
+              }
             }
           }} />
       </div>
