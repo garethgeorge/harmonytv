@@ -142,8 +142,13 @@
     font-family: monospace;
     border-radius: 0.15em;
     background-color: rgba(255, 255, 255, 0.1);
-    color: $color-primary-accent;
+    color: mix($color-primary-accent, white, 70%);
     font-style: normal;
     padding: 0.1em;
+  }
+  .command-arg {
+    font-family: monospace;
+    color: mix($color-primary-accent, white, 40%);
+    opacity: 0.7;
   }
 }

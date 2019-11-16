@@ -48,8 +48,9 @@ export default observer(class ChatBox extends React.Component {
 
   registerCommand(command, handler, opts = null) {
     if (!opts)
-      opts = []
+      opts = {};
 
+    // if an array is passed, apply the handler to each element
     if (command instanceof Array) {
       for (const cmd of command) {
         this.registerCommand(cmd, handler);
@@ -57,6 +58,19 @@ export default observer(class ChatBox extends React.Component {
       return;
     }
 
+    // generate html for command usage
+    let arglist = null;
+    if (!arglist && opts.args) {
+      arglist = opts.args.map(arg => {
+        if (arg.optional) {
+          return <span className="command-arg optional">{"["+arg.name+"]"}</span>;
+        }
+        return <span className="command-arg">{"<"+arg.name+">"}</span>;
+      });
+    }
+    const usage = <span className="command">{"\\" + command}{arglist ? " " : ""}{arglist}</span>;
+
+    // Determine number of required args
     if (opts && opts.args) {
       opts.requiredArgs = 0;
       for (const arg of opts.args) {
@@ -66,13 +80,26 @@ export default observer(class ChatBox extends React.Component {
       }
     }
 
+    let oldHandler = handler;
+
+    // // Allow named reference to args
+    // handler = (args) => {
+    //   let newArgs = args;
+    //   for (let i in opts.args) {
+    //     newArgs[opts.args[i].name] = args[i];
+    //   }
+    //   oldHandler(newArgs);
+    // }
+    // 
+    // oldHandler = handler;
+
+    // Preliminary error checking on number of required args
     if (opts && opts.requiredArgs) {
-      const oldHandler = handler;
       handler = (args) => {
+        console.log('ARGCZECKER: ', args);
         if (args.length < opts.requiredArgs) {
           this.addMessage(
-            `Expected ${opts.requiredArgs} arguments - usage: ` +
-            opts.args.map((arg, idx) => "<" + (arg.name || "arg" + idx) + ">").join(', '),
+            <span>Expected {opts.requiredArgs} argument(s). Usage: <br/> {usage}</span>,
             { kind: "warning" }
           );
           return;
@@ -84,7 +111,8 @@ export default observer(class ChatBox extends React.Component {
     this.commands[command] = {
       "command": command,
       "handler": handler,
-      "opts": opts
+      "opts": opts,
+      "usage": usage,
     }
   }
 
@@ -132,20 +160,15 @@ export default observer(class ChatBox extends React.Component {
 
     this.registerCommand("?", (args) => {
       const commands = Object.values(this.commands).map(command => {
+        if (command.opts.secret) {
+          return ;
+        }
         let text = null;
         if (!text && command.opts.help)
           text = command.opts.help
-        let usage = null;
-        if (!usage && command.opts.args) {
-          usage = " usage: " + command.opts.args.map(arg => {
-            if (arg.optional)
-              return "[" + arg.name + "]"
-            return "<" + arg.name + ">"
-          }).join(" ");
-        }
 
         return (
-          <li><span className="command">{"\\" + command.command}</span> {text} {usage}</li>
+          <li>{command.usage} {text}</li>
         )
       });
 
@@ -157,6 +180,8 @@ export default observer(class ChatBox extends React.Component {
           </ul>
         </div>
         , { kind: "info" });
+    }, {
+      help: 'show this list'
     });
 
     this.registerCommand("dock", (args) => {
@@ -186,11 +211,36 @@ export default observer(class ChatBox extends React.Component {
     this.registerCommand("float", (args) => {
       const stateCpy = Object.assign({}, this.state);
       stateCpy.docked = false;
+      if (args.length > 0) {
+        if (args[0] == "left" || args[0] == "right") {
+          cookies.set("harmonytv-chatbox-dockmode", args[0]);
+          stateCpy.side = args[0];
+        } else {
+          this.addMessage("side must be one of \'left\' or \'right\'", { kind: "success" });
+        }
+      }
+      this.setState(stateCpy, () => {
+        this.addMessage(`Chatbox undocked to side ${stateCpy.side}.`, { kind: "success" });
+      });
+    }, {
+      help: "undocks the chat",
+      args: [
+        {
+          name: "side",
+          optional: true
+        }
+      ]
+    });
+
+    this.registerCommand("undock", (args) => {
+      const stateCpy = Object.assign({}, this.state);
+      stateCpy.docked = false;
       cookies.set("harmonytv-chatbox-dockmode", "none");
       this.setState(stateCpy, () => {
         this.addMessage(`Undocked chatbox`, { kind: "success" });
       });
     }, {
+      secret: true,
       help: "undocks the chat"
     });
 
@@ -216,10 +266,87 @@ export default observer(class ChatBox extends React.Component {
       help: "pauses the video"
     });
 
+    this.registerCommand("skip", (args) => {
+      if (Number(args[0])) {
+        document.getElementById('video').currentTime += Number(args[0]);
+        if (Number(args[0]) > 0) {
+          this.addMessage('Skipped forward '+Number(args[0])+' seconds.', {kind: "success"});
+        }
+        else if (Number(args[0]) < 0) {
+          this.addMessage('Skipped back '+(-Number(args[0]))+' seconds.', {kind: "success"});
+        }
+        else {
+          this.addMessage('Failed to skip. Must provide a number of seconds.', {kind: "warning"});
+        }
+      }
+    }, {
+      help: "skip forward by seconds",
+      args: [{
+        name: "seconds",
+        optional: false
+      }]
+    });
+
+    this.registerCommand("seek", (args) => {
+      if (args[0].split(':').length==2 && Number(args[0].split(':')[0]) && Number(args[0].split(':')[1])) {
+        document.getElementById('video').currentTime = 60*Number(args[0].split(':')[0])+Number(args[0].split(':')[1]);
+        this.addMessage('Seeked to '+args[0]+'.', {kind: "success"});
+      }
+      else {
+        this.addMessage('Failed to seek. Must provide a timestamp argument.', {kind: "warning"});
+      }
+    }, {
+      help: "seek to a timestamp",
+      args: [{
+        name: "timestamp",
+        optional: false
+      }]
+    });
+
+    this.registerCommand("volume", (args) => {
+      const prev_volume = document.getElementById('video').volume;
+      const arg = args[0];
+      if (arg == "up") {
+        document.getElementById('video').muted = false;
+        document.getElementById('video').volume = Math.min(prev_volume+0.2,1);
+        this.addMessage('Volume increased.', {kind: "success"});
+      }
+      else if (arg == "down") {
+        document.getElementById('video').muted = false;
+        document.getElementById('video').volume = Math.max(prev_volume-0.2,0);
+        this.addMessage('Volume decreased.', {kind: "success"});
+      }
+      else if (arg == "mute") {
+        document.getElementById('video').muted = true;
+        this.addMessage('Volume muted.', {kind: "success"});
+      }
+      else if (arg == "unmute") {
+        document.getElementById('video').muted = false;
+        this.addMessage('Volume unmuted.', {kind: "success"});
+      }
+      else if (Number(arg) && 0<=Number(arg) && Number(arg)<=100) {
+        document.getElementById('video').muted = false;
+        document.getElementById('video').volume = Number(arg)/100;
+        this.addMessage('Volume set to '+Number(arg)+'.', {kind: "success"});
+      }
+      else {
+        this.addMessage('Failed volume change. Must provide an argument.', {kind: "warning"});
+      }
+    }, {
+      help: "change volume (up, down, mute, unmute, 0-100)",
+      args: [
+        {
+          name: "change",
+          optional: false
+        }
+      ]
+    });
+
     this.registerCommand("toggle_audio", (args) => {
       document.getElementById('video').muted = !document.getElementById('video').muted;
       this.addMessage('Video ' + (document.getElementById('video').muted ? '' : 'un') + 'muted.', { kind: "success" });
     }, {
+      secret: true,
       help: "toggles audio on / off",
     });
 
@@ -248,6 +375,8 @@ export default observer(class ChatBox extends React.Component {
         }
       }
       this.addMessage('Toggling fullscreen.', { kind: "success" });
+    }, {
+      help: "toggle fullscreen"
     });
   }
 
