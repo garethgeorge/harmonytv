@@ -80,22 +80,23 @@ export default observer(class ChatBox extends React.Component {
       }
     }
 
+    // Allow named reference to args
     let oldHandler = handler;
-
-    // // Allow named reference to args
-    // handler = (args) => {
-    //   let newArgs = args;
-    //   for (let i in opts.args) {
-    //     newArgs[opts.args[i].name] = args[i];
-    //   }
-    //   oldHandler(newArgs);
-    // }
-    //
-    // oldHandler = handler;
+    const argHandler = (args) => {
+      let newArgs = {};
+      for (let i in args) {
+        newArgs[i] = args[i];
+      }
+      for (let i in opts.args) {
+        newArgs[opts.args[i].name] = args[i];
+      }
+      oldHandler(newArgs);
+    }
 
     // Preliminary error checking on number of required args
+    let countHandler = argHandler;
     if (opts && opts.requiredArgs) {
-      handler = (args) => {
+      countHandler = (args) => {
         if (args.length < opts.requiredArgs) {
           this.addMessage(
             <span>Expected {opts.requiredArgs} argument(s). Usage: <br/> {usage}</span>,
@@ -103,9 +104,11 @@ export default observer(class ChatBox extends React.Component {
           );
           return;
         }
-        oldHandler(args);
+        argHandler(args);
       }
     }
+
+    handler = countHandler;
 
     this.commands[command] = {
       "command": command,
@@ -304,7 +307,7 @@ export default observer(class ChatBox extends React.Component {
 
     this.registerCommand("volume", (args) => {
       const prev_volume = document.getElementById('video').volume;
-      const arg = args[0];
+      const arg = args.change;
       if (arg == "up") {
         document.getElementById('video').muted = false;
         document.getElementById('video').volume = Math.min(prev_volume+0.2,1);
