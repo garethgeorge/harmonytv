@@ -90,13 +90,12 @@ export default observer(class ChatBox extends React.Component {
     //   }
     //   oldHandler(newArgs);
     // }
-    // 
+    //
     // oldHandler = handler;
 
     // Preliminary error checking on number of required args
     if (opts && opts.requiredArgs) {
       handler = (args) => {
-        console.log('ARGCZECKER: ', args);
         if (args.length < opts.requiredArgs) {
           this.addMessage(
             <span>Expected {opts.requiredArgs} argument(s). Usage: <br/> {usage}</span>,
@@ -402,7 +401,7 @@ export default observer(class ChatBox extends React.Component {
         {/* functionally this is padding */}
         <div style={{ height: "30px", color: "red" }}></div>
         {/* this is the actual text input */}
-        <input className="chatboxTextEntry" type="text"
+        <input className={"chatboxTextEntry " + (this.state.composition[0]=="\\" ? "command" : "")} type="text"
           value={this.state.composition}
           onChange={(e) => {
             const state = Object.assign({}, this.state);
