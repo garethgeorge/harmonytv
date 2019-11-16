@@ -10,7 +10,7 @@ export default observer(class ChatBox extends React.Component {
     composition: "",
     messages: [],
     users: 1,
-    docked: false,
+    docked: true,
     side: "left",
   }
 
@@ -19,12 +19,36 @@ export default observer(class ChatBox extends React.Component {
   constructor(props) {
     super(props);
 
-    const dockmode = cookies.get("harmonytv-chatbox-dockmode");
-    if (dockmode === "left" || dockmode === "right") {
+    const docked = cookies.get("harmonytv-chatbox-docked");
+    if (docked) {
       this.state.docked = true;
-      this.state.side = dockmode;
     } else
       this.state.docked = false;
+
+    const side = cookies.get("harmonytv-chatbox-side");
+    if (side === "left" || side === "right") {
+      this.state.side = side;
+    }
+
+    this.textEntry = React.createRef();
+    document.addEventListener('keydown', (e) => {
+      if (e.key === "Enter" && !(e.ctrlKey || e.metaKey)) {
+        if (document.activeElement != this.textEntry) {
+          this.textEntry.current.focus();
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    });
+    // document.addEventListener('keyup', (e) => {
+    //   if (e.key === "Enter" && !(e.ctrlKey || e.metaKey)) {
+    //     if (document.activeElement != this.textEntry) {
+    //       this.textEntry.current.focus();
+    //       e.preventDefault();
+    //       e.stopPropagation();
+    //     }
+    //   }
+    // });
 
     this.messages = React.createRef();
     this.registerCommands();
@@ -152,7 +176,7 @@ export default observer(class ChatBox extends React.Component {
     const command = args[0].substr(1);
 
     if (!this.commands[command]) {
-      this.addMessage('Unknown command "' + composition + '".', { kind: "warning" });
+      this.addMessage(<span>Unknown command <span className="command">{composition}</span>.</span>, { kind: "warning" });
     } else {
       this.commands[command].handler(args.slice(1));
     }
@@ -189,9 +213,10 @@ export default observer(class ChatBox extends React.Component {
     this.registerCommand("dock", (args) => {
       const stateCpy = Object.assign({}, this.state);
       stateCpy.docked = true;
+      cookies.set("harmonytv-chatbox-docked", stateCpy.docked);
       if (args.length > 0) {
         if (args[0] == "left" || args[0] == "right") {
-          cookies.set("harmonytv-chatbox-dockmode", args[0]);
+          cookies.set("harmonytv-chatbox-side", args[0]);
           stateCpy.side = args[0];
         } else {
           this.addMessage("side must be one of \'left\' or \'right\'", { kind: "success" });
@@ -213,9 +238,10 @@ export default observer(class ChatBox extends React.Component {
     this.registerCommand("float", (args) => {
       const stateCpy = Object.assign({}, this.state);
       stateCpy.docked = false;
+      cookies.set("harmonytv-chatbox-docked", stateCpy.docked);
       if (args.length > 0) {
         if (args[0] == "left" || args[0] == "right") {
-          cookies.set("harmonytv-chatbox-dockmode", args[0]);
+          cookies.set("harmonytv-chatbox-side", args[0]);
           stateCpy.side = args[0];
         } else {
           this.addMessage("side must be one of \'left\' or \'right\'", { kind: "success" });
@@ -237,7 +263,7 @@ export default observer(class ChatBox extends React.Component {
     this.registerCommand("undock", (args) => {
       const stateCpy = Object.assign({}, this.state);
       stateCpy.docked = false;
-      cookies.set("harmonytv-chatbox-dockmode", "none");
+      cookies.set("harmonytv-chatbox-docked", stateCpy.docked);
       this.setState(stateCpy, () => {
         this.addMessage(`Undocked chatbox`, { kind: "success" });
       });
@@ -245,6 +271,28 @@ export default observer(class ChatBox extends React.Component {
       secret: true,
       help: "undocks the chat"
     });
+
+    // this.registerCommand("hide", (args) => {
+    //   const stateCpy = Object.assign({}, this.state);
+    //   stateCpy.hidden = true;
+    //   this.setState(stateCpy, () => {
+    //     this.addMessage(`chatbox hidden`, { kind: "success" });
+    //   });
+    // }, {
+    //   secret: true,
+    //   help: "hides the chat"
+    // });
+    //
+    // this.registerCommand(["show"], (args) => {
+    //   const stateCpy = Object.assign({}, this.state);
+    //   stateCpy.hidden = false;
+    //   this.setState(stateCpy, () => {
+    //     this.addMessage(`chatbox unhidden`, { kind: "success" });
+    //   });
+    // }, {
+    //   secret: true,
+    //   help: "unhides the chat"
+    // });
 
     this.registerCommand("clear", (args) => {
       const stateCpy = Object.assign({}, this.state);
@@ -332,7 +380,7 @@ export default observer(class ChatBox extends React.Component {
         this.addMessage('Volume set to '+Number(arg)+'.', {kind: "success"});
       }
       else {
-        this.addMessage('Failed volume change. Must provide an argument.', {kind: "warning"});
+        this.addMessage('change must be one of \'up\', \'down\', \'mute\', \'unmute\' or a number 0-100.', {kind: "warning"});
       }
     }, {
       help: "change volume (up, down, mute, unmute, 0-100)",
@@ -404,7 +452,7 @@ export default observer(class ChatBox extends React.Component {
         {/* functionally this is padding */}
         <div style={{ height: "30px", color: "red" }}></div>
         {/* this is the actual text input */}
-        <input className={"chatboxTextEntry " + (this.state.composition[0]=="\\" ? "command" : "")} type="text"
+        <input ref={this.textEntry} className={"chatboxTextEntry " + (this.state.composition[0]=="\\" ? "command" : "")} type="text"
           value={this.state.composition}
           onChange={(e) => {
             const state = Object.assign({}, this.state);
@@ -412,20 +460,26 @@ export default observer(class ChatBox extends React.Component {
             this.setState(state);
           }}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && this.state.composition.length > 0) {
-              const state = Object.assign({}, this.state)
-              const composition = this.state.composition;
-              state.composition = "";
-              this.setState(state, () => {
-                // send the message if it is not a special command
-                if (composition[0] != "\\") {
-                  const message = model.state.user.username + ": " + composition;
-                  this.addMessage(message);
-                  this.props.socket.emit("client:message", message);
-                } else { // do the command if it is known
-                  this.chatCommand(composition);
+            if (e.key === "Enter") {
+              if (this.state.composition.length > 0) {
+                const state = Object.assign({}, this.state)
+                const composition = this.state.composition;
+                state.composition = "";
+                this.setState(state, () => {
+                  // send the message if it is not a special command
+                  if (composition[0] != "\\") {
+                    const message = model.state.user.username + ": " + composition;
+                    this.addMessage(message);
+                    this.props.socket.emit("client:message", message);
+                  } else { // do the command if it is known
+                    this.chatCommand(composition);
+                  }
+                });
+              } else {
+                if (!this.state.docked) {
+                  this.textEntry.current.blur();
                 }
-              });
+              }
             }
           }} />
       </div>

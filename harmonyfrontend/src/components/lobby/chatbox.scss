@@ -105,7 +105,8 @@
 
     padding: 0 0.35em;
 
-    transition: background-color 0.5s;
+    transition: opacity 0.3s, background-color 0.5s;
+    opacity: 0.1;
 
     &.command {
       font-size: 1.15em;
@@ -114,6 +115,7 @@
 
   .chatboxTextEntry:focus {
     background-color: rgba(0, 0, 0, 0.8);
+    opacity: 1;
   }
 
   // docked flavor of the chatbox
