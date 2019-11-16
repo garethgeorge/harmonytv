@@ -77,7 +77,7 @@ export default observer(class ChatBox extends React.Component {
     // if an array is passed, apply the handler to each element
     if (command instanceof Array) {
       for (const cmd of command) {
-        this.registerCommand(cmd, handler);
+        this.registerCommand(cmd, handler, opts);
       }
       return;
     }
@@ -114,6 +114,7 @@ export default observer(class ChatBox extends React.Component {
       for (let i in opts.args) {
         newArgs[opts.args[i].name] = args[i];
       }
+      newArgs.length = args.length;
       oldHandler(newArgs);
     }
 
@@ -214,6 +215,7 @@ export default observer(class ChatBox extends React.Component {
       const stateCpy = Object.assign({}, this.state);
       stateCpy.docked = true;
       cookies.set("harmonytv-chatbox-docked", stateCpy.docked);
+      console.log(args);
       if (args.length > 0) {
         if (args[0] == "left" || args[0] == "right") {
           cookies.set("harmonytv-chatbox-side", args[0]);
@@ -223,7 +225,7 @@ export default observer(class ChatBox extends React.Component {
         }
       }
       this.setState(stateCpy, () => {
-        this.addMessage(`Chatbox docked to side ${stateCpy.side}.`, { kind: "success" });
+        this.addMessage(`Chatbox docked to ${stateCpy.side} side.`, { kind: "success" });
       });
     }, {
       help: "docks the chat",
@@ -235,7 +237,7 @@ export default observer(class ChatBox extends React.Component {
       ]
     });
 
-    this.registerCommand("float", (args) => {
+    this.registerCommand(["float", "undock"], (args) => {
       const stateCpy = Object.assign({}, this.state);
       stateCpy.docked = false;
       cookies.set("harmonytv-chatbox-docked", stateCpy.docked);
@@ -248,7 +250,7 @@ export default observer(class ChatBox extends React.Component {
         }
       }
       this.setState(stateCpy, () => {
-        this.addMessage(`Chatbox undocked to side ${stateCpy.side}.`, { kind: "success" });
+        this.addMessage(`Chatbox undocked to ${stateCpy.side} side.`, { kind: "success" });
       });
     }, {
       help: "undocks the chat",
@@ -259,40 +261,6 @@ export default observer(class ChatBox extends React.Component {
         }
       ]
     });
-
-    this.registerCommand("undock", (args) => {
-      const stateCpy = Object.assign({}, this.state);
-      stateCpy.docked = false;
-      cookies.set("harmonytv-chatbox-docked", stateCpy.docked);
-      this.setState(stateCpy, () => {
-        this.addMessage(`Undocked chatbox`, { kind: "success" });
-      });
-    }, {
-      secret: true,
-      help: "undocks the chat"
-    });
-
-    // this.registerCommand("hide", (args) => {
-    //   const stateCpy = Object.assign({}, this.state);
-    //   stateCpy.hidden = true;
-    //   this.setState(stateCpy, () => {
-    //     this.addMessage(`chatbox hidden`, { kind: "success" });
-    //   });
-    // }, {
-    //   secret: true,
-    //   help: "hides the chat"
-    // });
-    //
-    // this.registerCommand(["show"], (args) => {
-    //   const stateCpy = Object.assign({}, this.state);
-    //   stateCpy.hidden = false;
-    //   this.setState(stateCpy, () => {
-    //     this.addMessage(`chatbox unhidden`, { kind: "success" });
-    //   });
-    // }, {
-    //   secret: true,
-    //   help: "unhides the chat"
-    // });
 
     this.registerCommand("clear", (args) => {
       const stateCpy = Object.assign({}, this.state);
