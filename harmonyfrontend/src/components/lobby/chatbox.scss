@@ -89,7 +89,7 @@
     position: absolute;
     bottom: 0;
 
-    outline-color: rgba(255, 255, 255, 0.5);
+    outline-color: rgba(255, 255, 255, 1);
     outline-width: 1px;
     outline-style: solid;
     outline-offset: -1px;
@@ -105,17 +105,17 @@
 
     padding: 0 0.35em;
 
-    transition: opacity 0.3s, background-color 0.5s;
-    opacity: 0.1;
+    transition: opacity 0.3s, background-color 0.3s;
+    opacity: 0.5;
 
     &.command {
       font-size: 1.15em;
     }
-  }
 
-  .chatboxTextEntry:focus {
-    background-color: rgba(0, 0, 0, 0.8);
-    opacity: 1;
+    &:focus {
+      background-color: rgba(0, 0, 0, 0.8);
+      opacity: 1;
+    }
   }
 
   // docked flavor of the chatbox
@@ -151,7 +151,7 @@
     color: mix($color-primary-accent, white, 70%);
     font-style: normal;
     padding: 0.1em;
-    border: 1px solid rgba(255,255,255,0.08);
+    border: 1px solid rgba(255, 255, 255, 0.08);
   }
   .command-arg {
     font-family: monospace;
