@@ -1,6 +1,6 @@
 import React from "react";
-import config from "../config";
-import model from "../model";
+import config from "../../config";
+import model from "../../model";
 import "./player.scss";
 
 // load shaka, example from: https://github.com/amit08255/shaka-player-react-with-ui-config/blob/master/with-default-ui/src/components/VideoPlayer.js
@@ -61,7 +61,7 @@ class Player extends React.Component {
     // read up on this for chrome cast: https://github.com/google/shaka-player/issues/1142
     // https://github.com/google/shaka-player/blob/d98543165cff6dc545eeaefcd660818d971cca33/demo/main.js#L91
     const castProxy = new shaka.cast.CastProxy(video, player, "00A3C5E8");
-      
+
     // CAST ID 1: 00A3C5E8, ID 2: 07AEE832 ID 3: 7B25EC44
     const ui = new shaka.ui.Overlay(player, videoContainer, video);
     ui.configure({
