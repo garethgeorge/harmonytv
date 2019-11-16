@@ -392,12 +392,23 @@ export default observer(class ChatBox extends React.Component {
       ]
     });
 
-    this.registerCommand("toggle_audio", (args) => {
-      document.getElementById('video').muted = !document.getElementById('video').muted;
-      this.addMessage('Video ' + (document.getElementById('video').muted ? '' : 'un') + 'muted.', { kind: "success" });
+    this.registerCommand("mute", (args) => {
+      document.getElementById('video').muted = true;
+      this.addMessage('Video muted.', { kind: "success" });
     }, {
       secret: true,
-      help: "toggles audio on / off",
+      help: "mutes the video",
+    });
+
+    this.registerCommand("unmute", (args) => {
+      document.getElementById('video').muted = false;
+      if (document.getElementById('video').volume < 0.2) {
+        document.getElementById('video').volume = 0.2;
+      }
+      this.addMessage('Video unmuted.', { kind: "success" });
+    }, {
+      secret: true,
+      help: "unmutes the video",
     });
 
     this.registerCommand("fullscreen", (args) => {
