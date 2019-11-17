@@ -95,45 +95,137 @@ export default observer(class ChatBox extends React.Component {
     const usage = <span className="command">{"\\" + command}{arglist ? " " : ""}{arglist}</span>;
 
     // Determine number of required args
-    if (opts && opts.args) {
-      opts.requiredArgs = 0;
-      for (const arg of opts.args) {
-        if (arg.optional != true) {
-          opts.requiredArgs += 1;
-        }
-      }
-    }
+    // if (opts && opts.args) {
+    //   opts.requiredArgs = 0;
+    //   for (const arg of opts.args) {
+    //     if (arg.optional != true) {
+    //       opts.requiredArgs += 1;
+    //     }
+    //   }
+    // }
+    //
+    // // Allow named reference to args
+    // let oldHandler = handler;
+    // const argHandler = (args) => {
+    //   let newArgs = {pos, kw};
+    //   for (let i in args) {
+    //     newArgs.pos[i] = args[i];
+    //   }
+    //   for (let i in opts.args) {
+    //     newArgs.kw[opts.args[i].name] = args[i];
+    //   }
+    //   newArgs.count = args.length;
+    //   oldHandler(newArgs);
+    // }
+    //
+    // // Preliminary error checking on number of required args
+    // let countHandler = argHandler;
+    // if (opts && opts.requiredArgs) {
+    //   countHandler = (args) => {
+    //     if (args.length < opts.requiredArgs) {
+    //       this.addMessage(
+    //         <span>Expected {opts.requiredArgs} argument(s). Usage: <br/> {usage}</span>,
+    //         { kind: "warning" }
+    //       );
+    //       return;
+    //     }
+    //     argHandler(args);
+    //   }
+    //
 
-    // Allow named reference to args
+    // Validate and parse argstr
     let oldHandler = handler;
-    const argHandler = (args) => {
-      let newArgs = {};
-      for (let i in args) {
-        newArgs[i] = args[i];
-      }
-      for (let i in opts.args) {
-        newArgs[opts.args[i].name] = args[i];
-      }
-      newArgs.length = args.length;
-      oldHandler(newArgs);
-    }
-
-    // Preliminary error checking on number of required args
-    let countHandler = argHandler;
-    if (opts && opts.requiredArgs) {
-      countHandler = (args) => {
-        if (args.length < opts.requiredArgs) {
+    let argHandler;
+    if (opts && opts.args) {
+      argHandler = (argstr) => {
+        const validArgStr = /^\s*(?:(?:(?:[^=\s]|\\=)+|"(?:[^"]|\")*")(?:\s+))*(?:[A-Za-z]\w*=(?:(?:[^=\s]|\\=)+|"(?:[^"]|\")*")(?:\s+))*$/;
+        if (!(argstr+' ').match(validArgStr)) {
+          // if argstr is invalid, throw error.
           this.addMessage(
-            <span>Expected {opts.requiredArgs} argument(s). Usage: <br/> {usage}</span>,
-            { kind: "warning" }
+            <span>Invalid argument string <span className="command">{argstr}</span>.</span>,
+            { kind: "error" }
           );
-          return;
+          return ;
+        } else {
+          // if argstr is valid...
+          const argSplitter = /(?<=^|\s)((?:[A-Za-z]\w*=)?(?:(?:[^\s="]|\\=)+|".*(?<!\\)"|""))(?=\s|$)/g;
+          const splitArgs = Array.from(argstr.matchAll(argSplitter), m => m[0]);
+          const argPartSplitter = /^([A-Za-z]\w*(?==))|((?:[^\s="]|\\=)+|".*(?<!\\)"|"")$/g;
+          let kwargsParsed = {};
+          let posargsParsed = [];
+          // get positional an keyword args
+          for (const argtext of splitArgs) {
+            const argParts = Array.from(argtext.matchAll(argPartSplitter), m => m[0]);
+            if (argParts.length == 1) {
+              posargsParsed = argParts[0];
+            } else {
+              kwargsParsed[argParts[0]] = argParts[1];
+            }
+          }
+          // figure out which arguments are which...
+          let prevalues = Object.assign({},kwargsParsed);
+          let req = 0;
+          for (const arg of opts.args) {
+            if (!hasOwnProperty.call(prevalues, arg.name)) {
+              prevalues[arg.name] = null;
+              if (!arg.optional) {
+                req ++;
+              }
+            }
+          }
+          let free = posargsParsed.length - req; // number of optional ones to fill.
+          let i = 0;
+          for (const arg of opts.args) {
+            if (prevalues[arg.name] == null) {
+              if (!arg.optional) {
+                if (i < posargsParsed.length) {
+                  prevalues[arg.name] = posargsParsed[i];
+                  i ++;
+                } else {
+                  this.addMessage(
+                    <span>Not all required arguments supplied. Expected usage: <br/><span className="command">{usage}</span>.</span>,
+                    { kind: "error" }
+                  );
+                  return ;
+                }
+              } else if (free > 0) {
+                prevalues[arg.name] = posargsParsed[i];
+                i ++;
+                free-=1;
+              }
+            }
+          }
+          if (i < posargsParsed.length) {
+            this.addMessage(
+              <span>More arguments supplied than expected. Expected usage: <br/><span className="command">{usage}</span>.</span>,
+              { kind: "error" }
+            );
+            return ;
+          }
+          let values = {};
+          for (const arg of opts.args) {
+            if (prevalues[arg.name]) {
+              if (arg.validate && !arg.validate.test(prevalues[arg.name])) {
+                this.addMessage(
+                  <span>Invalid format for <span className="command command-arg">{arg.name}</span> argument.</span>,
+                  { kind: "error" }
+                );
+                return ;
+              } else {
+                if (arg.parse) {
+                  values[arg.name] = arg.parse(prevalues[arg.name]);
+                } else {
+                  values[arg.name] = prevalues[arg.name];
+                }
+              }
+            }
+          }
+          oldHandler(values);
         }
-        argHandler(args);
       }
     }
 
-    handler = countHandler;
+    handler = argHandler;
 
     this.commands[command] = {
       "command": command,
@@ -144,42 +236,43 @@ export default observer(class ChatBox extends React.Component {
   }
 
   addMessage(messageText, opts = {}) {
-    // const index = this.state.messages.length;
-    const options = Object.assign({ kind: "message" }, opts);
-
-    const state = Object.assign({}, this.state);
-    var message = {
-      key: this.state.messages.length,
-      text: messageText,
-      kind: options.kind,
-      data: {
-        classlist: []
-      }
-    };
-    state.messages = this.state.messages.slice(0);
-    state.messages.push(message);
-    this.setState(state, () => {
-      if (this.messages.current)
-        this.messages.current.scrollTop = this.messages.current.scrollHeight + 1000;
-    });
-
+    // setTimeout so that multiple messages can be added at the same time.
     setTimeout(() => {
-      message.data.classlist.push('old');
-      this.setState(this.state);
-    }, 15000);
+      const options = Object.assign({ kind: "message" }, opts);
 
-    return message;
+      const state = Object.assign({}, this.state);
+      var message = {
+        key: this.state.messages.length,
+        text: messageText,
+        kind: options.kind,
+        data: {
+          classlist: []
+        }
+      };
+      state.messages = this.state.messages.slice(0);
+      state.messages.push(message);
+      this.setState(state, () => {
+        if (this.messages.current)
+          this.messages.current.scrollTop = this.messages.current.scrollHeight + 1000;
+      });
+
+      setTimeout(() => {
+        message.data.classlist.push('old');
+        this.setState(this.state);
+      }, 15000);
+
+      return message;
+    }, 0);
   }
 
   chatCommand(composition) {
-    const args = composition.split(' ');
-    const argnum = args.length;
-    const command = args[0].substr(1);
+    const command = composition.split(' ')[0].substr(1);
+    const argstr = composition.split(' ',1)[1];
 
     if (!this.commands[command]) {
       this.addMessage(<span>Unknown command <span className="command">{composition}</span>.</span>, { kind: "warning" });
     } else {
-      this.commands[command].handler(args.slice(1));
+      this.commands[command].handler(argstr);
     }
   }
 
@@ -209,6 +302,26 @@ export default observer(class ChatBox extends React.Component {
         , { kind: "info" });
     }, {
       help: 'show this list'
+    });
+
+    this.registerCommand("test", (args) => {
+      this.addMessage("this is a test.", { kind: "info" });
+    }, {
+      help: 'test stuff',
+      args: [
+        {
+          name: 'foo',
+          optional: false,
+        },
+        {
+          name: 'bar',
+          optional: true,
+        },
+        {
+          name: 'xyz',
+          optional: false,
+        },
+      ]
     });
 
     this.registerCommand("dock", (args) => {
@@ -306,18 +419,23 @@ export default observer(class ChatBox extends React.Component {
     });
 
     this.registerCommand("seek", (args) => {
-      if (args[0].split(':').length==2 && Number(args[0].split(':')[0]) && Number(args[0].split(':')[1])) {
-        document.getElementById('video').currentTime = 60*Number(args[0].split(':')[0])+Number(args[0].split(':')[1]);
-        this.addMessage('Seeked to '+args[0]+'.', {kind: "success"});
-      }
-      else {
-        this.addMessage('Failed to seek. Must provide a timestamp argument.', {kind: "warning"});
-      }
+      document.getElementById('video').currentTime = args.time;
+      this.addMessage('Seeked to '+args[0]+'.', {kind: "success"});
+
+      // if (args[0].split(':').length==2 && Number(args[0].split(':')[0]) && Number(args[0].split(':')[1])) {
+      //   document.getElementById('video').currentTime = 60*Number(args[0].split(':')[0])+Number(args[0].split(':')[1]);
+      //   this.addMessage('Seeked to '+args[0]+'.', {kind: "success"});
+      // }
+      // else {
+      //   this.addMessage('Failed to seek. Must provide a timestamp argument.', {kind: "warning"});
+      // }
     }, {
       help: "seek to a timestamp",
       args: [{
-        name: "timestamp",
-        optional: false
+        name: "time",
+        optional: false,
+        validate: /^\d+:[0-5]\d(:[0-5]\d)?(.\d+)?$/,
+        parse: (timestamp) => {const parts = timestamp.split(':'); return {seconds: parts.length == 2 ? 60*parts[0]+parts[1] : 60*60*parts[0] + 60*parts[1] + parts[0], timestamp: timestamp};}
       }]
     });
 
