@@ -23,14 +23,9 @@ route.get("/create", auth_required, async (req, res) => {
 
   const resume = await req.user.getResumeWatchingForMedia(req.query.mediaid);
 
-  debug(
-    "created lobby to play video: " +
-      req.query.mediaid +
-      " resume watching state: ",
-    resume
-  );
+  debug("created lobby to play video: " + req.query.mediaid + " resume watching state: ", resume);
   const lby = lobby.create(mediainfo);
-  lby.setPlaybackPosition(resume ? resume.position : 0);
+  lby.setSyncPosition(resume ? resume.position : 0);
 
   res.header("Content-Type", "application/json");
   res.end(
@@ -38,6 +33,35 @@ route.get("/create", auth_required, async (req, res) => {
       lobbyId: lby.id
     })
   );
+});
+
+route.post("/:lobbyid/setQueue", async (req, res) => {
+  const lobby = lobby.get(req.params.lobbyid);
+  if (!lobby) {
+    res.status(404);
+    return res.end(
+      JSON.stringify({
+        error: "lobby not found"
+      })
+    );
+  }
+
+  lobby.setVideoQueue(req.body);
+  return res.end(JSON.stringify(req.body));
+});
+
+route.get("/:lobbyid/getQueue", async (req, res) => {
+  const lobby = lobby.get(req.params.lobbyid);
+  if (!lobby) {
+    res.status(404);
+    return res.end(
+      JSON.stringify({
+        error: "lobby not found"
+      })
+    );
+  }
+
+  return res.end(JSON.stringify(lobby.getVideoQueue()));
 });
 
 module.exports = route;

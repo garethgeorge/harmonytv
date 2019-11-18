@@ -24,8 +24,6 @@ export default observer(class Movie extends React.Component {
       </div>
     ) : null;
 
-    console.log(JSON.stringify(this.props.style));
-
     return (
       <div className={completed ? "movie watched" : "movie"} key={movie.mediaid} style={this.props.style}>
         <a href="#" onClick={this.onClick.bind(this)}>

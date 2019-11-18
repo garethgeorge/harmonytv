@@ -57,8 +57,6 @@ exports.getAllLibraries = async (conn = null) => {
 exports.libraryGetAllMedia = async (libraryId, conn = null) => {
   if (!conn) conn = pool;
 
-  const res = await conn.query(
-    pgformat("SELECT * FROM media WHERE libraryId = %L", libraryId)
-  );
+  const res = await conn.query(pgformat("SELECT * FROM media WHERE libraryId = %L", libraryId));
   return res.rows;
 };

@@ -65,12 +65,20 @@ class Lobby extends React.Component {
   }
 
   componentDidMount() {
+    // initialize the sync
+    console.log("broadcasting client:join-lobby " + this.props.lobbyid);
+    this.socket.emit("client:join-lobby", this.props.lobbyid);
+
+    model.lobby.syncVideoWithLobby(this.socket, this.player.current);
+  }
+
+  componentDidMountOld() {
     // TODO: this code needs major cleanup work
     // mainly things need to be factored into reasonable functions etc.
 
     const player = this.player.current;
 
-    console.log("setting up the media player");
+    console.log("broadcasting client:join-lobby " + this.props.lobbyid);
     this.socket.emit("client:join-lobby", this.props.lobbyid);
 
     let serverNowPlaying = null;

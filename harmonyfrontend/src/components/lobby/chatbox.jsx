@@ -285,8 +285,8 @@ export default observer(class ChatBox extends React.Component {
     }, 0);
   }
 
-  addUserMessage(messageText, opts = {}) {
-    this.addMessage(messageText, opts);
+  addUserMessage(message, opts = {}) {
+    this.addMessage(<span><span className="message-sender" style={{color: message.color}}>{message.sender}:</span> {message.text}</span>, opts);
   }
 
   execCommand(composition) {
@@ -323,7 +323,7 @@ export default observer(class ChatBox extends React.Component {
         {/* functionally this is padding */}
         <div style={{ height: "30px", color: "red" }}></div>
         {/* this is the actual text input */}
-        <input ref={this.textEntry} className={"chatboxTextEntry " + (this.state.composition[0]=="\\" ? "command" : "")} type="text"
+        <input ref={this.textEntry} className={"chatboxTextEntry " + (this.state.composition[0] == "\\" ? "command" : "")} type="text"
           value={this.state.composition}
           onChange={(e) => {
             const state = Object.assign({}, this.state);
@@ -339,7 +339,8 @@ export default observer(class ChatBox extends React.Component {
                 this.setState(state, () => {
                   // send the message if it is not a special command
                   if (composition[0] != "\\") {
-                    const message = <span><span className="message-sender" style={{color: this.state.userColor}}>{model.state.user.username}</span>: {composition}</span>;
+                    const message = JSON.stringify({sender: model.state.user.username, text: composition, color: this.state.userColor});
+                    //<span className="message-sender" style={{color: this.state.userColor}}>{model.state.user.username}</span>: {composition}</span>;
                     this.addUserMessage(message);
                     this.props.socket.emit("client:message", message);
                   } else { // do the command if it is known
