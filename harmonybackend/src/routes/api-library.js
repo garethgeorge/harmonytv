@@ -11,9 +11,7 @@ route.get("/getAll", async (req, res) => {
 route.get("/:libraryid/getMedia", async (req, res) => {
   // first get the library
   const media = await model.libraryGetAllMedia(req.params.libraryid);
-  debug(
-    "returned " + media.length + " records for library " + req.params.libraryid
-  );
+  debug("returned " + media.length + " records for library " + req.params.libraryid);
   res.header("Content-Type", "application/json");
   res.end(JSON.stringify(media));
 });

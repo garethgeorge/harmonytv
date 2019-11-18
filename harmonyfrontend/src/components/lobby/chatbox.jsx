@@ -87,9 +87,9 @@ export default observer(class ChatBox extends React.Component {
     if (!arglist && opts.args) {
       arglist = opts.args.map(arg => {
         if (arg.optional) {
-          return <span className="command-arg optional">{"["+arg.name+"]"}</span>;
+          return <span className="command-arg optional">{"[" + arg.name + "]"}</span>;
         }
-        return <span className="command-arg">{"<"+arg.name+">"}</span>;
+        return <span className="command-arg">{"<" + arg.name + ">"}</span>;
       });
     }
     const usage = <span className="command">{"\\" + command}{arglist ? " " : ""}{arglist}</span>;
@@ -124,7 +124,7 @@ export default observer(class ChatBox extends React.Component {
       countHandler = (args) => {
         if (args.length < opts.requiredArgs) {
           this.addMessage(
-            <span>Expected {opts.requiredArgs} argument(s). Usage: <br/> {usage}</span>,
+            <span>Expected {opts.requiredArgs} argument(s). Usage: <br /> {usage}</span>,
             { kind: "warning" }
           );
           return;
@@ -188,7 +188,7 @@ export default observer(class ChatBox extends React.Component {
     this.registerCommand("?", (args) => {
       const commands = Object.values(this.commands).map(command => {
         if (command.opts.secret) {
-          return ;
+          return;
         }
         let text = null;
         if (!text && command.opts.help)
@@ -288,13 +288,13 @@ export default observer(class ChatBox extends React.Component {
       if (Number(args[0])) {
         document.getElementById('video').currentTime += Number(args[0]);
         if (Number(args[0]) > 0) {
-          this.addMessage('Skipped forward '+Number(args[0])+' seconds.', {kind: "success"});
+          this.addMessage('Skipped forward ' + Number(args[0]) + ' seconds.', { kind: "success" });
         }
         else if (Number(args[0]) < 0) {
-          this.addMessage('Skipped back '+(-Number(args[0]))+' seconds.', {kind: "success"});
+          this.addMessage('Skipped back ' + (-Number(args[0])) + ' seconds.', { kind: "success" });
         }
         else {
-          this.addMessage('Failed to skip. Must provide a number of seconds.', {kind: "warning"});
+          this.addMessage('Failed to skip. Must provide a number of seconds.', { kind: "warning" });
         }
       }
     }, {
@@ -306,12 +306,12 @@ export default observer(class ChatBox extends React.Component {
     });
 
     this.registerCommand("seek", (args) => {
-      if (args[0].split(':').length==2 && Number(args[0].split(':')[0]) && Number(args[0].split(':')[1])) {
-        document.getElementById('video').currentTime = 60*Number(args[0].split(':')[0])+Number(args[0].split(':')[1]);
-        this.addMessage('Seeked to '+args[0]+'.', {kind: "success"});
+      if (args[0].split(':').length == 2 && Number(args[0].split(':')[0]) && Number(args[0].split(':')[1])) {
+        document.getElementById('video').currentTime = 60 * Number(args[0].split(':')[0]) + Number(args[0].split(':')[1]);
+        this.addMessage('Seeked to ' + args[0] + '.', { kind: "success" });
       }
       else {
-        this.addMessage('Failed to seek. Must provide a timestamp argument.', {kind: "warning"});
+        this.addMessage('Failed to seek. Must provide a timestamp argument.', { kind: "warning" });
       }
     }, {
       help: "seek to a timestamp",
@@ -326,29 +326,29 @@ export default observer(class ChatBox extends React.Component {
       const arg = args.change;
       if (arg == "up") {
         document.getElementById('video').muted = false;
-        document.getElementById('video').volume = Math.min(prev_volume+0.2,1);
-        this.addMessage('Volume increased.', {kind: "success"});
+        document.getElementById('video').volume = Math.min(prev_volume + 0.2, 1);
+        this.addMessage('Volume increased.', { kind: "success" });
       }
       else if (arg == "down") {
         document.getElementById('video').muted = false;
-        document.getElementById('video').volume = Math.max(prev_volume-0.2,0);
-        this.addMessage('Volume decreased.', {kind: "success"});
+        document.getElementById('video').volume = Math.max(prev_volume - 0.2, 0);
+        this.addMessage('Volume decreased.', { kind: "success" });
       }
       else if (arg == "mute") {
         document.getElementById('video').muted = true;
-        this.addMessage('Volume muted.', {kind: "success"});
+        this.addMessage('Volume muted.', { kind: "success" });
       }
       else if (arg == "unmute") {
         document.getElementById('video').muted = false;
-        this.addMessage('Volume unmuted.', {kind: "success"});
+        this.addMessage('Volume unmuted.', { kind: "success" });
       }
-      else if (Number(arg) && 0<=Number(arg) && Number(arg)<=100) {
+      else if (Number(arg) && 0 <= Number(arg) && Number(arg) <= 100) {
         document.getElementById('video').muted = false;
-        document.getElementById('video').volume = Number(arg)/100;
-        this.addMessage('Volume set to '+Number(arg)+'.', {kind: "success"});
+        document.getElementById('video').volume = Number(arg) / 100;
+        this.addMessage('Volume set to ' + Number(arg) + '.', { kind: "success" });
       }
       else {
-        this.addMessage('change must be one of \'up\', \'down\', \'mute\', \'unmute\' or a number 0-100.', {kind: "warning"});
+        this.addMessage('change must be one of \'up\', \'down\', \'mute\', \'unmute\' or a number 0-100.', { kind: "warning" });
       }
     }, {
       help: "change volume (up, down, mute, unmute, 0-100)",
@@ -431,7 +431,7 @@ export default observer(class ChatBox extends React.Component {
         {/* functionally this is padding */}
         <div style={{ height: "30px", color: "red" }}></div>
         {/* this is the actual text input */}
-        <input ref={this.textEntry} className={"chatboxTextEntry " + (this.state.composition[0]=="\\" ? "command" : "")} type="text"
+        <input ref={this.textEntry} className={"chatboxTextEntry " + (this.state.composition[0] == "\\" ? "command" : "")} type="text"
           value={this.state.composition}
           onChange={(e) => {
             const state = Object.assign({}, this.state);

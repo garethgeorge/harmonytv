@@ -5,12 +5,12 @@ import library from "./library";
 import lobby from "./lobby";
 import media from "./media";
 
-axios.defaults.withCredentials = true
+axios.defaults.withCredentials = true;
 
 export default {
   user,
   state,
   library,
   lobby,
-  media 
-}
+  media
+};
