@@ -96,6 +96,7 @@ export default observer(class ChatBox extends React.Component {
     if (!arglist && opts.args) {
       arglist = opts.args.map(arg => {
         if (arg.optional) {
+
           return <span className="command-arg optional">{" ["+arg.name+"]"}</span>;
         }
         return <span className="command-arg">{" <"+arg.name+">"}</span>;
@@ -255,11 +256,11 @@ export default observer(class ChatBox extends React.Component {
     // this.setState(state);
   }
 
+
   addMessage(messageText, opts = {}) {
     // setTimeout so that multiple messages can be added at the same time.
     setTimeout(() => {
       const options = Object.assign({ kind: "message" }, opts);
-
       const state = Object.assign({}, this.state);
       var message = {
         key: this.state.messages.length,
@@ -284,6 +285,7 @@ export default observer(class ChatBox extends React.Component {
       return message;
     }, 0);
   }
+
 
   addUserMessage(messageText, opts = {}) {
     this.addMessage(messageText, opts);
@@ -323,7 +325,7 @@ export default observer(class ChatBox extends React.Component {
         {/* functionally this is padding */}
         <div style={{ height: "30px", color: "red" }}></div>
         {/* this is the actual text input */}
-        <input ref={this.textEntry} className={"chatboxTextEntry " + (this.state.composition[0]=="\\" ? "command" : "")} type="text"
+        <input ref={this.textEntry} className={"chatboxTextEntry " + (this.state.composition[0] == "\\" ? "command" : "")} type="text"
           value={this.state.composition}
           onChange={(e) => {
             const state = Object.assign({}, this.state);

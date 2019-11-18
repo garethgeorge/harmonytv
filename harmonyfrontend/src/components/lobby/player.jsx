@@ -35,7 +35,6 @@ class Player extends React.Component {
   }
 
   componentDidMount() {
-
     const video = this.videoComponent.current;
     this.videoElem = video;
     const videoContainer = this.videoContainer.current;
@@ -55,8 +54,7 @@ class Player extends React.Component {
         bufferingGoal: 60,
         bufferBehind: 30,
       }
-    })
-
+    });
 
     // read up on this for chrome cast: https://github.com/google/shaka-player/issues/1142
     // https://github.com/google/shaka-player/blob/d98543165cff6dc545eeaefcd660818d971cca33/demo/main.js#L91
