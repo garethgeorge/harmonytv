@@ -75,8 +75,8 @@ export default {
     let didAck = false;
     socket.on("server:sync-playback-state", _syncState => {
       syncState = _syncState;
-      applySyncState(syncState);
       didAck = false;
+      if (!amInSync()) applySyncState(syncState);
 
       console.log("server:sync-playback-state: ", syncState);
 
@@ -99,7 +99,7 @@ export default {
 
     // send state updates to the server
     const makeStateChangeRequest = () => {
-      if (amInSync() || !didAck) {
+      if (amInSync()) {
         return;
       }
       clearInterval(syncPlaybackStateTimer);
@@ -120,7 +120,7 @@ export default {
     video.addEventListener("pause", makeStateChangeRequest);
     video.addEventListener("seeking", () => {
       // TODO: clean this up by merging duplicate code with makeStateChangeRequest
-      if (amInSync() || !didAck) {
+      if (amInSync()) {
         return;
       }
       clearInterval(syncPlaybackStateTimer);
