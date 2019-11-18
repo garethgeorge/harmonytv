@@ -286,6 +286,7 @@ export default observer(class ChatBox extends React.Component {
   }
 
   addUserMessage(message, opts = {}) {
+    // thing
     this.addMessage(<span><span className="message-sender" style={{color: message.color}}>{message.sender}:</span> {message.text}</span>, opts);
   }
 
