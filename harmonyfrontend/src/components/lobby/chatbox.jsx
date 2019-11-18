@@ -11,10 +11,10 @@ export default observer(class ChatBox extends React.Component {
     users: 1,
     docked: true,
     side: "left",
-    userColors: {},
+    userColor: "#ffffff",
   }
 
-  persistent = ["docked", "side"]
+  persistent = ["docked", "side", "userColor"]
 
   commands = {}
 
@@ -238,6 +238,10 @@ export default observer(class ChatBox extends React.Component {
     }, 0);
   }
 
+  addUserMessage(messageText, opts = {}) {
+    this.addMessage(messageText, opts);
+  }
+
   execCommand(composition) {
     const command = composition.split(' ')[0].substr(1);
     const argstr = (composition+' ').split(' ').slice(1).join(' ');
@@ -288,8 +292,8 @@ export default observer(class ChatBox extends React.Component {
                 this.setState(state, () => {
                   // send the message if it is not a special command
                   if (composition[0] != "\\") {
-                    const message = <span><span className="message-sender">{model.state.user.username}</span>: {composition}</span>;
-                    this.addMessage(message);
+                    const message = <span><span className="message-sender" style={{color: this.state.userColor}}>{model.state.user.username}</span>: {composition}</span>;
+                    this.addUserMessage(message);
                     this.props.socket.emit("client:message", message);
                   } else { // do the command if it is known
                     this.execCommand(composition);

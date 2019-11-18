@@ -1,4 +1,7 @@
 import React from "react";
+import model from "../../model";
+import chatboxParsers from "./chatbox_parsers.jsx";
+import chatboxValidaters from "./chatbox_validaters.jsx";
 
 export default (chatbox) => {
   chatbox.registerCommand("?", (args) => {
@@ -68,7 +71,7 @@ export default (chatbox) => {
       {
         name: "side",
         optional: true,
-        validate: /^(left|right)$/,
+        validate: chatboxValidaters.choice(["left", "right"]),
       }
     ]
   });
@@ -95,6 +98,13 @@ export default (chatbox) => {
     help: "pauses the video"
   });
 
+  chatbox.registerCommand("speed", (args) => {
+    // To do. Needs backend support.
+  }, {
+    help: "change playback speed",
+    secret: true,
+  });
+
   chatbox.registerCommand("skip", (args) => {
     const skipby = args.dir * args.seconds;
     console.log(skipby);
@@ -110,14 +120,14 @@ export default (chatbox) => {
       {
         name: 'dir',
         optional: true,
-        validate: /^(forward|ahead|back)$/,
-        parse: (str) => {if (str == 'ahead' || str == 'forward') {return 1;}; if (str == 'back') {return -1;};},
+        validate: chatboxValidaters.choice(['forward', 'ahead', 'back', 'backward']),
+        parse: chatboxParsers.choice({forward: 1, ahead: 1, back: -1, backward: -1}),
         fallback: 1,
       },
       {
         name: "seconds",
         optional: false,
-        validate: /^-?[123456789][0-9]*\.?[0-9]*$/,
+        validate: chatboxValidaters.number,
         parse: parseInt,
       }
     ]
@@ -132,15 +142,8 @@ export default (chatbox) => {
     args: [{
       name: "time",
       optional: false,
-      validate: /^\d+:[0-5]\d(:[0-5]\d)?(.\d+)?$/,
-      parse: (timestamp) => {
-        const parts = timestamp.split(':');
-        return {
-          seconds: (parts.length == 2 ?
-            60*parseInt(parts[0]) + parseInt(parts[1]) :
-            60*60*parseInt(parts[0]) + 60*parseInt(parts[1]) + parseInt(parts[0])),
-          timestamp: timestamp};
-        }
+      validate: chatboxValidaters.timestamp,
+      parse: chatboxParsers.timestamp
     }]
   });
 
@@ -171,14 +174,15 @@ export default (chatbox) => {
       chatbox.addMessage('Volume set to '+parseInt(arg)+'.', {kind: "success"});
     }
     else {
-      chatbox.addMessage('change must be one of \'up\', \'down\', \'mute\', \'unmute\' or a parseInt 0-100.', {kind: "warning"});
+      chatbox.addMessage('change must be one of \'up\', \'down\', \'mute\', \'unmute\' or a percent (e.g. \'50%\').', {kind: "warning"});
     }
   }, {
     help: "change volume (up, down, mute, unmute, 0-100)",
     args: [
       {
         name: "change",
-        optional: false
+        optional: false,
+        validate: chatboxValidaters.choice(["up", "down", "mute", "unmute", chatboxValidaters.percent.source]),
       }
     ]
   });
@@ -229,5 +233,23 @@ export default (chatbox) => {
     chatbox.addMessage('Toggling fullscreen.', { kind: "success" });
   }, {
     help: "toggle fullscreen"
+  });
+
+  chatbox.registerCommand("usercolor", (args) => {
+    let state = Object.assign({},chatbox.state);
+    const color = args.color;
+    state.userColor = args.color;
+    chatbox.setState(state);
+    // in future change colors for other ppl too.
+  }, {
+    help: "change your name's color",
+    args: [
+      {
+        name: 'color',
+        optional: false,
+        validate: chatboxValidaters.color,
+        parse: chatboxParsers.color,
+      }
+    ]
   });
 }
