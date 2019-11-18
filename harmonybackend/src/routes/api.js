@@ -29,7 +29,7 @@ route.post("/logout", (req, res) => {
 });
 
 route.use("/library/", auth_required, require("./api-library"));
-route.use("/media/", /* auth_required, */ require("./api-media"));
+route.use("/media/", auth_required, require("./api-media"));
 route.use("/lobby/", auth_required, require("./api-lobby"));
 
 route.get("/user/", (req, res) => {
