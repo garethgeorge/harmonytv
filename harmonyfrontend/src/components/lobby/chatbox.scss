@@ -143,6 +143,14 @@
     .chatboxTextEntry {
       position: relative;
     }
+
+    // .user-message.same-sender {
+    //   padding-top: 0;
+    //
+    //   .message-sender {
+    //     display: none;
+    //   }
+    // }
   }
 
   .inline-command {
@@ -235,6 +243,15 @@
       padding: 0;
       margin: 0;
       padding-bottom: 0.3em;
+    }
+  }
+
+  :not(.old) + .message .same-sender,
+  &.docked .same-sender {
+    padding-top: 0;
+
+    .message-sender {
+      display: none;
     }
   }
 }

@@ -50,8 +50,6 @@ export default observer(class ChatBox extends React.Component {
     });
 
     document.addEventListener('keydown', (e) => {
-      console.log(e);
-      console.log(document.activeElement, this.textEntry.current)
       if (document.activeElement == this.textEntry.current) {
         if (e.key === "ArrowUp" && !(e.ctrlKey || e.metaKey) && this.commandHistory.length) {
           console.log('up');
@@ -107,7 +105,14 @@ export default observer(class ChatBox extends React.Component {
       });
     });
 
-    this.sendRelayMessage({version: "1", type: "user-joined", sender: model.state.user.username, color: this.userColor});
+    setTimeout(() => {
+      this.sendRelayMessage({
+        version: "1",
+        type: "user-joined",
+        sender: model.state.user.username,
+        color: this.userColor
+      });
+    }, 100);
   }
 
   componentDidUpdate() {
@@ -301,24 +306,29 @@ export default observer(class ChatBox extends React.Component {
         </span>
       );
     }
-    this.addMessage(<div className="command-box">{lines}</div>);
+    this.addMessage(lines, {kind: 'command-box'});
     this.commandBox.length = 0;
     let state = Object.assign({}, this.state);
     // this.setState(state);
   }
 
-  addMessage(messageText, opts = {}) {
+  addMessage(messageText, opts = {}, sender = null) {
+    if (sender == null) {
+      sender = model.state.user.username;
+    }
     // setTimeout so that multiple messages can be added at the same time.
     setTimeout(() => {
-      const options = Object.assign({ kind: "message" }, opts);
+      const options = Object.assign({ kind: "message", classlist: [], attributes: {} }, opts);
 
       const state = Object.assign({}, this.state);
       var message = {
         key: this.state.messages.length,
+        sender: sender,
         text: messageText,
         kind: options.kind,
         data: {
-          classlist: []
+          classlist: options.classlist,
+          attributes: options.attributes,
         }
       };
       state.messages = this.state.messages.slice(0);
@@ -340,19 +350,44 @@ export default observer(class ChatBox extends React.Component {
   sendRelayMessage(relayMessage) {
     const message = JSON.stringify(relayMessage);
     this.props.socket.emit("client:message", message);
-    this.receiveRelayMessage(message, true);
+    this.receiveRelayMessage(message, {mine: true});
   }
 
-  receiveRelayMessage(relayMessage, mine=false) {
+  receiveRelayMessage(relayMessage, options={mine: false}) {
     const message = JSON.parse(relayMessage);
     if (message.version != "1") {
       this.addMessage('Your version is out of date.', {kind: 'warning'});
     }
     if (message.type == "user-message") {
-      this.addMessage(<span className={"user-message " + (mine ? "my-message" : "")}><span className="message-sender" style={{color: message.color}}>{message.sender}:</span> <span className="message-content">{message.text}</span></span>);
+      console.log(
+        'MESSAGE',
+        this.state.messages[this.state.messages.length-1],
+        this.state.messages[this.state.messages.length-1].sender,
+        message.sender
+      );
+      this.addMessage(
+        <span className={"user-message " +
+                        (options.mine ? "my-message " : "") +
+                        ((this.state.messages[this.state.messages.length-1].kind == 'message' &&
+                          this.state.messages[this.state.messages.length-1].sender == message.sender) ? "same-sender " : "")}>
+          <span className="message-sender" style={{color: message.color}}>{message.sender}:</span>
+          <span className="message-content">{message.text}</span>
+        </span>, {
+          attributes: {sender: message.sender}
+        },
+        message.sender
+      );
     }
     if (message.type == "user-joined") {
-      this.addMessage(<span className="user-joined"><span className="message-sender" style={{color: message.color}}>{message.sender}</span> joined the lobby.</span>, {kind: 'info'});
+      this.addMessage(
+        <span className="user-joined">
+          <span className="message-sender" style={{color: message.color}}>{message.sender}</span>
+          {" joined the lobby."}
+        </span>, {
+          kind: 'info'
+        },
+        message.sender
+      );
     }
   }
 
@@ -394,6 +429,7 @@ export default observer(class ChatBox extends React.Component {
         <span
           className={"chat-text " + message.kind + " " + message.data.classlist.join(" ")}
           key={message.key}
+          {...message.data.attributes}
         >
           {message.text}
         </span>

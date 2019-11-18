@@ -8,7 +8,6 @@ export default (chatbox) => {
   const flush = chatbox.flushCommand;
 
   chatbox.registerCommand("?", (args) => {
-    console.log('hi');
     const commands = Object.values(chatbox.commands).map(command => {
       if (command.opts.secret) {
         return ;
@@ -35,13 +34,13 @@ export default (chatbox) => {
     help: 'show command list'
   });
 
-  // chatbox.registerCommand("test", (args) => {
-  //   chatbox.print(`This is a test.`);
-  //   chatbox.print(`This is a test.`);
-  //   chatbox.print(`This is a test.`);
-  //   chatbox.print(`This is a test.`);
-  //   chatbox.print(`This is a test.`);
-  // });
+  chatbox.registerCommand("test", (args) => {
+    // chatbox.sendRelayMessage({version: "1", type: "user-joined", sender: model.state.user.username, color: chatbox.userColor});
+    console.log('MODEL:',model);
+    chatbox.print(`did test.`, { kind: "info" });
+  }, {
+    secret: true,
+  });
 
   chatbox.registerCommand("dock", (args) => {
     const side = args.side;
@@ -59,7 +58,7 @@ export default (chatbox) => {
       {
         name: "side",
         optional: true,
-        validate: /^(left|right)$/,
+        validate: chatboxValidaters.choice(["left","right"]),
       }
     ]
   });
@@ -80,7 +79,7 @@ export default (chatbox) => {
       {
         name: "side",
         optional: true,
-        validate: /^(left|right)$/,
+        validate: chatboxValidaters.choice(["left","right"]),
       }
     ]
   });
