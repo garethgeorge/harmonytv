@@ -4,6 +4,14 @@ import "./chatbox.scss";
 import model from "../../model";
 import chatboxCommands from "./chatbox_commands.jsx";
 
+function randomColor() {
+    var letters = "0123456789ABCDEF";
+    var color = '#';
+    for (var i = 0; i < 6; i++)
+       color += letters[(Math.floor(Math.random() * 16))];
+    return color;
+}
+
 export default observer(class ChatBox extends React.Component {
   state = {
     composition: "",
@@ -11,7 +19,7 @@ export default observer(class ChatBox extends React.Component {
     users: 1,
     docked: true,
     side: "left",
-    userColor: "#ffffff",
+    userColor: randomColor(),
   }
 
   persistent = ["docked", "side", "userColor"]
@@ -20,16 +28,62 @@ export default observer(class ChatBox extends React.Component {
 
   commandBox = []
 
+  commandHistory = []
+
+  commandHistoryIndex = null
+
   constructor(props) {
     super(props);
 
     this.loadPreferences();
 
     this.textEntry = React.createRef();
+
     document.addEventListener('keydown', (e) => {
       if (e.key === "Enter" && !(e.ctrlKey || e.metaKey)) {
-        if (document.activeElement != this.textEntry) {
+        if (document.activeElement != this.textEntry.current) {
           this.textEntry.current.focus();
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      console.log(e);
+      console.log(document.activeElement, this.textEntry.current)
+      if (document.activeElement == this.textEntry.current) {
+        if (e.key === "ArrowUp" && !(e.ctrlKey || e.metaKey) && this.commandHistory.length) {
+          console.log('up');
+          let state = Object.assign({}, this.state);
+          if (this.commandHistoryIndex == null) {
+            this.commandHistoryIndex = this.commandHistory.length;
+          }
+          if (this.commandHistoryIndex > 0) {
+            this.commandHistoryIndex -= 1;
+          }
+          state.composition = this.commandHistory[this.commandHistoryIndex];
+          this.setState(state);
+          e.preventDefault();
+          e.stopPropagation();
+        }
+      }
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (document.activeElement == this.textEntry.current) {
+        if (e.key === "ArrowDown" && !(e.ctrlKey || e.metaKey) && this.commandHistory.length && this.commandHistoryIndex !== null) {
+          console.log('down');
+          let state = Object.assign({}, this.state);
+          if (this.commandHistoryIndex < this.commandHistory.length) {
+            this.commandHistoryIndex += 1;
+            state.composition = this.commandHistory[this.commandHistoryIndex];
+          }
+          if (this.commandHistoryIndex == this.commandHistory.length) {
+            this.commandHistoryIndex = null;
+            state.composition = '';
+          }
+          this.setState(state);
           e.preventDefault();
           e.stopPropagation();
         }
@@ -42,7 +96,7 @@ export default observer(class ChatBox extends React.Component {
     this.addMessage(<div>Type <span className="command">\?</span> for a list of commands.</div>, { kind: "info" });
 
     this.props.socket.on("server:message", (message) => {
-      this.addUserMessage(message);
+      this.receiveRelayMessage(message);
     });
 
     this.props.socket.on("server:lobby-connected-users", (users) => {
@@ -52,11 +106,9 @@ export default observer(class ChatBox extends React.Component {
         this.addMessage(users + " total users are now connected.", { kind: "info" });
       });
     });
-  }
 
-  // componentWillUpdate() {
-  //   this.flushCommand();
-  // }
+    this.sendRelayMessage({version: "1", type: "user-joined", sender: model.state.user.username, color: this.userColor});
+  }
 
   componentDidUpdate() {
     this.savePreferences();
@@ -229,7 +281,7 @@ export default observer(class ChatBox extends React.Component {
   }
 
   printFlush(messageText, opts = {}) {
-    this.print(messageText, opts = {});
+    this.print(messageText, opts);
     this.flushCommand();
   }
 
@@ -285,10 +337,33 @@ export default observer(class ChatBox extends React.Component {
     }, 0);
   }
 
-  addUserMessage(messageText, opts = {}) {
-    // thing
-    let message = JSON.parse(messageText);
-    this.addMessage(<span><span className="message-sender" style={{color: message.color}}>{message.sender}:</span> {message.text}</span>, opts);
+  sendRelayMessage(relayMessage) {
+    const message = JSON.stringify(relayMessage);
+    this.props.socket.emit("client:message", message);
+    this.receiveRelayMessage(message, true);
+  }
+
+  receiveRelayMessage(relayMessage, mine=false) {
+    const message = JSON.parse(relayMessage);
+    if (message.version != "1") {
+      this.addMessage('Your version is out of date.', {kind: 'warning'});
+    }
+    if (message.type == "user-message") {
+      this.addMessage(<span className={"user-message " + (mine ? "my-message" : "")}><span className="message-sender" style={{color: message.color}}>{message.sender}:</span> <span className="message-content">{message.text}</span></span>);
+    }
+    if (message.type == "user-joined") {
+      this.addMessage(<span className="user-joined"><span className="message-sender" style={{color: message.color}}>{message.sender}</span> joined the lobby.</span>, {kind: 'info'});
+    }
+  }
+
+  makeMessage (composition) {
+    return {
+      version: "1",
+      type: 'user-message',
+      sender: model.state.user.username,
+      text: composition,
+      color: this.state.userColor,
+    }
   }
 
   execCommand(composition) {
@@ -296,6 +371,12 @@ export default observer(class ChatBox extends React.Component {
     const argstr = (composition+' ').split(' ').slice(1).join(' ');
 
     this.print(composition, { kind: "command-entered" });
+    this.commandHistory.push(composition);
+    this.commandHistory = this.commandHistory.filter((item,pos,arr) => {
+      return pos === 0 || item !== arr[pos-1]; // remove consecutive duplicates
+    })
+    this.commandHistoryIndex = null;
+    console.log(this.commandHistory);
     if (!this.commands[command]) {
       this.printFlush(<span>Unknown command <span className="command">\{command}</span>.</span>, { kind: "error" });
     } else {
@@ -341,10 +422,8 @@ export default observer(class ChatBox extends React.Component {
                 this.setState(state, () => {
                   // send the message if it is not a special command
                   if (composition[0] != "\\") {
-                    const message = JSON.stringify({sender: model.state.user.username, text: composition, color: this.state.userColor});
-                    //<span className="message-sender" style={{color: this.state.userColor}}>{model.state.user.username}</span>: {composition}</span>;
-                    this.addUserMessage(message);
-                    this.props.socket.emit("client:message", message);
+                    const message = this.makeMessage(composition);
+                    this.sendRelayMessage(message);
                   } else { // do the command if it is known
                     this.execCommand(composition);
                   }
