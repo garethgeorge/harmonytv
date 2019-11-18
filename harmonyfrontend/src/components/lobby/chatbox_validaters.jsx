@@ -1,5 +1,5 @@
 export default {
-  choice(list) {return new RegExp("/^("+list.join('|')+")$/");},
+  choice(list) {console.log(new RegExp("/^("+list.join('|')+")$/")); return new RegExp("/^("+list.join('|')+")$/");},
   number: /^-?[123456789][0-9]*\.?[0-9]*$/,
   timestamp: /^\d+:[0-5]\d(:[0-5]\d)?(.\d+)?$/,
   percent: /^[123456789][0-9]?\%$/,

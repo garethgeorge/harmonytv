@@ -18,6 +18,8 @@ export default observer(class ChatBox extends React.Component {
 
   commands = {}
 
+  commandBox = []
+
   constructor(props) {
     super(props);
 
@@ -51,6 +53,10 @@ export default observer(class ChatBox extends React.Component {
       });
     });
   }
+
+  // componentWillUpdate() {
+  //   this.flushCommand();
+  // }
 
   componentDidUpdate() {
     this.savePreferences();
@@ -99,13 +105,12 @@ export default observer(class ChatBox extends React.Component {
 
     // Validate and parse argstr
     let oldHandler = handler;
-    let argHandler;
-    argHandler = (argstr) => {
+    let argHandler = (argstr) => {
       if (opts && opts.args) {
         const validArgStr = /^\s*(?:(?:(?:[^=\s]|\\=)+|"(?:[^"]|\")*")(?:\s+))*(?:[A-Za-z]\w*=(?:(?:[^=\s]|\\=)+|"(?:[^"]|\")*")(?:\s+))*$/;
         if (!(argstr+' ').match(validArgStr)) {
           // if argstr is invalid, throw error.
-          this.addMessage(
+          this.printFlush(
             <span>Invalid argument string <span className="command">{argstr}</span>.</span>,
             { kind: "error" }
           );
@@ -146,7 +151,7 @@ export default observer(class ChatBox extends React.Component {
                   prevalues[arg.name] = posargsParsed[i];
                   i ++;
                 } else {
-                  this.addMessage(
+                  this.printFlush(
                     <span>Not all required arguments supplied. Expected usage: <br/>{usage}.</span>,
                     { kind: "error" }
                   );
@@ -160,7 +165,7 @@ export default observer(class ChatBox extends React.Component {
             }
           }
           if (i < posargsParsed.length) {
-            this.addMessage(
+            this.printFlush(
               <span>More arguments supplied than expected. Expected usage: <br/><span className="command">{usage}</span>.</span>,
               { kind: "error" }
             );
@@ -170,7 +175,8 @@ export default observer(class ChatBox extends React.Component {
           for (const arg of opts.args) {
             if (prevalues[arg.name]) {
               if (arg.validate && !arg.validate.test(prevalues[arg.name])) {
-                this.addMessage(
+                console.log('tested');
+                this.printFlush(
                   <span>Invalid format for <span className="command command-arg">{arg.name}</span> argument.</span>,
                   { kind: "error" }
                 );
@@ -191,10 +197,12 @@ export default observer(class ChatBox extends React.Component {
           }
           console.log(values);
           oldHandler(values);
+          this.flushCommand();
           return ;
         }
       }
       oldHandler(argstr);
+      this.flushCommand();
       return ;
     }
 
@@ -206,6 +214,45 @@ export default observer(class ChatBox extends React.Component {
       "opts": opts,
       "usage": usage,
     }
+  }
+
+  print(messageText, opts = {}) {
+    var line = {
+      key: this.commandBox.length,
+      text: messageText,
+      kind: (opts.kind ? opts.kind : 'normal'),
+      data: {
+        classlist: []
+      }
+    };
+    this.commandBox.push(line);
+  }
+
+  printFlush(messageText, opts = {}) {
+    this.print(messageText, opts = {});
+    this.flushCommand();
+  }
+
+  flushCommand() {
+    // setTimeout so that multiple messages can be added at the same time.
+    if (this.commandBox.length == 0) {
+      return ;
+    }
+    const lines = [];
+    for (const line of this.commandBox) {
+      lines.push(
+        <span
+          className={"chat-text " + line.kind + " " + line.data.classlist.join(" ")}
+          key={line.key}
+        >
+          {line.text}
+        </span>
+      );
+    }
+    this.addMessage(<div className="command-box">{lines}</div>);
+    this.commandBox.length = 0;
+    let state = Object.assign({}, this.state);
+    // this.setState(state);
   }
 
   addMessage(messageText, opts = {}) {
@@ -246,9 +293,9 @@ export default observer(class ChatBox extends React.Component {
     const command = composition.split(' ')[0].substr(1);
     const argstr = (composition+' ').split(' ').slice(1).join(' ');
 
-    this.addMessage(<span className="command command-entered">{composition}</span>, { kind: "info" });
+    this.print(composition, { kind: "command-entered" });
     if (!this.commands[command]) {
-      this.addMessage(<span>Unknown command <span className="command">\{command}</span>.</span>, { kind: "error" });
+      this.printFlush(<span>Unknown command <span className="command">\{command}</span>.</span>, { kind: "error" });
     } else {
       this.commands[command].handler(argstr);
     }

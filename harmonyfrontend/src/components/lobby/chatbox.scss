@@ -39,7 +39,7 @@
   // styling for chat text
   .chat-text {
     height: auto;
-    float: right;
+    // float: right;
     /* font-weight: bold; */
     text-align: left;
     line-height: 30px;
@@ -81,6 +81,7 @@
 
       li {
         margin: 0px;
+        line-height: 1.7;
       }
     }
   }
@@ -159,9 +160,47 @@
     opacity: 0.7;
   }
 
-  .command-entered {
-    display: block;
+  .command-box {
+    display: flex;
+    flex-direction: column;
     width: 100%;
+    font-family: monospace;
+    border-radius: 0.45em;
+    // background-color: rgba(255, 127, 191, 0.1);
+    background-color: rgba(63,63,63, 0.5);
+    color: mix($color-primary-accent, white, 70%);
+    font-style: normal;
+    padding: 0;
+    border: 1px solid rgba(255, 0, 127, 0.3);
+    position: relative;
+    margin: 0.25em 0;
+    line-height: 1;
+
+    > * {
+      display: block;
+      padding: 0 0.5em;
+      // background: rgba(255, 255, 255, 0.08);
+      border-bottom: 1px dashed rgba(255, 191, 223, 0.5);
+    }
+    > *:last-child {
+      border-bottom: none;
+    }
+
+    .command-entered {
+      font-family: monospace;
+      border-radius: 0.15em;
+      background-color: rgba(47,0,11, 0.5);
+      color: mix(mix($color-primary-accent, white, 70%), transparent, 85%);
+      font-style: normal;
+      border: none;
+      border-bottom: 1px solid rgba(255, 0, 95, 0.15);
+      width: 100%;
+      margin-top: 0;
+      // position: absolute;
+      // top: 0;
+      // left: 0;
+      // right: 0;
+    }
   }
 
   .message-sender {

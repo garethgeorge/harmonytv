@@ -4,6 +4,9 @@ import chatboxParsers from "./chatbox_parsers.jsx";
 import chatboxValidaters from "./chatbox_validaters.jsx";
 
 export default (chatbox) => {
+  const print = chatbox.commandPrint;
+  const flush = chatbox.flushCommand;
+
   chatbox.registerCommand("?", (args) => {
     console.log('hi');
     const commands = Object.values(chatbox.commands).map(command => {
@@ -20,7 +23,7 @@ export default (chatbox) => {
     });
     console.log(commands);
 
-    chatbox.addMessage(
+    chatbox.print(
       <div>
         Commands:
         <ul className="command-list">
@@ -40,9 +43,8 @@ export default (chatbox) => {
     if (side !== null) {
       stateCpy.side = side;
     }
-    chatbox.setState(stateCpy, () => {
-      chatbox.addMessage(`Chatbox docked to ${stateCpy.side} side.`, { kind: "success" });
-    });
+    chatbox.setState(stateCpy);
+    chatbox.print(`Chatbox docking to ${stateCpy.side} side.`, { kind: "success" });
   }, {
     help: "docks the chat",
     args: [
@@ -62,16 +64,15 @@ export default (chatbox) => {
     if (side !== null) {
       stateCpy.side = side;
     }
-    chatbox.setState(stateCpy, () => {
-      chatbox.addMessage(`Chatbox floated to ${stateCpy.side} side.`, { kind: "success" });
-    });
+    chatbox.setState(stateCpy);
+    chatbox.print(`Chatbox floating to ${stateCpy.side} side.`, { kind: "success" });
   }, {
     help: "docks the chat",
     args: [
       {
         name: "side",
         optional: true,
-        validate: chatboxValidaters.choice(["left", "right"]),
+        validate: /^(left|right)$/,
       }
     ]
   });
@@ -80,20 +81,21 @@ export default (chatbox) => {
     const stateCpy = Object.assign({}, chatbox.state);
     stateCpy.messages = [];
     chatbox.setState(stateCpy);
+    chatbox.print(`Clearing chat.`, { kind: "success" });
   }, {
     help: "clears chat messages",
   });
 
   chatbox.registerCommand("play", (args) => {
     document.getElementById('video').play(); // TODO: chatbox is a very bad way of doing chatbox by react conventions
-    chatbox.addMessage('Playing the video.', { kind: "success" });
+    chatbox.print('Playing the video.', { kind: "success" });
   }, {
     help: "plays the video"
   });
 
   chatbox.registerCommand("pause", (args) => {
     document.getElementById('video').pause(); // TODO: chatbox is a very bad way of doing chatbox by react conventions
-    chatbox.addMessage('Paused the video.', { kind: "success" });
+    chatbox.print('Pausing the video.', { kind: "success" });
   }, {
     help: "pauses the video"
   });
@@ -110,9 +112,9 @@ export default (chatbox) => {
     console.log(skipby);
     document.getElementById('video').currentTime += skipby;
     if (skipby > 0) {
-      chatbox.addMessage('Skipped ahead '+skipby+' seconds.', {kind: "success"});
+      chatbox.print('Skipping ahead '+skipby+' seconds.', {kind: "success"});
     } else {
-      chatbox.addMessage('Skipped back '+(-skipby)+' seconds.', {kind: "success"});
+      chatbox.print('Skipping back '+(-skipby)+' seconds.', {kind: "success"});
     }
   }, {
     help: "skip forward by seconds",
@@ -136,7 +138,7 @@ export default (chatbox) => {
   chatbox.registerCommand("seek", (args) => {
     console.log(args);
     document.getElementById('video').currentTime = args.time.seconds;
-    chatbox.addMessage('Seeked to '+args.time.timestamp+'.', {kind: "success"});
+    chatbox.print('Seeking to '+args.time.timestamp+'.', {kind: "success"});
   }, {
     help: "seek to a timestamp",
     args: [{
@@ -153,28 +155,25 @@ export default (chatbox) => {
     if (arg == "up") {
       document.getElementById('video').muted = false;
       document.getElementById('video').volume = Math.min(prev_volume+0.2,1);
-      chatbox.addMessage('Volume increased.', {kind: "success"});
+      chatbox.print('Increasing volume.', {kind: "success"});
     }
     else if (arg == "down") {
       document.getElementById('video').muted = false;
       document.getElementById('video').volume = Math.max(prev_volume-0.2,0);
-      chatbox.addMessage('Volume decreased.', {kind: "success"});
+      chatbox.print('Decreasing volume.', {kind: "success"});
     }
     else if (arg == "mute") {
       document.getElementById('video').muted = true;
-      chatbox.addMessage('Volume muted.', {kind: "success"});
+      chatbox.print('Muting volume.', {kind: "success"});
     }
     else if (arg == "unmute") {
       document.getElementById('video').muted = false;
-      chatbox.addMessage('Volume unmuted.', {kind: "success"});
+      chatbox.print('Unmuting volume.', {kind: "success"});
     }
     else if (parseInt(arg) && 0<=parseInt(arg) && parseInt(arg)<=100) {
       document.getElementById('video').muted = false;
       document.getElementById('video').volume = parseInt(arg)/100;
-      chatbox.addMessage('Volume set to '+parseInt(arg)+'.', {kind: "success"});
-    }
-    else {
-      chatbox.addMessage('change must be one of \'up\', \'down\', \'mute\', \'unmute\' or a percent (e.g. \'50%\').', {kind: "warning"});
+      chatbox.print('Setting volume to '+arg+'.', {kind: "success"});
     }
   }, {
     help: "change volume (up, down, mute, unmute, 0-100)",
@@ -189,7 +188,7 @@ export default (chatbox) => {
 
   chatbox.registerCommand("mute", (args) => {
     document.getElementById('video').muted = true;
-    chatbox.addMessage('Video muted.', { kind: "success" });
+    chatbox.print('Muting video.', { kind: "success" });
   }, {
     secret: true,
     help: "mutes the video",
@@ -200,7 +199,7 @@ export default (chatbox) => {
     if (document.getElementById('video').volume < 0.2) {
       document.getElementById('video').volume = 0.2;
     }
-    chatbox.addMessage('Video unmuted.', { kind: "success" });
+    chatbox.print('Unmuting video.', { kind: "success" });
   }, {
     secret: true,
     help: "unmutes the video",
@@ -230,7 +229,7 @@ export default (chatbox) => {
         document.webkitExitFullscreen();
       }
     }
-    chatbox.addMessage('Toggling fullscreen.', { kind: "success" });
+    chatbox.print('Toggling fullscreen.', { kind: "success" });
   }, {
     help: "toggle fullscreen"
   });
@@ -252,4 +251,5 @@ export default (chatbox) => {
       }
     ]
   });
+
 }
