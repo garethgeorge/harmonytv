@@ -42,7 +42,7 @@ export default observer(class ChatBox extends React.Component {
     this.addMessage(<div>Type <span className="command">\?</span> for a list of commands.</div>, { kind: "info" });
 
     this.props.socket.on("server:message", (message) => {
-      this.addMessage(message);
+      this.addUserMessage(message);
     });
 
     this.props.socket.on("server:lobby-connected-users", (users) => {
