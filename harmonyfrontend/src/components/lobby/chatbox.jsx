@@ -96,7 +96,6 @@ export default observer(class ChatBox extends React.Component {
     if (!arglist && opts.args) {
       arglist = opts.args.map(arg => {
         if (arg.optional) {
-
           return <span className="command-arg optional">{" ["+arg.name+"]"}</span>;
         }
         return <span className="command-arg">{" <"+arg.name+">"}</span>;
@@ -256,11 +255,11 @@ export default observer(class ChatBox extends React.Component {
     // this.setState(state);
   }
 
-
   addMessage(messageText, opts = {}) {
     // setTimeout so that multiple messages can be added at the same time.
     setTimeout(() => {
       const options = Object.assign({ kind: "message" }, opts);
+
       const state = Object.assign({}, this.state);
       var message = {
         key: this.state.messages.length,
@@ -286,9 +285,9 @@ export default observer(class ChatBox extends React.Component {
     }, 0);
   }
 
-
-  addUserMessage(messageText, opts = {}) {
-    this.addMessage(messageText, opts);
+  addUserMessage(message, opts = {}) {
+    // thing
+    this.addMessage(<span><span className="message-sender" style={{color: message.color}}>{message.sender}:</span> {message.text}</span>, opts);
   }
 
   execCommand(composition) {
@@ -341,7 +340,8 @@ export default observer(class ChatBox extends React.Component {
                 this.setState(state, () => {
                   // send the message if it is not a special command
                   if (composition[0] != "\\") {
-                    const message = <span><span className="message-sender" style={{color: this.state.userColor}}>{model.state.user.username}</span>: {composition}</span>;
+                    const message = JSON.stringify({sender: model.state.user.username, text: composition, color: this.state.userColor});
+                    //<span className="message-sender" style={{color: this.state.userColor}}>{model.state.user.username}</span>: {composition}</span>;
                     this.addUserMessage(message);
                     this.props.socket.emit("client:message", message);
                   } else { // do the command if it is known
