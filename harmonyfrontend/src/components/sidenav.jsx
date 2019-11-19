@@ -20,7 +20,7 @@ export default observer(class SideNav extends React.Component {
         links.push(
           <Link key={library.id}
             className={selected ? "selected" : ""}
-            to={"/library/" + library.id}
+            to={"/library/" + library.name}
             onClick={() => {
               setImmediate(() => {
                 this.forceUpdate();

@@ -6,7 +6,7 @@ import "./player.scss";
 // load shaka, example from: https://github.com/amit08255/shaka-player-react-with-ui-config/blob/master/with-default-ui/src/components/VideoPlayer.js
 import 'shaka-player/dist/controls.css';
 const shaka = require('shaka-player/dist/shaka-player.ui.js');
-
+const debug = require("debug")("components:lobby:player");
 
 class Player extends React.Component {
   state = {}
@@ -85,10 +85,10 @@ class Player extends React.Component {
   }
 
   playVideo(mediaid, callback = null) {
-    console.log("Player::playVideo(" + mediaid + ")");
+    debug("Player::playVideo(" + mediaid + ")");
 
     model.media.getInfo(mediaid).then(media => {
-      console.log("MEDIA INFO: " + JSON.stringify(media));
+      debug("MEDIA INFO: " + JSON.stringify(media));
 
       if (!this.shakaPlayer) {
         this.videoComponent.current.src = config.apiHost + "/media/" + mediaid + "/files/" + media.metadata.hlsStream;
@@ -100,15 +100,15 @@ class Player extends React.Component {
       const player = this.shakaPlayer;
 
       player.load(manifestUrl).then(() => {
-        console.log('The video has now been loaded!');
+        debug('The video has now been loaded!');
 
         const metadata = media.metadata;
-        console.log("VIDEO METADATA: " + JSON.stringify(metadata));
+        debug("VIDEO METADATA: " + JSON.stringify(metadata));
 
-        console.log("loading subtitles");
+        debug("loading subtitles");
         for (const language of Object.keys(metadata.subtitles)) {
           const subtitle = metadata.subtitles[language];
-          console.log("\tadding subtitle language: " + language + " - file url: " + (config.apiHost + "/media/" + mediaid + "/files/" + subtitle.file));
+          debug("\tadding subtitle language: " + language + " - file url: " + (config.apiHost + "/media/" + mediaid + "/files/" + subtitle.file));
 
           player.addTextTrack(
             config.apiHost + "/media/" + mediaid + "/files/" + subtitle.file,

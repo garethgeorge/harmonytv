@@ -14,8 +14,7 @@ class Library {
         return this._media;
       },
       get series() {
-        if (!this.media)
-          return null;
+        if (!this.media) return null;
         const series = {};
         for (const mediaObj of this._media) {
           series[mediaObj.seriesname] = series[mediaObj.seriesname] || [];
@@ -42,41 +41,48 @@ class Library {
   }
 
   refreshMediaList() {
-    axios.get(config.apiHost + "/library/" + this._library.libraryid + "/getMedia")
-      .then(action(res => {
-        res.data.sort((a, b) => {
-          return (a > b) ? 1 : -1;
-        });
-        this.media = res.data;
-      }));
+    axios
+      .get(config.apiHost + "/library/" + this._library.libraryid + "/getMedia")
+      .then(
+        action(res => {
+          res.data.sort((a, b) => {
+            return a > b ? 1 : -1;
+          });
+          this.media = res.data;
+        })
+      );
   }
 }
 
 export default {
-
-  findByName: computedFn((name) => {
+  findByName: computedFn(name => {
     if (name === null || !model.state.libraries) {
       return null;
     }
     for (const library of Object.values(model.state.libraries)) {
-      if (library.name === name)
-        return library;
+      if (library.name === name) return library;
     }
     return null;
   }),
 
   refreshLibraries: () => {
-    return axios.get(config.apiHost + "/library/getAll")
-      .then(action((res) => {
-        console.log("LibraryManager::refreshLibraries() - libraries list: ", JSON.stringify(res.data, false, 3));
-        const newlibraries = {};
-        for (const library of res.data) {
-          newlibraries[library.libraryid] = new Library(library);
-        }
-        model.state.libraries = newlibraries;
-      }))
-      .catch((err) => {
+    return axios
+      .get(config.apiHost + "/library/getAll")
+      .then(
+        action(res => {
+          console.log(
+            "LibraryManager::refreshLibraries() - libraries list: ",
+            JSON.stringify(res.data, false, 3)
+          );
+          const newlibraries = {};
+          for (const library of res.data) {
+            newlibraries[library.libraryid] = new Library(library);
+          }
+          model.state.libraries = newlibraries;
+        })
+      )
+      .catch(err => {
         console.log("ERROR FETCHING LIBRARIES");
       });
-  },
-}
+  }
+};

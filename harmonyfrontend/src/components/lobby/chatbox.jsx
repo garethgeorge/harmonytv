@@ -3,6 +3,7 @@ import { observer } from "mobx-react";
 import "./chatbox.scss";
 import model from "../../model";
 import chatboxCommands from "./chatbox_commands.jsx";
+const debug = require("debug")("components:lobby:chatbox");
 
 export default observer(class ChatBox extends React.Component {
   state = {
@@ -17,13 +18,10 @@ export default observer(class ChatBox extends React.Component {
   persistent = ["docked", "side", "userColor"]
 
   commands = {}
-
   commandBox = []
 
   constructor(props) {
     super(props);
-
-    this.loadPreferences();
 
     this.textEntry = React.createRef();
     document.addEventListener('keydown', (e) => {
@@ -54,12 +52,8 @@ export default observer(class ChatBox extends React.Component {
     });
   }
 
-  // componentWillUpdate() {
-  //   this.flushCommand();
-  // }
-
-  componentDidUpdate() {
-    this.savePreferences();
+  componentDidMount() {
+    this.loadPreferences();
   }
 
   savePreferences() {
@@ -67,16 +61,21 @@ export default observer(class ChatBox extends React.Component {
     for (const pref of this.persistent) {
       preferences[pref] = this.state[pref];
     }
+    debug(JSON.stringify(preferences));
     window.localStorage.setItem("harmonytv-chatbox", JSON.stringify(preferences));
   }
 
   loadPreferences() {
     let state = Object.assign({}, this.state);
-    let preferences = JSON.parse(window.localStorage.getItem("harmonytv-chatbox"));
-    for (const pref in preferences) {
-      state[pref] = preferences[pref];
+    try {
+      let preferences = JSON.parse(window.localStorage.getItem("harmonytv-chatbox"));
+      for (const pref in preferences) {
+        state[pref] = preferences[pref];
+      }
+      debug("LOADED THE PREFERENCES!!! " + JSON.stringify(preferences));
+    } finally {
+      this.setState(state);
     }
-    this.setState(state);
   }
 
   registerCommand(command, handler, opts = null) {
@@ -96,9 +95,9 @@ export default observer(class ChatBox extends React.Component {
     if (!arglist && opts.args) {
       arglist = opts.args.map(arg => {
         if (arg.optional) {
-          return <span className="command-arg optional">{" ["+arg.name+"]"}</span>;
+          return <span key={arg.name} className="command-arg optional">{" [" + arg.name + "]"}</span>;
         }
-        return <span className="command-arg">{" <"+arg.name+">"}</span>;
+        return <span key={arg.name} className="command-arg">{" <" + arg.name + ">"}</span>;
       });
     }
     const usage = <span className="command">{"\\" + command}{arglist}</span>;
@@ -108,13 +107,13 @@ export default observer(class ChatBox extends React.Component {
     let argHandler = (argstr) => {
       if (opts && opts.args) {
         const validArgStr = /^\s*(?:(?:(?:[^=\s]|\\=)+|"(?:[^"]|\")*")(?:\s+))*(?:[A-Za-z]\w*=(?:(?:[^=\s]|\\=)+|"(?:[^"]|\")*")(?:\s+))*$/;
-        if (!(argstr+' ').match(validArgStr)) {
+        if (!(argstr + ' ').match(validArgStr)) {
           // if argstr is invalid, throw error.
           this.printFlush(
             <span>Invalid argument string <span className="command">{argstr}</span>.</span>,
             { kind: "error" }
           );
-          return ;
+          return;
         } else {
           // if argstr is valid...
           const argSplitter = /(?<=^|\s)((?:[A-Za-z]\w*=)?(?:(?:[^\s="]|\\=)+|".*(?<!\\)"|""))(?=\s|$)/g;
@@ -132,13 +131,13 @@ export default observer(class ChatBox extends React.Component {
             }
           }
           // figure out which arguments are which...
-          let prevalues = Object.assign({},kwargsParsed);
+          let prevalues = Object.assign({}, kwargsParsed);
           let req = 0;
           for (const arg of opts.args) {
             if (!prevalues.hasOwnProperty(arg.name)) {
               prevalues[arg.name] = null;
               if (!arg.optional) {
-                req ++;
+                req++;
               }
             }
           }
@@ -149,41 +148,40 @@ export default observer(class ChatBox extends React.Component {
               if (!arg.optional) {
                 if (i < posargsParsed.length) {
                   prevalues[arg.name] = posargsParsed[i];
-                  i ++;
+                  i++;
                 } else {
                   this.printFlush(
-                    <span>Not all required arguments supplied. Expected usage: <br/>{usage}.</span>,
+                    <span>Not all required arguments supplied. Expected usage: <br />{usage}.</span>,
                     { kind: "error" }
                   );
-                  return ;
+                  return;
                 }
               } else if (free > 0) {
                 prevalues[arg.name] = posargsParsed[i];
-                i ++;
-                free-=1;
+                i++;
+                free -= 1;
               }
             }
           }
           if (i < posargsParsed.length) {
             this.printFlush(
-              <span>More arguments supplied than expected. Expected usage: <br/><span className="command">{usage}</span>.</span>,
+              <span>More arguments supplied than expected. Expected usage: <br /><span className="command">{usage}</span>.</span>,
               { kind: "error" }
             );
-            return ;
+            return;
           }
           let values = {};
           for (const arg of opts.args) {
             if (prevalues[arg.name]) {
               if (arg.validate && !arg.validate.test(prevalues[arg.name])) {
-                console.log('tested');
                 this.printFlush(
                   <span>Invalid format for <span className="command command-arg">{arg.name}</span> argument.</span>,
                   { kind: "error" }
                 );
-                return ;
+                return;
               } else {
                 if (prevalues[arg.name][0] == '"') {
-                  prevalues[arg.name] = prevalues[arg.name].slice(1,-1);
+                  prevalues[arg.name] = prevalues[arg.name].slice(1, -1);
                 }
                 if (arg.parse) {
                   values[arg.name] = arg.parse(prevalues[arg.name]);
@@ -195,15 +193,14 @@ export default observer(class ChatBox extends React.Component {
               values[arg.name] = arg.hasOwnProperty('fallback') ? arg.fallback : null;
             }
           }
-          console.log(values);
           oldHandler(values);
           this.flushCommand();
-          return ;
+          return;
         }
       }
       oldHandler(argstr);
       this.flushCommand();
-      return ;
+      return;
     }
 
     handler = argHandler;
@@ -236,7 +233,7 @@ export default observer(class ChatBox extends React.Component {
   flushCommand() {
     // setTimeout so that multiple messages can be added at the same time.
     if (this.commandBox.length == 0) {
-      return ;
+      return;
     }
     const lines = [];
     for (const line of this.commandBox) {
@@ -288,12 +285,12 @@ export default observer(class ChatBox extends React.Component {
   addUserMessage(messageText, opts = {}) {
     // thing
     let message = JSON.parse(messageText);
-    this.addMessage(<span><span className="message-sender" style={{color: message.color}}>{message.sender}:</span> {message.text}</span>, opts);
+    this.addMessage(<span><span className="message-sender" style={{ color: message.color }}>{message.sender}:</span> {message.text}</span>, opts);
   }
 
   execCommand(composition) {
     const command = composition.split(' ')[0].substr(1);
-    const argstr = (composition+' ').split(' ').slice(1).join(' ');
+    const argstr = (composition + ' ').split(' ').slice(1).join(' ');
 
     this.print(composition, { kind: "command-entered" });
     if (!this.commands[command]) {
@@ -304,8 +301,8 @@ export default observer(class ChatBox extends React.Component {
   }
 
   render() {
-    // if (this.state.users <= 1)
-    //   return null;
+    if (this.state.users <= 1)
+      return null;
 
     const messages = [];
     for (const message of this.state.messages) {
@@ -341,7 +338,7 @@ export default observer(class ChatBox extends React.Component {
                 this.setState(state, () => {
                   // send the message if it is not a special command
                   if (composition[0] != "\\") {
-                    const message = JSON.stringify({sender: model.state.user.username, text: composition, color: this.state.userColor});
+                    const message = JSON.stringify({ sender: model.state.user.username, text: composition, color: this.state.userColor });
                     //<span className="message-sender" style={{color: this.state.userColor}}>{model.state.user.username}</span>: {composition}</span>;
                     this.addUserMessage(message);
                     this.props.socket.emit("client:message", message);

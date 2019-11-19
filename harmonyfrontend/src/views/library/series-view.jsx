@@ -22,6 +22,9 @@ export default observer(class SeriesView extends React.Component {
     this._mobx_disposer = autorun(() => {
       if (!model.state.libraries) return;
       const library = model.state.libraries[this.props.libraryid];
+      if (!library)
+        return;
+
       if (!library.media)
         setImmediate(() => {
           library.refreshMediaList();
@@ -32,11 +35,11 @@ export default observer(class SeriesView extends React.Component {
         model.state.breadcrumbs = [
           {
             text: library.name,
-            href: "/library/" + library.id
+            href: "/library/" + library.name
           },
           {
             text: this.props.seriesName,
-            href: "/library/" + library.id + "/series/" + this.props.seriesName
+            href: "/library/" + library.name + "/series/" + this.props.seriesName
           }
         ];
       } else {

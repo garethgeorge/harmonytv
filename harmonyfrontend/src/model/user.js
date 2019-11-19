@@ -1,13 +1,12 @@
 import axios from "axios";
 import state from "./state";
 import model from ".";
-import {action} from "mobx";
+import { action } from "mobx";
 import config from "../config";
 
 export default {
   getCurrentUser: async () => {
-    if (state.user !== null)
-      return state.user;
+    if (state.user !== null) return state.user;
     const user = (await axios.get(config.apiHost + "/user/")).data.user;
     action(() => {
       state.user = user;
@@ -16,7 +15,10 @@ export default {
   },
 
   login: async (username, password) => {
-    const res = await axios.post(config.apiHost + "/login", {"username": username, "password": password});
+    const res = await axios.post(config.apiHost + "/login", {
+      username: username,
+      password: password
+    });
     action(() => {
       state.user = res.data.user;
     })();
@@ -32,11 +34,14 @@ export default {
   },
 
   updateResumeWatching: async (mediaid, position, total_duration) => {
-    const resp = await axios.post(config.apiHost + "/user/setPlaybackPosition", {
-      position: position,
-      total_duration: total_duration,
-      mediaid: mediaid
-    });
+    const resp = await axios.post(
+      config.apiHost + "/user/setPlaybackPosition",
+      {
+        position: position,
+        total_duration: total_duration,
+        mediaid: mediaid
+      }
+    );
     return resp.data;
   }
-}
+};

@@ -55,7 +55,7 @@ export default observer(class SeriesList extends React.Component {
     for (const seriesName of Object.keys(series)) {
       shows.push(
         <Link key={seriesName}
-          className="show" to={"/library/" + this.props.library.id + "/series/" + encodeURIComponent(seriesName)}
+          className="show" to={"/library/" + this.props.library.name + "/series/" + encodeURIComponent(seriesName)}
           style={{ width: this.state.width + "px" }}
         >
           <div className="inner">

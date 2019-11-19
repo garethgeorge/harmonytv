@@ -10,13 +10,13 @@ export default observer(() => {
   return (
     <div>
       <Route
-        path={`/library/:libraryid/series/:seriesname`}
+        path={`/library/:libraryname/series/:seriesname`}
         component={observer(props => {
           return (
             <div>
               <BreadCrumbs breadcrumbs={model.state.breadcrumbs} />
               <SeriesView
-                libraryid={props.match.params.libraryid}
+                libraryid={(model.library.findByName(props.match.params.libraryname) || {}).id}
                 seriesName={props.match.params.seriesname}
               />
             </div>
@@ -25,12 +25,12 @@ export default observer(() => {
       />
       <Route
         exact
-        path={`/library/:libraryid`}
+        path={`/library/:libraryname`}
         component={observer(props => {
           return (
             <div>
               <BreadCrumbs breadcrumbs={model.state.breadcrumbs} />
-              <LibraryView libraryid={props.match.params.libraryid} />
+              <LibraryView libraryid={(model.library.findByName(props.match.params.libraryname) || {}).id} />
             </div>
           );
         })}

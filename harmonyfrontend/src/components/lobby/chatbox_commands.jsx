@@ -2,16 +2,16 @@ import React from "react";
 import model from "../../model";
 import chatboxParsers from "./chatbox_parsers.jsx";
 import chatboxValidaters from "./chatbox_validaters.jsx";
+const debug = require("debug")("components:lobby:chatbox:commands");
 
 export default (chatbox) => {
   const print = chatbox.commandPrint;
   const flush = chatbox.flushCommand;
 
   chatbox.registerCommand("?", (args) => {
-    console.log('hi');
     const commands = Object.values(chatbox.commands).map(command => {
       if (command.opts.secret) {
-        return ;
+        return;
       }
       let text = null;
       if (!text && command.opts.help)
@@ -21,7 +21,7 @@ export default (chatbox) => {
         <li>{command.usage} {text}</li>
       )
     });
-    console.log(commands);
+    debug(commands);
 
     chatbox.print(
       <div>
@@ -39,11 +39,11 @@ export default (chatbox) => {
     const side = args.side;
     const stateCpy = Object.assign({}, chatbox.state);
     stateCpy.docked = true;
-    console.log(args);
+    debug(args);
     if (side !== null) {
       stateCpy.side = side;
     }
-    chatbox.setState(stateCpy);
+    chatbox.setState(stateCpy, chatbox.savePreferences.bind(chatbox));
     chatbox.print(`Chatbox docking to ${stateCpy.side} side.`, { kind: "success" });
   }, {
     help: "docks the chat",
@@ -60,11 +60,11 @@ export default (chatbox) => {
     const side = args.side;
     const stateCpy = Object.assign({}, chatbox.state);
     stateCpy.docked = false;
-    console.log(args);
+    debug(args);
     if (side !== null) {
       stateCpy.side = side;
     }
-    chatbox.setState(stateCpy);
+    chatbox.setState(stateCpy, chatbox.savePreferences.bind(chatbox));
     chatbox.print(`Chatbox floating to ${stateCpy.side} side.`, { kind: "success" });
   }, {
     help: "docks the chat",
@@ -109,12 +109,12 @@ export default (chatbox) => {
 
   chatbox.registerCommand("skip", (args) => {
     const skipby = args.dir * args.seconds;
-    console.log(skipby);
+    debug(skipby);
     document.getElementById('video').currentTime += skipby;
     if (skipby > 0) {
-      chatbox.print('Skipping ahead '+skipby+' seconds.', {kind: "success"});
+      chatbox.print('Skipping ahead ' + skipby + ' seconds.', { kind: "success" });
     } else {
-      chatbox.print('Skipping back '+(-skipby)+' seconds.', {kind: "success"});
+      chatbox.print('Skipping back ' + (-skipby) + ' seconds.', { kind: "success" });
     }
   }, {
     help: "skip forward by seconds",
@@ -123,7 +123,7 @@ export default (chatbox) => {
         name: 'dir',
         optional: true,
         validate: chatboxValidaters.choice(['forward', 'ahead', 'back', 'backward']),
-        parse: chatboxParsers.choice({forward: 1, ahead: 1, back: -1, backward: -1}),
+        parse: chatboxParsers.choice({ forward: 1, ahead: 1, back: -1, backward: -1 }),
         fallback: 1,
       },
       {
@@ -136,9 +136,9 @@ export default (chatbox) => {
   });
 
   chatbox.registerCommand("seek", (args) => {
-    console.log(args);
+    debug(args);
     document.getElementById('video').currentTime = args.time.seconds;
-    chatbox.print('Seeking to '+args.time.timestamp+'.', {kind: "success"});
+    chatbox.print('Seeking to ' + args.time.timestamp + '.', { kind: "success" });
   }, {
     help: "seek to a timestamp",
     args: [{
@@ -154,26 +154,26 @@ export default (chatbox) => {
     const arg = args.change;
     if (arg == "up") {
       document.getElementById('video').muted = false;
-      document.getElementById('video').volume = Math.min(prev_volume+0.2,1);
-      chatbox.print('Increasing volume.', {kind: "success"});
+      document.getElementById('video').volume = Math.min(prev_volume + 0.2, 1);
+      chatbox.print('Increasing volume.', { kind: "success" });
     }
     else if (arg == "down") {
       document.getElementById('video').muted = false;
-      document.getElementById('video').volume = Math.max(prev_volume-0.2,0);
-      chatbox.print('Decreasing volume.', {kind: "success"});
+      document.getElementById('video').volume = Math.max(prev_volume - 0.2, 0);
+      chatbox.print('Decreasing volume.', { kind: "success" });
     }
     else if (arg == "mute") {
       document.getElementById('video').muted = true;
-      chatbox.print('Muting volume.', {kind: "success"});
+      chatbox.print('Muting volume.', { kind: "success" });
     }
     else if (arg == "unmute") {
       document.getElementById('video').muted = false;
-      chatbox.print('Unmuting volume.', {kind: "success"});
+      chatbox.print('Unmuting volume.', { kind: "success" });
     }
-    else if (parseInt(arg) && 0<=parseInt(arg) && parseInt(arg)<=100) {
+    else if (parseInt(arg) && 0 <= parseInt(arg) && parseInt(arg) <= 100) {
       document.getElementById('video').muted = false;
-      document.getElementById('video').volume = parseInt(arg)/100;
-      chatbox.print('Setting volume to '+arg+'.', {kind: "success"});
+      document.getElementById('video').volume = parseInt(arg) / 100;
+      chatbox.print('Setting volume to ' + arg + '.', { kind: "success" });
     }
   }, {
     help: "change volume (up, down, mute, unmute, 0-100)",
@@ -235,11 +235,10 @@ export default (chatbox) => {
   });
 
   chatbox.registerCommand("usercolor", (args) => {
-    let state = Object.assign({},chatbox.state);
+    let state = Object.assign({}, chatbox.state);
     const color = args.color;
     state.userColor = args.color;
-    chatbox.setState(state);
-    // in future change colors for other ppl too.
+    chatbox.setState(state, chatbox.savePreferences.bind(chatbox));
   }, {
     help: "change your name's color",
     args: [
