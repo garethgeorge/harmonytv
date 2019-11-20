@@ -1,12 +1,9 @@
 import React from "react";
 import model from "../../model";
-import chatboxCommandRegister from "./chatbox_command_registration.jsx";
 import chatboxParsers from "./chatbox_parsers.jsx";
 import chatboxValidaters from "./chatbox_validaters.jsx";
 
 export default (chatbox) => {
-  chatboxCommandRegister(chatbox);
-
   const print = chatbox.commandPrint;
   const flush = chatbox.flushCommand;
 

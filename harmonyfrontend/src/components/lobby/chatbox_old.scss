@@ -15,7 +15,7 @@
 
   font-size: 1em;
 
-  .chat-area {
+  .messages {
     width: 300px;
     padding-left: 0.5em;
     padding-right: 0.5em;
@@ -25,23 +25,19 @@
   }
 
   // class for chatbox when docked to the left
-  &[display-side=left] {
+  &.left {
     left: 1em;
   }
 
   // class for chatbox when docked right
-  &[display-side=right] {
+  &.right {
     left: auto;
     right: 1em;
     order: -1;
   }
 
-  .chat-stream {
-    border: 1px solid red;
-  }
-
   // styling for chat text
-  .stream-line {
+  .chat-text {
     height: auto;
     // float: right;
     /* font-weight: bold; */
@@ -54,30 +50,45 @@
       display: none;
     }
 
-    &[kind=info] {
+    &.info {
       @include notification;
       color: rgba(127, 127, 255, 0.7);
     }
 
-    &[kind=warning] {
+    &.warning {
       @include notification;
       color: rgba(255, 255, 127, 0.7);
     }
 
-    &[kind=success] {
+    &.success {
       @include notification;
       color: rgba(127, 255, 127, 0.7);
     }
 
-    &[kind=error] {
+    &.error {
       @include notification;
       color: rgba(255, 127, 127, 0.7);
+    }
+
+    .command-list {
+      list-style-type: none;
+      padding-left: 0.5em;
+      margin: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      border: 1px solid rgba(63, 63, 63, 0.3);
+      border-radius: 0.4em;
+      padding: 0.2em;
+
+      li {
+        margin: 0px;
+        line-height: 1.7;
+      }
     }
   }
 
   .chatboxTextEntry {
-    //position: absolute;
-    //bottom: 0;
+    position: absolute;
+    bottom: 0;
 
     outline-color: rgba(255, 255, 255, 1);
     outline-width: 1px;
@@ -109,14 +120,14 @@
   }
 
   // docked flavor of the chatbox
-  &[display=docked] {
+  &.docked {
     position: relative;
     bottom: 1px;
     left: 1px;
     // background-color: rgba(15,15,15,1);
     background-color: rgb(7, 7, 7);
 
-    .chat-area {
+    .messages {
       flex-grow: 1;
       width: 300px;
       overflow-y: scroll;
@@ -132,6 +143,14 @@
     .chatboxTextEntry {
       position: relative;
     }
+
+    // .user-message.same-sender {
+    //   padding-top: 0;
+    //
+    //   .message-sender {
+    //     display: none;
+    //   }
+    // }
   }
 
   .inline-command {
@@ -160,22 +179,7 @@
     opacity: 0.7;
   }
 
-  .command-list {
-    list-style-type: none;
-    padding-left: 0.5em;
-    margin: 0;
-    background-color: rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(63, 63, 63, 0.3);
-    border-radius: 0.4em;
-    padding: 0.2em;
-
-    li {
-      margin: 0px;
-      line-height: 1.7;
-    }
-  }
-
-  .chat-stream[kind=command-box] {
+  .command-box {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -200,18 +204,21 @@
     > *:last-child {
       border-bottom: none;
     }
-    > *:first-child {
-      &[kind=command-entered] {
-        font-family: monospace;
-        border-radius: 0.15em;
-        background-color: rgba(47,0,11, 0.5);
-        color: mix(mix($color-primary-accent, white, 70%), transparent, 85%);
-        font-style: normal;
-        border: none;
-        border-bottom: 1px solid rgba(255, 0, 95, 0.15);
-        width: 100%;
-        margin-top: 0em;
-      }
+
+    .command-entered {
+      font-family: monospace;
+      border-radius: 0.15em;
+      background-color: rgba(47,0,11, 0.5);
+      color: mix(mix($color-primary-accent, white, 70%), transparent, 85%);
+      font-style: normal;
+      border: none;
+      border-bottom: 1px solid rgba(255, 0, 95, 0.15);
+      width: 100%;
+      margin-top: 0em;
+      // position: absolute;
+      // top: 0;
+      // left: 0;
+      // right: 0;
     }
   }
 
