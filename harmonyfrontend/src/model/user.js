@@ -3,8 +3,9 @@ import state from "./state";
 import model from ".";
 import { action } from "mobx";
 import config from "../config";
+const debug = require("debug")("model:user");
 
-export default {
+const exports = {
   getCurrentUser: async () => {
     if (state.user !== null) return state.user;
     const user = (await axios.get(config.apiHost + "/user/")).data.user;
@@ -31,6 +32,9 @@ export default {
     for (const record of resp.data) {
       resumeWatching[record.mediaid] = record;
     }
+    debug(
+      "refreshResumeWatchingList: got " + resumeWatching.length + " records."
+    );
   },
 
   updateResumeWatching: async (mediaid, position, total_duration) => {
@@ -45,3 +49,9 @@ export default {
     return resp.data;
   }
 };
+
+window.addEventListener("focus", () => {
+  exports.refreshResumeWatchingList();
+});
+
+export default exports;

@@ -1,7 +1,7 @@
 import axios from "axios";
-import { action, extendObservable } from "mobx";
+import { action, extendObservable, observe } from "mobx";
 import { computedFn } from "mobx-utils";
-import model from ".";
+import state from "./state";
 import config from "../config";
 
 class Library {
@@ -56,10 +56,10 @@ class Library {
 
 const exports = {
   findByName: computedFn(name => {
-    if (name === null || !model.state.libraries) {
+    if (name === null || !state.libraries) {
       return null;
     }
-    for (const library of Object.values(model.state.libraries)) {
+    for (const library of Object.values(state.libraries)) {
       if (library.name === name) return library;
     }
     return null;
@@ -78,7 +78,7 @@ const exports = {
           for (const library of res.data) {
             newlibraries[library.libraryid] = new Library(library);
           }
-          model.state.libraries = newlibraries;
+          state.libraries = newlibraries;
         })
       )
       .catch(err => {
@@ -87,5 +87,9 @@ const exports = {
   }
 };
 
-exports.refreshLibraries();
+// automatically refresh the libraries when we detect we are signed in
+observe(state, "user", () => {
+  exports.refreshLibraries();
+});
+
 export default exports;

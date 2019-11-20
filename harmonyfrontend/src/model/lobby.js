@@ -165,6 +165,14 @@ export default {
         }
       };
       socket.on("server:all-clients-acked", onceSynchronized);
+
+      if (currentlyPlayingVideo) {
+        model.user.updateResumeWatching(
+          currentlyPlayingVideo,
+          video.currentTime,
+          video.duration
+        );
+      }
     });
 
     const updateResumeWatchingTimer = setInterval(() => {
