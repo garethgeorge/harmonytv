@@ -11,22 +11,17 @@ export default observer(
     state = {};
 
     componentDidMount() {
-      if (!model.state.libraries) model.library.refreshLibraries();
-
       this._mobx_disposer = autorun(() => {
         if (!model.state.libraries) return;
         const library = model.state.libraries[this.props.libraryid];
 
         if (library) {
-          // update breadcrumbs
           model.state.breadcrumbs = [
             {
               text: library.name,
               href: "/library/" + library.id
             }
           ];
-
-          // library.refreshMediaList();
         } else {
           model.state.breadcrumbs = [];
         }

@@ -54,7 +54,7 @@ class Library {
   }
 }
 
-export default {
+const exports = {
   findByName: computedFn(name => {
     if (name === null || !model.state.libraries) {
       return null;
@@ -86,3 +86,6 @@ export default {
       });
   }
 };
+
+exports.refreshLibraries();
+export default exports;

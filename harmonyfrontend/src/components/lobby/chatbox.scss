@@ -145,7 +145,7 @@
     }
   }
 
-  .command {
+  .inline-command {
     font-family: monospace;
     border-radius: 0.15em;
     background-color: rgba(255, 255, 255, 0.1);
@@ -153,6 +153,16 @@
     font-style: normal;
     padding: 0.1em;
     border: 1px solid rgba(255, 255, 255, 0.08);
+  }
+
+  .command {
+    font-family: monospace;
+    border-radius: 0.2em;
+    background-color: rgba(0, 0, 0, 0.9);
+    color: mix($color-primary-accent, white, 70%);
+    font-style: normal;
+    padding: 0.1em;
+    border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
   .command-arg {
@@ -168,7 +178,7 @@
     font-family: monospace;
     border-radius: 0.45em;
     // background-color: rgba(255, 127, 191, 0.1);
-    background-color: rgba(63,63,63, 0.5);
+    background-color: rgba(31,31,31, 0.5);
     color: mix($color-primary-accent, white, 70%);
     font-style: normal;
     padding: 0;
@@ -181,7 +191,7 @@
       display: block;
       padding: 0 0.5em;
       // background: rgba(255, 255, 255, 0.08);
-      border-bottom: 1px dashed rgba(255, 191, 223, 0.5);
+      border-bottom: 1px dashed rgba(255, 191, 223, 0.2);
     }
     > *:last-child {
       border-bottom: none;
@@ -196,7 +206,7 @@
       border: none;
       border-bottom: 1px solid rgba(255, 0, 95, 0.15);
       width: 100%;
-      margin-top: 0;
+      margin-top: 0em;
       // position: absolute;
       // top: 0;
       // left: 0;
@@ -206,5 +216,25 @@
 
   .message-sender {
     font-weight: bold;
+  }
+
+  .user-message {
+    display: flex;
+    flex-direction: column;
+    padding: 0.25em 0.1em 0.15em;
+
+    .message-sender {
+      font-size: 0.7em;
+      line-height: 1.4;
+      padding: 0;
+      margin: 0;
+    }
+
+    .message-content {
+      line-height: 1em;
+      padding: 0;
+      margin: 0;
+      padding-bottom: 0.3em;
+    }
   }
 }

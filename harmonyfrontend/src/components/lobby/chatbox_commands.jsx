@@ -32,8 +32,16 @@ export default (chatbox) => {
       </div>
       , { kind: "info" });
   }, {
-    help: 'show chatbox list'
+    help: 'show command list'
   });
+
+  // chatbox.registerCommand("test", (args) => {
+  //   chatbox.print(`This is a test.`);
+  //   chatbox.print(`This is a test.`);
+  //   chatbox.print(`This is a test.`);
+  //   chatbox.print(`This is a test.`);
+  //   chatbox.print(`This is a test.`);
+  // });
 
   chatbox.registerCommand("dock", (args) => {
     const side = args.side;

@@ -135,7 +135,12 @@ module.exports = {
           util.nothrow(() => {
             if (lobby) {
               lobby.removeClient(socket);
-              ionsp.to(lobby.id).emit("server:lobby-connected-users", lobby.numConnectedClients());
+              ionsp
+                .to(lobby.id)
+                .emit(
+                  "server:lobby-connected-users",
+                  lobby.numConnectedClients()
+                );
             }
           })
         );
@@ -158,7 +163,12 @@ module.exports = {
 
               socket.emit("server:curtime", new Date().getTime());
 
-              ionsp.to(lobby.id).emit("server:lobby-connected-users", lobby.numConnectedClients());
+              ionsp
+                .to(lobby.id)
+                .emit(
+                  "server:lobby-connected-users",
+                  lobby.numConnectedClients()
+                );
             } else {
               socket.emit("server:error", "you already joined a room");
             }
