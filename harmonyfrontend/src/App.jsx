@@ -22,25 +22,27 @@ const lobbyPage = props => {
 
 const FullRouter = () => {
   return (
-    <Router basename="/">
-      <Switch>
-        {/* iterates its children and takes the first that matches */}
-        {/* <Route path={`/player/:mediaid`} component={playerPage} /> */}
-        <Route path={`/lobby/:lobbyid`} component={lobbyPage} />
+    <React.Suspense fallback={<Loading />}>
+      <Router basename="/">
+        <Switch>
+          {/* iterates its children and takes the first that matches */}
+          {/* <Route path={`/player/:mediaid`} component={playerPage} /> */}
+          <Route path={`/lobby/:lobbyid`} component={lobbyPage} />
 
-        <Route path={`/`}>
-          <div className="App">
-            <div className="sidenav-container">
-              <SideNav />
-            </div>
+          <Route path={`/`}>
+            <div className="App">
+              <div className="sidenav-container">
+                <SideNav />
+              </div>
 
-            <div className="content-container">
-              <Route path={`/library/:libraryid`} component={LibraryRouter} />
+              <div className="content-container">
+                <Route path={`/library/:libraryid`} component={LibraryRouter} />
+              </div>
             </div>
-          </div>
-        </Route>
-      </Switch>
-    </Router>
+          </Route>
+        </Switch>
+      </Router>
+    </React.Suspense>
   );
 };
 
