@@ -1,6 +1,7 @@
 const uuidv4 = require("uuid/v4");
 const debug = require("debug")("model:lobby");
 const util = require("../util");
+const wordlist = require("wordlist-english").english;
 
 let ionsp = null;
 
@@ -10,7 +11,13 @@ class Lobby {
   constructor(media) {
     this.media = media;
 
-    this.id = uuidv4();
+    this.id = new Array(3)
+      .fill("")
+      .map(() => {
+        return wordlist[Math.floor(Math.random() * wordlist.length)];
+      })
+      .join("-");
+
     this.videoQueue = {
       queueId: uuidv4(),
       videos: [this.media.mediaid]

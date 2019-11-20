@@ -29,6 +29,7 @@ const exports = {
   refreshResumeWatchingList: async () => {
     const resp = await axios.get(config.apiHost + "/user/listResumeWatching");
     const resumeWatching = model.state.resumeWatching;
+    if (!(resp.data instanceof Array)) return;
     for (const record of resp.data) {
       resumeWatching[record.mediaid] = record;
     }

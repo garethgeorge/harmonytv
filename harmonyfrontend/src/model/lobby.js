@@ -24,6 +24,7 @@ export default {
 
     /*
       time synchronization
+      TODO: add ping based offset
     */
     let delta = 0;
     socket.on("server:curtime", time => {
@@ -34,6 +35,14 @@ export default {
     const curTime = () => {
       return new Date().getTime() + delta;
     };
+
+    /*
+      synchronize the number of currently connected users
+    */
+    let numConnectedUsers = 0;
+    socket.on("server:lobby-connected-users", _numConnectedUsers => {
+      numConnectedUsers = _numConnectedUsers;
+    });
 
     /*
       video and queue synchronization
@@ -57,6 +66,15 @@ export default {
         player.playVideo(currentlyPlayingVideo, () => {
           debug("\tsuccessfully played " + currentlyPlayingVideo);
         });
+        model.media
+          .getInfo(currentlyPlayingVideo)
+          .then(mediaInfo => {
+            debug("GOT THE MEDIA INFO: " + JSON.stringify(mediaInfo, false, 3));
+            document.title = mediaInfo.name;
+          })
+          .catch(err => {
+            alert(err);
+          });
       }
     });
 
@@ -88,9 +106,19 @@ export default {
     let syncPlaybackStateTimer = null;
     let didAck = false;
     socket.on("server:sync-playback-state", _syncState => {
+      // special case sync handling for lobby with only one user
+      if (numConnectedUsers <= 1) {
+        syncState = _syncState;
+        applySyncState();
+        socket.emit("client:ack-state", _syncState.stateId);
+        return;
+      }
+
+      // much more complicated sync handling code for the case where there
+      // are many users -- this is to avoid the formation of sync cycles / race conditions
       syncState = _syncState;
       didAck = false;
-      if (!amInSync()) applySyncState(syncState);
+      if (!amInSync()) applySyncState();
 
       debug("server:sync-playback-state: ", syncState);
 
@@ -112,7 +140,7 @@ export default {
           }
         } else {
           debug("\t\tsync is still in progress, working on it.");
-          applySyncState(syncState);
+          applySyncState();
         }
       }, 1000);
     });
