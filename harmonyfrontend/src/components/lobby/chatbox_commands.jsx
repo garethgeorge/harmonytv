@@ -3,6 +3,7 @@ import model from "../../model";
 import chatboxCommandRegister from "./chatbox_command_registration.jsx";
 import chatboxParsers from "./chatbox_parsers.jsx";
 import chatboxValidaters from "./chatbox_validaters.jsx";
+const debug = require("debug")("components:lobby:chatbox:commands");
 
 export default (chatbox) => {
   chatboxCommandRegister(chatbox);
@@ -13,7 +14,7 @@ export default (chatbox) => {
   chatbox.registerCommand("?", (args,stream) => {
     const commands = Object.values(chatbox.commands).map(command => {
       if (command.opts.secret) {
-        return ;
+        return;
       }
       let text = null;
       if (!text && command.opts.help)
@@ -23,7 +24,7 @@ export default (chatbox) => {
         <li>{command.usage} {text}</li>
       )
     });
-    console.log(commands);
+    debug(commands);
 
     chatbox.print(stream, {content:
       <div>
@@ -88,7 +89,7 @@ export default (chatbox) => {
     if (visibility !== null) {
       stateCpy.displayOptions.visibility = visibility;
     }
-    chatbox.setState(stateCpy);
+    chatbox.setState(stateCpy, chatbox.savePreferences.bind(chatbox));
     chatbox.print(stream, {content: `Chatbox floating to ${stateCpy.displayOptions.side} side.`, kind: "success" });
   }, {
     help: "docks the chat",
@@ -140,7 +141,7 @@ export default (chatbox) => {
 
   chatbox.registerCommand("skip", (args,stream) => {
     const skipby = args.dir * args.seconds;
-    console.log(skipby);
+    debug(skipby);
     document.getElementById('video').currentTime += skipby;
     if (skipby > 0) {
       chatbox.print(stream, {content: 'Skipping ahead '+skipby+' seconds.', kind: "success"});
@@ -154,7 +155,7 @@ export default (chatbox) => {
         name: 'dir',
         optional: true,
         validate: chatboxValidaters.choice(['forward', 'ahead', 'back', 'backward']),
-        parse: chatboxParsers.choice({forward: 1, ahead: 1, back: -1, backward: -1}),
+        parse: chatboxParsers.choice({ forward: 1, ahead: 1, back: -1, backward: -1 }),
         fallback: 1,
       },
       {
@@ -201,7 +202,7 @@ export default (chatbox) => {
       document.getElementById('video').muted = false;
       chatbox.print(stream, {content: 'Unmuting volume.', kind: "success"});
     }
-    else if (parseInt(arg) && 0<=parseInt(arg) && parseInt(arg)<=100) {
+    else if (parseInt(arg) && 0 <= parseInt(arg) && parseInt(arg) <= 100) {
       document.getElementById('video').muted = false;
       document.getElementById('video').volume = parseInt(arg)/100;
       chatbox.print(stream, {content: 'Setting volume to '+arg+'.', kind: "success"});

@@ -14,8 +14,12 @@ module.exports.setup = async setup => {
   // bit of a race condition here but it makes life much easier to just live w/it
   debug("initializing cloud data stores");
 
-  const gdriveBackend = await require("../storage-backends/gdrive")(config.gdrive.parentFolder);
-  const cryptBackend = await require("../storage-backends/crypt")(gdriveBackend);
+  const gdriveBackend = await require("../storage-backends/gdrive")(
+    config.gdrive.parentFolder
+  );
+  const cryptBackend = await require("../storage-backends/crypt")(
+    gdriveBackend
+  );
 
   storageBackend = cryptBackend;
   exports.storageBackend = storageBackend;
@@ -24,9 +28,32 @@ module.exports.setup = async setup => {
 module.exports.getMediaInfo = async (mediaid, conn = null) => {
   if (!conn) conn = pool;
 
-  const res = await conn.query(pgformat(`SELECT * FROM media WHERE mediaid = %L`, mediaid));
+  const res = await conn.query(
+    pgformat(`SELECT * FROM media WHERE mediaid = %L`, mediaid)
+  );
   if (res.rows.length === 0) return null;
   return res.rows[0];
+};
+
+/*
+ * returns the episodes of a series as well as the fraction they have been watched
+ */
+module.exports.seriesGetEpisodes = async (seriesname, conn = null) => {
+  if (!conn) conn = pool;
+
+  const res = await conn.query(
+    pgformat(
+      `
+        SELECT media.*, position::float / total_duration::float AS completed_fraction
+        FROM media 
+        LEFT JOIN user_resume_watching ON user_resume_watching.mediaid = media.mediaid
+        WHERE seriesname = %L
+      `,
+      seriesname
+    )
+  );
+
+  return res.rows;
 };
 
 module.exports.objectGetParentMedia = async (objectid, conn = null) => {
@@ -64,7 +91,11 @@ exports.putStreamObject = async (mediaid, uploadDir, file, conn = null) => {
   while (true) {
     try {
       const objectStream = fs.createReadStream(path.join(uploadDir, file));
-      blockId = await storageBackend.putBlock(objectStream, mimetype, encryptionKey);
+      blockId = await storageBackend.putBlock(
+        objectStream,
+        mimetype,
+        encryptionKey
+      );
       break;
     } catch (e) {
       if (retry_time > 15 * 60) {
@@ -141,11 +172,15 @@ exports.getStreamObject = async (mediaid, objectid, conn = null) => {
 
   let encryptionKey = null;
   const res = await conn.query(
-    pgformat("SELECT encryptionkey FROM media_objects WHERE objectid = %L", objectid)
+    pgformat(
+      "SELECT encryptionkey FROM media_objects WHERE objectid = %L",
+      objectid
+    )
   );
   if (res.rows.length > 0) {
     debug("getStreamObject(...): encryptionkey: ", res.rows[0].encryptionkey);
-    if (res.rows[0].encryptionkey) encryptionKey = res.rows[0].encryptionkey.trim();
+    if (res.rows[0].encryptionkey)
+      encryptionKey = res.rows[0].encryptionkey.trim();
   }
 
   return await objectCacheLock.acquire(objectid, callback => {
@@ -167,7 +202,9 @@ exports.getStreamObject = async (mediaid, objectid, conn = null) => {
         object.stream.pipe(stream);
         object.stream = stream;
 
-        debug(`\t\tfetched object ${objectid} successfully, caching it and returning it`);
+        debug(
+          `\t\tfetched object ${objectid} successfully, caching it and returning it`
+        );
         objectCache.set(objectid, object);
         debug(`\t\tthere are ${objectCache.size()} items in the cache`);
 
@@ -182,7 +219,11 @@ exports.mediaObjectIdByPath = async (mediaid, path, conn = null) => {
   if (!conn) conn = pool;
 
   const res = await conn.query(
-    pgformat("SELECT objectId FROM media_objects WHERE mediaId = %L AND path = %L", mediaid, path)
+    pgformat(
+      "SELECT objectId FROM media_objects WHERE mediaId = %L AND path = %L",
+      mediaid,
+      path
+    )
   );
 
   if (res.rows.length === 0) return null;

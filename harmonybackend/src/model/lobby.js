@@ -1,6 +1,7 @@
 const uuidv4 = require("uuid/v4");
 const debug = require("debug")("model:lobby");
 const util = require("../util");
+const wordlist = require("wordlist-english").english;
 
 let ionsp = null;
 
@@ -10,7 +11,13 @@ class Lobby {
   constructor(media) {
     this.media = media;
 
-    this.id = uuidv4();
+    this.id = new Array(3)
+      .fill("")
+      .map(() => {
+        return wordlist[Math.floor(Math.random() * wordlist.length)];
+      })
+      .join("-");
+
     this.videoQueue = {
       queueId: uuidv4(),
       videos: [this.media.mediaid]
@@ -70,10 +77,6 @@ class Lobby {
   }
 
   setVideoQueue(queue) {
-    if (syncState.stateId === this.syncState.stateId) {
-      throw new Error("setting the same queue again!");
-    }
-
     this.videoQueue = Object.assign({}, queue);
     ionsp.in(this.id).emit("server:sync-queue", this.videoQueue);
   }
@@ -91,17 +94,6 @@ class Lobby {
     socket.emit("server:sync-playback-state", this.syncState);
   }
 }
-
-// sweep old lobbies
-// setInterval(() => {
-//   for (const lobbyId in lobbies) {
-//     const lobby = lobbies[lobbyId];
-
-//     if (lobby.getAge() > 8 * 3600 * 1000 && lobby.members === 0) {
-//       delete lobbies[lobbyId];
-//     }
-//   }
-// }, 30 * 1000);
 
 module.exports = {
   create: media => {
@@ -135,7 +127,12 @@ module.exports = {
           util.nothrow(() => {
             if (lobby) {
               lobby.removeClient(socket);
-              ionsp.to(lobby.id).emit("server:lobby-connected-users", lobby.numConnectedClients());
+              ionsp
+                .to(lobby.id)
+                .emit(
+                  "server:lobby-connected-users",
+                  lobby.numConnectedClients()
+                );
             }
           })
         );
@@ -158,7 +155,12 @@ module.exports = {
 
               socket.emit("server:curtime", new Date().getTime());
 
-              ionsp.to(lobby.id).emit("server:lobby-connected-users", lobby.numConnectedClients());
+              ionsp
+                .to(lobby.id)
+                .emit(
+                  "server:lobby-connected-users",
+                  lobby.numConnectedClients()
+                );
             } else {
               socket.emit("server:error", "you already joined a room");
             }

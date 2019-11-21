@@ -3,13 +3,13 @@ import { observer } from "mobx-react";
 import "./chatbox.scss";
 import model from "../../model";
 import chatboxCommands from "./chatbox_commands.jsx";
+const debug = require("debug")("components:lobby:chatbox");
 
 function randomColor() {
-    var letters = "0123456789ABCDEF";
-    var color = '#';
-    for (var i = 0; i < 6; i++)
-       color += letters[(Math.floor(Math.random() * 16))];
-    return color;
+  var letters = "0123456789ABCDEF";
+  var color = "#";
+  for (var i = 0; i < 6; i++) color += letters[Math.floor(Math.random() * 16)];
+  return color;
 }
 
 function randomId() {
@@ -40,9 +40,11 @@ export default observer(class ChatBox extends React.Component {
   chatArea = React.createRef();
   textEntry = React.createRef();
 
+  commandHistory = [];
+  commandHistoryIndex = null;
+
   constructor(props) {
     super(props);
-
     document.addEventListener('keydown', (e) => {
       if (e.key === "Enter" && !(e.ctrlKey || e.metaKey)) {
         if (document.activeElement != this.textEntry.current) {
@@ -59,7 +61,7 @@ export default observer(class ChatBox extends React.Component {
       this.receiveRelayMessage(this.makeInfoMessage("type \\? for a list of commands"));
     }, 0);
 
-    this.props.socket.on("server:message", (message) => {
+    this.props.socket.on("server:message", message => {
       this.receiveRelayMessage(message);
     });
 
@@ -76,16 +78,12 @@ export default observer(class ChatBox extends React.Component {
     this.sendRelayMessage(this.makeInfoMessage(model.state.user.username + " joined the lobby."));
   }
 
-  componentDidUpdate() {
-    this.savePreferences();
-  }
-
   savePreferences() {
     let preferences = {};
     for (const pref of this.persistent) {
       preferences[pref] = this.state[pref];
     }
-    //debug(JSON.stringify(preferences));
+    debug(JSON.stringify(preferences));
     window.localStorage.setItem(
       "harmonytv-chatbox",
       JSON.stringify(preferences)
@@ -321,9 +319,10 @@ export default observer(class ChatBox extends React.Component {
                   this.textEntry.current.blur();
                 }
               }
-            }
-          }} />
-      </div>
-    )
+            }}}
+          />
+        </div>
+      );
+    }
   }
-});
+);

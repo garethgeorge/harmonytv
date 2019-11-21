@@ -1,8 +1,8 @@
-import {observable} from "mobx";
+import { observable } from "mobx";
 
 export default observable({
-  user: null, 
+  user: null,
   libraries: null,
-  resumeWatching: {}, // array of shows that the current user has watched or partially watched 
+  resumeWatching: {}, // array of shows that the current user has watched or partially watched
   breadcrumbs: []
 });
