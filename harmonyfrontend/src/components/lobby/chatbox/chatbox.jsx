@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 import "./chatbox.scss";
-import model from "../../model";
+import model from "../../../model";
 import chatboxCommands from "./chatbox_commands.jsx";
 const debug = require("debug")("components:lobby:chatbox");
 
@@ -280,6 +280,7 @@ export default observer(
         if (
           this.messageStream === null ||
           this.messageStream < this.streamCount - 1 ||
+          !this.stream(this.messageStream).kind ||
           this.stream(this.messageStream).kind != "info-chunk"
         ) {
           if (this.messageStream !== null) {

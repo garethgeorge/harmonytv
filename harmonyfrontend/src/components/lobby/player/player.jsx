@@ -1,7 +1,7 @@
 import React, { Children } from "react";
 import ReactDOM from "react-dom";
-import config from "../../config";
-import model from "../../model";
+import config from "../../../config";
+import model from "../../../model";
 import { observer } from "mobx-react";
 import "./player.scss";
 
@@ -58,7 +58,72 @@ class SkipButton extends shaka.ui.Element {
   }
 }
 
+class MyFullscreen extends shaka.ui.Element {
+  constructor(parent, controls) {
+    super(parent, controls);
+
+    this.elem = document.createElement("div");
+
+    const FSButton = observer(
+      class FSButton extends React.Component {
+        render() {
+          return (
+            <button
+              style={{
+                border: "none",
+                background: "none",
+                paddingTop: "4px"
+              }}
+            >
+              <i
+                className="material-icons md-light"
+                style={{ fontSize: "24px" }}
+              >
+                fullscreen
+              </i>
+            </button>
+          );
+        }
+      }
+    );
+
+    ReactDOM.render(<FSButton />, this.elem);
+    this.parent.appendChild(this.elem);
+
+    this.eventManager.listen(this.elem, "click", () => {
+      const elem = document.getElementById('root') || document.documentElement;
+      if (!document.fullscreenElement && !document.mozFullScreenElement &&
+        !document.webkitFullscreenElement && !document.msFullscreenElement) {
+        if (elem.requestFullscreen) {
+          elem.requestFullscreen();
+        } else if (elem.msRequestFullscreen) {
+          elem.msRequestFullscreen();
+        } else if (elem.mozRequestFullScreen) {
+          elem.mozRequestFullScreen();
+        } else if (elem.webkitRequestFullscreen) {
+          elem.webkitRequestFullscreen(Element.ALLOW_KEYBOARD_INPUT);
+        }
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        } else if (document.msExitFullscreen) {
+          document.msExitFullscreen();
+        } else if (document.mozCancelFullScreen) {
+          document.mozCancelFullScreen();
+        } else if (document.webkitExitFullscreen) {
+          document.webkitExitFullscreen();
+        }
+      }
+    });
+  }
+
+  static create(rootElement, controls) {
+    return new MyFullscreen(rootElement, controls);
+  }
+}
+
 shaka.ui.Controls.registerElement("skip", SkipButton);
+shaka.ui.Controls.registerElement("myfullscreen", MyFullscreen);
 
 class Player extends React.Component {
   state = {};
@@ -122,6 +187,7 @@ class Player extends React.Component {
         "mute",
         "volume",
         "fullscreen",
+        "myfullscreen",
         "overflow_menu"
       ],
       overflowMenuButtons: [

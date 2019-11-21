@@ -1,10 +1,10 @@
 import React from "react";
 import io from "socket.io-client";
-import Player from "../../components/lobby/player";
+import Player from "../../components/lobby/player/player";
 import model from "../../model/";
 import config from "../../config";
 import "./lobbyview.scss";
-import ChatBox from "../../components/lobby/chatbox";
+import ChatBox from "../../components/lobby/chatbox/chatbox";
 
 class Lobby extends React.Component {
   state = {};
