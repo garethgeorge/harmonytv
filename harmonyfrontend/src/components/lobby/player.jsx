@@ -2,6 +2,7 @@ import React, { Children } from "react";
 import ReactDOM from "react-dom";
 import config from "../../config";
 import model from "../../model";
+import { observer } from "mobx-react";
 import "./player.scss";
 
 // load shaka, example from: https://github.com/amit08255/shaka-player-react-with-ui-config/blob/master/with-default-ui/src/components/VideoPlayer.js
@@ -17,20 +18,39 @@ class SkipButton extends shaka.ui.Element {
     super(parent, controls);
 
     this.elem = document.createElement("div");
-    ReactDOM.render(
-      <div>
-        <button style={{ color: "black" }}>Skip Video</button>
-      </div>,
-      this.elem
+
+    const SkipButton = observer(
+      class SkipButton extends React.Component {
+        render() {
+          if (!model.state.videoQueue || model.state.videoQueue.length <= 1)
+            return null;
+
+          return (
+            <button
+              style={{
+                border: "none",
+                background: "none",
+                paddingTop: "4px"
+              }}
+            >
+              <i
+                className="material-icons md-light"
+                style={{ fontSize: "24px" }}
+              >
+                skip_next
+              </i>
+            </button>
+          );
+        }
+      }
     );
+
+    ReactDOM.render(<SkipButton />, this.elem);
     this.parent.appendChild(this.elem);
 
-    /*
-    this.eventManager.listen(this.button_, "click", () => {
-      // TODO: play the next video :P
-      // this.player.load(nextManifest);
+    this.eventManager.listen(this.elem, "click", () => {
+      model.lobby.playNextInQueue().catch(alert);
     });
-    */
   }
 
   static create(rootElement, controls) {
@@ -98,7 +118,7 @@ class Player extends React.Component {
         "play_pause",
         "time_and_duration",
         "spacer",
-        // "skip",
+        "skip",
         "mute",
         "volume",
         "fullscreen",

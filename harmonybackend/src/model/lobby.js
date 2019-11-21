@@ -77,10 +77,6 @@ class Lobby {
   }
 
   setVideoQueue(queue) {
-    if (syncState.stateId === this.syncState.stateId) {
-      throw new Error("setting the same queue again!");
-    }
-
     this.videoQueue = Object.assign({}, queue);
     ionsp.in(this.id).emit("server:sync-queue", this.videoQueue);
   }
@@ -98,17 +94,6 @@ class Lobby {
     socket.emit("server:sync-playback-state", this.syncState);
   }
 }
-
-// sweep old lobbies
-// setInterval(() => {
-//   for (const lobbyId in lobbies) {
-//     const lobby = lobbies[lobbyId];
-
-//     if (lobby.getAge() > 8 * 3600 * 1000 && lobby.members === 0) {
-//       delete lobbies[lobbyId];
-//     }
-//   }
-// }, 30 * 1000);
 
 module.exports = {
   create: media => {

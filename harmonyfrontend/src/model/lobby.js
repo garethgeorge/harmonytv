@@ -1,6 +1,7 @@
 import axios from "axios";
 import config from "../config";
 import uuidv4 from "uuid/v4";
+import state from "./state";
 import model from ".";
 const debug = require("debug")("model:lobby");
 
@@ -10,12 +11,25 @@ export default {
       config.apiHost + "/lobby/create?mediaid=" + mediaid
     );
     debug(
-      "created lobby playing media: " +
-        mediaid +
-        " lobbyid: " +
-        res.data.lobbyId
+      "fd lobby playing media: " + mediaid + " lobbyid: " + res.data.lobbyId
     );
     return res.data.lobbyId;
+  },
+
+  setQueue: async (lobbyid, newQueue) => {
+    const res = await axios.post(
+      config.apiHost + "/lobby/" + lobbyid + "/setQueue",
+      newQueue
+    );
+    if (res.data.error) throw new Error(res.data.error);
+  },
+
+  playNextInQueue: async () => {
+    const newQueue = {
+      queueId: uuidv4(),
+      videos: state.videoQueue.videos.slice(1)
+    };
+    await model.lobby.setQueue(model.state.lobbyid, newQueue);
   },
 
   syncVideoWithLobby: (socket, player) => {
@@ -41,6 +55,19 @@ export default {
     */
     let numConnectedUsers = 0;
     socket.on("server:lobby-connected-users", _numConnectedUsers => {
+      if (numConnectedUsers === 0 && _numConnectedUsers === 1) {
+        // autoplay the video if we are the first user to connect to the lobby
+        const toClear = setInterval(() => {
+          if (
+            syncState != null &&
+            (!player.shakaPlayer || !player.shakaPlayer.isBuffering())
+          ) {
+            video.play();
+            clearInterval(toClear);
+          }
+        }, 500);
+      }
+
       numConnectedUsers = _numConnectedUsers;
     });
 
@@ -52,12 +79,27 @@ export default {
 
     socket.on("server:sync-queue", _videoQueue => {
       debug("server:sync-queue: " + JSON.stringify(_videoQueue, false, 2));
+      state.videoQueue = _videoQueue;
       videoQueue = _videoQueue;
 
       if (
         videoQueue.videos.length > 0 &&
         videoQueue.videos[0] !== currentlyPlayingVideo
       ) {
+        if (currentlyPlayingVideo !== null) {
+          // ! whenever a new video starts rolling in an existing lobby, it means we skipped to the next video
+          // we should then automatically message the server to seek to the beginning of the new video
+          debug(
+            "sending a new sync state to the server to trigger new video to play"
+          );
+          socket.emit("client:sync-playback-state", {
+            updateTime: curTime(), // the time at which it was updated
+            position: 0, // the position when it was updated
+            state: "playing", // the state (can also be paused)
+            stateId: uuidv4()
+          });
+        }
+
         debug(
           "DETECTED DIFFERENT VIDEO AT HEAD OF QUEUE! Now playing video: " +
             videoQueue.videos[0]
@@ -65,6 +107,7 @@ export default {
         currentlyPlayingVideo = videoQueue.videos[0];
         player.playVideo(currentlyPlayingVideo, () => {
           debug("\tsuccessfully played " + currentlyPlayingVideo);
+          applySyncState();
         });
         model.media
           .getInfo(currentlyPlayingVideo)
@@ -87,6 +130,8 @@ export default {
     };
 
     const applySyncState = () => {
+      if (!syncState) return;
+
       if (syncState.state == "paused") {
         video.pause();
       } else if (syncState.state == "playing") {
@@ -212,6 +257,13 @@ export default {
         );
       }
     }, 30000);
+
+    video.addEventListener("ended", () => {
+      if (videoQueue.videos.length > 1) {
+        alert("autoplaying!");
+        model.lobby.playNextInQueue();
+      }
+    });
 
     return () => {
       clearInterval(updateResumeWatchingTimer);
