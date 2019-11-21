@@ -39,6 +39,7 @@ export default observer(
     messageStream = null;
     chatArea = React.createRef();
     textEntry = React.createRef();
+    notes = [];
 
     commandHistory = [];
     commandHistoryIndex = null;

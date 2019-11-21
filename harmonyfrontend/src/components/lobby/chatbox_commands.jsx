@@ -286,7 +286,7 @@ export default (chatbox) => {
     chatbox.sendRelayMessage(chatbox.makeWhisperMessage(args.message,args.user));
     // ideally deal with this serverside
   }, {
-    help: "change your name's color",
+    help: "send a message to a specific user",
     args: [
       {
         name: 'user',
@@ -296,6 +296,51 @@ export default (chatbox) => {
         name: 'message',
         optional: false,
       }
+    ]
+  });
+
+  chatbox.registerCommand("writenote", (args,stream) => {
+    chatbox.notes.push(args.text);
+  }, {
+    help: "write a note",
+    args: [
+      {
+        name: 'text',
+        optional: false,
+      },
+    ]
+  });
+
+  chatbox.registerCommand("readnotes", (args,stream) => {
+    console.log(chatbox.notes);
+    var k = 1;
+    for (const note of chatbox.notes) {
+      chatbox.print(stream, {content: k+'. '+note});
+      k++;
+    }
+  }, {
+    help: "read your notes",
+  });
+
+  chatbox.registerCommand("clearnotes", (args,stream) => {
+    chatbox.notes = [];
+    chatbox.print(stream, {content: 'all notes deleted'});
+  }, {
+    help: "deleta all your notes",
+  });
+
+  chatbox.registerCommand("deletenote", (args,stream) => {
+    chatbox.print(stream, {content: 'deleted note '+args.index});
+    chatbox.print(stream, {content: chatbox.notes.splice(args.index-1,1)});
+  }, {
+    help: "delete a note",
+    args: [
+      {
+        name: 'index',
+        optional: false,
+        validate: chatboxValidaters.integer,
+        parse: parseInt,
+      },
     ]
   });
 
