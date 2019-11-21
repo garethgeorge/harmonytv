@@ -8,12 +8,44 @@ const debug = require("debug")("components:lobby:chatbox:commands");
 export default (chatbox) => {
   chatboxCommandRegister(chatbox);
 
-  const print = chatbox.commandPrint;
-  const flush = chatbox.flushCommand;
-
   chatbox.registerCommand("?", (args,stream) => {
+    chatbox.print(stream, {
+      content:
+        "Use \\listcommands [category] to list commands of a given category. " +
+        "Or don't mention a category, and get all commands. " +
+        "Categories: help, chat, video, notes.",
+      kind: 'info'
+    })
+    // const commands = Object.values(chatbox.commands).map(command => {
+    //   if (command.opts.secret) {
+    //     return;
+    //   }
+    //   let text = null;
+    //   if (!text && command.opts.help)
+    //     text = command.opts.help
+    //
+    //   return (
+    //     <li>{command.usage} {text}</li>
+    //   )
+    // });
+    // debug(commands);
+    //
+    // chatbox.print(stream, {content:
+    //   <div>
+    //     Commands:
+    //     <ul className="command-list">
+    //       {commands}
+    //     </ul>
+    //   </div>,
+    //   kind: "info" });
+  }, {
+    help: 'show command list',
+    category: 'help',
+  });
+
+  chatbox.registerCommand("listcommands", (args,stream) => {
     const commands = Object.values(chatbox.commands).map(command => {
-      if (command.opts.secret) {
+      if (command.opts.secret || (args.category != null && !command.opts.category.split(' ').includes(args.category))) {
         return;
       }
       let text = null;
@@ -35,7 +67,14 @@ export default (chatbox) => {
       </div>,
       kind: "info" });
   }, {
-    help: 'show command list'
+    help: 'show command list',
+    category: 'help',
+    args: [
+      {
+        name: 'category',
+        optional: true,
+      }
+    ]
   });
 
   chatbox.registerCommand("test", (args,stream) => {
@@ -53,6 +92,7 @@ export default (chatbox) => {
     }, 2000)
   }, {
     secret: true,
+    category: 'test',
     keepStreamOpen: true,
   });
 
@@ -68,6 +108,7 @@ export default (chatbox) => {
     chatbox.print(stream, {content: `Chatbox docking to ${stateCpy.displayOptions.side} side.`, kind: "success" });
   }, {
     help: "docks the chat",
+    category: 'chat',
     args: [
       {
         name: "side",
@@ -93,6 +134,7 @@ export default (chatbox) => {
     chatbox.print(stream, {content: `Chatbox floating to ${stateCpy.displayOptions.side} side.`, kind: "success" });
   }, {
     help: "docks the chat",
+    category: 'chat',
     args: [
       {
         name: "side",
@@ -116,26 +158,30 @@ export default (chatbox) => {
     //chatbox.print(stream, {content: `Clearing chat.`, kind: "success" });
   }, {
     help: "clears chat messages",
+    category: 'chat',
   });
 
   chatbox.registerCommand("play", (args,stream) => {
     document.getElementById('video').play(); // TODO: chatbox is a very bad way of doing chatbox by react conventions
     chatbox.print(stream, {content: 'Playing the video.', kind: "success" });
   }, {
-    help: "plays the video"
+    help: "plays the video",
+    category: 'video',
   });
 
   chatbox.registerCommand("pause", (args,stream) => {
     document.getElementById('video').pause(); // TODO: chatbox is a very bad way of doing chatbox by react conventions
     chatbox.print(stream, {content: 'Pausing the video.', kind: "success" });
   }, {
-    help: "pauses the video"
+    help: "pauses the video",
+    category: 'video',
   });
 
   chatbox.registerCommand("speed", (args,stream) => {
     // To do. Needs backend support.
   }, {
     help: "change playback speed",
+    category: 'video',
     secret: true,
   });
 
@@ -150,6 +196,7 @@ export default (chatbox) => {
     }
   }, {
     help: "skip forward by seconds",
+    category: 'video',
     args: [
       {
         name: 'dir',
@@ -173,6 +220,7 @@ export default (chatbox) => {
     chatbox.print(stream, {content: 'Seeking to '+args.time.timestamp+'.', kind: "success"});
   }, {
     help: "seek to a timestamp",
+    category: 'video',
     args: [{
       name: "time",
       optional: false,
@@ -209,6 +257,7 @@ export default (chatbox) => {
     }
   }, {
     help: "change volume (up, down, mute, unmute, 0-100%)",
+    category: 'video',
     args: [
       {
         name: "change",
@@ -223,6 +272,7 @@ export default (chatbox) => {
     chatbox.print(stream, {content: 'Muting video.', kind: "success" });
   }, {
     secret: true,
+    category: 'video',
     help: "mutes the video",
   });
 
@@ -235,6 +285,7 @@ export default (chatbox) => {
   }, {
     secret: true,
     help: "unmutes the video",
+    category: 'video',
   });
 
   chatbox.registerCommand("fullscreen", (args,stream) => {
@@ -263,7 +314,8 @@ export default (chatbox) => {
     }
     chatbox.print(stream, {content: 'Toggling fullscreen.', kind: "success" });
   }, {
-    help: "toggle fullscreen"
+    help: "toggle fullscreen",
+    category: 'chat video',
   });
 
   chatbox.registerCommand("usercolor", (args,stream) => {
@@ -272,6 +324,7 @@ export default (chatbox) => {
     // in future change colors for other ppl too.
   }, {
     help: "change your name's color",
+    category: 'chat',
     args: [
       {
         name: 'color',
@@ -287,6 +340,7 @@ export default (chatbox) => {
     // ideally deal with this serverside
   }, {
     help: "send a message to a specific user",
+    category: 'chat',
     args: [
       {
         name: 'user',
@@ -303,6 +357,7 @@ export default (chatbox) => {
     chatbox.notes.push(args.text);
   }, {
     help: "write a note",
+    category: 'notes',
     args: [
       {
         name: 'text',
@@ -320,6 +375,7 @@ export default (chatbox) => {
     }
   }, {
     help: "read your notes",
+    category: 'notes',
   });
 
   chatbox.registerCommand("clearnotes", (args,stream) => {
@@ -327,6 +383,7 @@ export default (chatbox) => {
     chatbox.print(stream, {content: 'all notes deleted'});
   }, {
     help: "deleta all your notes",
+    category: 'notes',
   });
 
   chatbox.registerCommand("deletenote", (args,stream) => {
@@ -334,6 +391,7 @@ export default (chatbox) => {
     chatbox.print(stream, {content: chatbox.notes.splice(args.index-1,1)});
   }, {
     help: "delete a note",
+    category: 'notes',
     args: [
       {
         name: 'index',
