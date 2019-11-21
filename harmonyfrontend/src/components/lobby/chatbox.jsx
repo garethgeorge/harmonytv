@@ -236,6 +236,41 @@ export default observer(
           kind: "user-message"
         });
       }
+      if (message.type == "whisper-message" && (
+          message.to == model.state.user.username // ideally deal with this serverside
+          || message.sender_id == this.streamData(this.messageStream).sender_id)) {
+        if (
+          this.messageStream === null ||
+          this.messageStream < this.streamCount - 1 ||
+          this.stream(this.messageStream).kind != "whisper-chunk" ||
+          this.streamData(this.messageStream).sender != message.sender ||
+          this.streamData(this.messageStream).sender_id != message.sender_id
+        ) {
+          if (this.messageStream !== null) {
+            this.closeStream(this.messageStream);
+          }
+          this.messageStream = this.openStream("whisper-chunk", {
+            sender: message.sender,
+            sender_id: message.sender_id
+          });
+        }
+        this.print(this.messageStream, {
+          content: (
+            <span
+              className={"whisper-message " + (options.mine ? "my-message " : "")}
+            >
+              <span className="message-sender" style={{ color: message.color }}>
+                {message.sender}
+                <span className="whisper-indicator">
+                  (whisper{message.to != model.state.user.username ? ' to '+message.to : ''})
+                </span>:
+              </span>
+              <span className="message-content">{message.text}</span>
+            </span>
+          ),
+          kind: "whisper-message"
+        });
+      }
       if (message.type == "info-message") {
         console.log("MS", this.messageStream);
         if (
@@ -268,6 +303,18 @@ export default observer(
         type: "user-message",
         sender: model.state.user.username,
         sender_id: this.uniqueId,
+        text: composition,
+        color: this.userColor
+      });
+    }
+
+    makeWhisperMessage(composition, to) {
+      return JSON.stringify({
+        version: "2",
+        type: "whisper-message",
+        sender: model.state.user.username,
+        sender_id: this.uniqueId,
+        to: to,
         text: composition,
         color: this.userColor
       });

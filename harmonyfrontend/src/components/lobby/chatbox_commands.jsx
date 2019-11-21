@@ -282,4 +282,21 @@ export default (chatbox) => {
     ]
   });
 
+  chatbox.registerCommand("whisper", (args,stream) => {
+    chatbox.sendRelayMessage(chatbox.makeWhisperMessage(args.message,args.user));
+    // ideally deal with this serverside
+  }, {
+    help: "change your name's color",
+    args: [
+      {
+        name: 'user',
+        optional: false,
+      },
+      {
+        name: 'message',
+        optional: false,
+      }
+    ]
+  });
+
 }

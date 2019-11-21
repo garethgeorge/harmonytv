@@ -37,7 +37,8 @@
   }
 
   .chat-stream {
-    &[kind=user-chunk] {
+    &[kind=user-chunk],
+    &[kind=whisper-chunk], {
       margin: 0.15em 0;
     }
 
@@ -57,9 +58,11 @@
     vertical-align: middle;
     color: rgba(255, 255, 255, 0.7);
 
-    &[kind=user-message] {
+    &[kind=user-message],
+    &[kind=whisper-message] {
 
-      .user-message {
+      .user-message,
+      .whisper-message {
         padding: 0;
       }
       .message-sender {
@@ -277,13 +280,14 @@
     font-weight: bold;
   }
 
-  .user-message {
+  .user-message,
+  .whisper-message {
     display: flex;
     flex-direction: column;
     padding: 0.25em 0.1em 0.15em;
 
     .message-sender {
-      font-size: 0.7em;
+      font-size: 0.75em;
       line-height: 1.4;
       padding: 0;
       margin: 0;
@@ -294,6 +298,16 @@
       padding: 0;
       margin: 0;
       padding-bottom: 0.3em;
+    }
+  }
+
+  .whisper-message {
+    .whisper-indicator {
+      // color: rgba(191,127,255,0.4);
+      font-weight: 300;
+      font-style: italic;
+      font-size: 0.9em;
+      margin-left: 0.3em;
     }
   }
 
