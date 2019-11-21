@@ -87,13 +87,6 @@ export default {
         videoQueue.videos.length > 0 &&
         videoQueue.videos[0] !== currentlyPlayingVideo
       ) {
-        if (currentlyPlayingVideo != null) {
-          debug(
-            "DETECTED DIFFERENT VIDEO AT HEAD OF QUEUE -- INTERRUPTING PLAYBACK AND SEEKING TO BEGINNING"
-          );
-          video.currentTime = 0;
-        }
-
         debug(
           "DETECTED DIFFERENT VIDEO AT HEAD OF QUEUE! Now playing video: " +
             videoQueue.videos[0]

@@ -85,7 +85,16 @@ route.post("/:lobbyid/setQueue", async (req, res) => {
     );
   }
 
+  // update the video queue
   lby.setVideoQueue(req.body);
+
+  // set the sync state back to the beginning of the new video
+  const syncStateCpy = Object.assign({}, lby.syncState);
+  syncStateCpy.position = 0;
+  syncStateCpy.updateTime = new Date().getTime();
+  syncStateCpy.stateId = uuidv4();
+  lby.setSyncState(syncStateCpy);
+
   return res.end(JSON.stringify(req.body));
 });
 
