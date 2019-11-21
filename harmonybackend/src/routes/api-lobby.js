@@ -44,9 +44,6 @@ route.get("/create", auth_required, async (req, res) => {
         episode.episodenumber <= mediainfo.episodenumber
       )
         return false;
-      // consider the episode to be completed
-      if (episode.completed_fraction && episode.completed_fraction > 0.9)
-        return false;
       return true;
     });
     debug("remaining episodes after filtering: %o", remainingEpisodes);
