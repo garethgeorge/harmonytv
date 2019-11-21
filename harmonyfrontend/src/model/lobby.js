@@ -60,6 +60,7 @@ export default {
         const toClear = setInterval(() => {
           if (
             syncState != null &&
+            didAck &&
             (!player.shakaPlayer || !player.shakaPlayer.isBuffering())
           ) {
             video.play();
@@ -86,18 +87,11 @@ export default {
         videoQueue.videos.length > 0 &&
         videoQueue.videos[0] !== currentlyPlayingVideo
       ) {
-        if (currentlyPlayingVideo !== null) {
-          // ! whenever a new video starts rolling in an existing lobby, it means we skipped to the next video
-          // we should then automatically message the server to seek to the beginning of the new video
+        if (currentlyPlayingVideo != null) {
           debug(
-            "sending a new sync state to the server to trigger new video to play"
+            "DETECTED DIFFERENT VIDEO AT HEAD OF QUEUE -- INTERRUPTING PLAYBACK AND SEEKING TO BEGINNING"
           );
-          socket.emit("client:sync-playback-state", {
-            updateTime: curTime(), // the time at which it was updated
-            position: 0, // the position when it was updated
-            state: "playing", // the state (can also be paused)
-            stateId: uuidv4()
-          });
+          video.currentTime = 0;
         }
 
         debug(
@@ -151,14 +145,6 @@ export default {
     let syncPlaybackStateTimer = null;
     let didAck = false;
     socket.on("server:sync-playback-state", _syncState => {
-      // special case sync handling for lobby with only one user
-      if (numConnectedUsers <= 1) {
-        syncState = _syncState;
-        applySyncState();
-        socket.emit("client:ack-state", _syncState.stateId);
-        return;
-      }
-
       // much more complicated sync handling code for the case where there
       // are many users -- this is to avoid the formation of sync cycles / race conditions
       syncState = _syncState;
@@ -226,7 +212,7 @@ export default {
         stateId: uuidv4()
       };
       syncState = newState;
-      video.pause();
+      applySyncState();
       socket.emit("client:sync-playback-state", newState);
 
       // once everyon is ready, play the video, and resync the state automatically
