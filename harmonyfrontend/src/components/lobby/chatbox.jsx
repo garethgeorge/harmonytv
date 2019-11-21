@@ -3,7 +3,6 @@ import { observer } from "mobx-react";
 import "./chatbox.scss";
 import model from "../../model";
 import chatboxCommands from "./chatbox_commands.jsx";
-// import ChatChunk from "./chatbox_chunk.jsx";
 
 function randomColor() {
     var letters = "0123456789ABCDEF";
@@ -34,15 +33,10 @@ export default observer(class ChatBox extends React.Component {
   }
 
   persistent = ["display","displayOptions"]
-
   userColor = randomColor()
-
   uniqueId = randomId()
-
   streamCount = 0
-
   messageStream = null
-
   chatArea = React.createRef();
   textEntry = React.createRef();
 
@@ -62,17 +56,10 @@ export default observer(class ChatBox extends React.Component {
     chatboxCommands(this);
 
     setTimeout(() => {
-      // this.receiveRelayMessage(JSON.stringify({
-      //   version: "2",
-      //   type: "info-message",
-      //   text: <div>Type <span className="command">\?</span> for a list of commands.</div>,
-      // }));
       this.receiveRelayMessage(this.makeInfoMessage("type \\? for a list of commands"));
     }, 0);
 
     this.props.socket.on("server:message", (message) => {
-      //this.receiveRelayMessage(this.makeInfoMessage("INFO"));
-      console.log('MESSAGE FROM SERVER', message);
       this.receiveRelayMessage(message);
     });
 
@@ -80,7 +67,7 @@ export default observer(class ChatBox extends React.Component {
       const state = Object.assign({}, this.state);
       state.users = users;
       this.setState(state);
-      //this.receiveRelayMessage(this.makeInfoMessage(users + " total users are now connected."));
+      this.receiveRelayMessage(this.makeInfoMessage(users + " total users are now connected."));
     });
   }
 
@@ -192,7 +179,6 @@ export default observer(class ChatBox extends React.Component {
       }
       return state;
     }, () => {
-      //console.log(this.chatArea.current);
       if (this.chatArea.current)
         this.chatArea.current.scrollTop = this.chatArea.current.scrollHeight + 1000;
     });
@@ -225,7 +211,6 @@ export default observer(class ChatBox extends React.Component {
           sender_id: message.sender_id,
         });
       }
-      //console.log('STREAM!', this.state.streams[this.messageStream]);
       this.print(this.messageStream, {
         content:
           <span className={"user-message " +
@@ -246,7 +231,6 @@ export default observer(class ChatBox extends React.Component {
         }
         this.messageStream = this.openStream('info-chunk');
       }
-      //console.log('STREAM!', this.state.streams[this.messageStream]);
       this.print(this.messageStream, {
         content:
           <span className="info">
@@ -292,7 +276,6 @@ export default observer(class ChatBox extends React.Component {
       this.closeStream(streamIndex);
     } else {
       this.commands[command].handler(argstr,streamIndex);
-      //this.print(streamIndex, {content: JSON.stringify(this.commands[command].opts)});
       if (! this.commands[command].opts.keepStreamOpen) {
         this.closeStream(streamIndex);
       }
@@ -300,7 +283,6 @@ export default observer(class ChatBox extends React.Component {
   }
 
   render() {
-    console.log('RENDERING STATE',this.state);
     return (
       <div className={"chatbox"} display={this.state.display} display-side={this.state.displayOptions.side} display-visibility={this.state.displayOptions.visibility}>
         <div className="chat-area" ref={this.chatArea}>
@@ -310,8 +292,6 @@ export default observer(class ChatBox extends React.Component {
             </div>
           )}
         </div>
-        {/* functionally this is padding */}
-        {/* <div style={{ height: "30px", color: "red" }}></div> */}
         {/* this is the actual text input */}
         <input ref={this.textEntry} className={"chatboxTextEntry " + (this.state.composition[0] == "\\" ? "command" : "")} type="text"
           value={this.state.composition}
@@ -337,7 +317,6 @@ export default observer(class ChatBox extends React.Component {
                 });
               } else {
                 console.log(this.state.display);
-                //this.textEntry.current.blur();
                 if (this.state.display !== "docked") {
                   this.textEntry.current.blur();
                 }
