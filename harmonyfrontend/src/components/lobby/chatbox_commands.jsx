@@ -61,10 +61,10 @@ export default (chatbox) => {
     stateCpy.display = "docked";
     console.log(args);
     if (side !== null) {
-      stateCpy.displaySide = side;
+      stateCpy.displayOptions.side = side;
     }
     chatbox.setState(stateCpy);
-    chatbox.print(stream, {content: `Chatbox docking to ${side} side.`, kind: "success" });
+    chatbox.print(stream, {content: `Chatbox docking to ${stateCpy.displayOptions.side} side.`, kind: "success" });
   }, {
     help: "docks the chat",
     args: [
@@ -78,14 +78,18 @@ export default (chatbox) => {
 
   chatbox.registerCommand("float", (args,stream) => {
     const side = args.side;
+    const visibility = args.visibility;
     const stateCpy = Object.assign({}, chatbox.state);
     stateCpy.display = "float";
     console.log(args);
     if (side !== null) {
-      stateCpy.displaySide = side;
+      stateCpy.displayOptions.side = side;
+    }
+    if (visibility !== null) {
+      stateCpy.displayOptions.visibility = visibility;
     }
     chatbox.setState(stateCpy);
-    chatbox.print(stream, {content: `Chatbox floating to ${side} side.`, kind: "success" });
+    chatbox.print(stream, {content: `Chatbox floating to ${stateCpy.displayOptions.side} side.`, kind: "success" });
   }, {
     help: "docks the chat",
     args: [
@@ -93,6 +97,11 @@ export default (chatbox) => {
         name: "side",
         optional: true,
         validate: chatboxValidaters.choice(["left","right"]),
+      },
+      {
+        name: "visibility",
+        optional: true,
+        validate: chatboxValidaters.choice(["invisible","visible"]),
       }
     ]
   });
@@ -198,7 +207,7 @@ export default (chatbox) => {
       chatbox.print(stream, {content: 'Setting volume to '+arg+'.', kind: "success"});
     }
   }, {
-    help: "change volume (up, down, mute, unmute, 0-100)",
+    help: "change volume (up, down, mute, unmute, 0-100%)",
     args: [
       {
         name: "change",
@@ -257,10 +266,8 @@ export default (chatbox) => {
   });
 
   chatbox.registerCommand("usercolor", (args,stream) => {
-    let state = Object.assign({},chatbox.state);
     const color = args.color;
-    state.userColor = args.color;
-    chatbox.setState(state);
+    chatbox.userColor = args.color;
     // in future change colors for other ppl too.
   }, {
     help: "change your name's color",

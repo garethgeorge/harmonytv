@@ -19,6 +19,12 @@ export default {
       return '#3020FF';
     } else if (color == 'white') {
       return '#FFFFFF';
+    } else if (color == 'random') {
+      const letters = "0123456789ABCDEF";
+      var col = '#';
+      for (let i = 0; i < 6; i++)
+         col += letters[(Math.floor(Math.random() * 16))];
+      return col;
     } else {
       return color;
     }

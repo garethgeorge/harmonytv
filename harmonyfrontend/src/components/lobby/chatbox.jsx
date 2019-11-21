@@ -29,8 +29,11 @@ export default observer(class ChatBox extends React.Component {
     display: "docked",
     displayOptions: {
       side: "left",
+      visibility: true,
     },
   }
+
+  persistent = ["display","displayOptions"]
 
   userColor = randomColor()
 
@@ -40,12 +43,12 @@ export default observer(class ChatBox extends React.Component {
 
   messageStream = null
 
-  commands = {}
+  chatArea = React.createRef();
+  textEntry = React.createRef();
 
   constructor(props) {
     super(props);
 
-    this.textEntry = React.createRef();
     document.addEventListener('keydown', (e) => {
       if (e.key === "Enter" && !(e.ctrlKey || e.metaKey)) {
         if (document.activeElement != this.textEntry.current) {
@@ -55,8 +58,6 @@ export default observer(class ChatBox extends React.Component {
         }
       }
     });
-
-    this.chatArea = React.createRef();
 
     chatboxCommands(this);
 
@@ -79,8 +80,44 @@ export default observer(class ChatBox extends React.Component {
       const state = Object.assign({}, this.state);
       state.users = users;
       this.setState(state);
-      this.receiveRelayMessage(this.makeInfoMessage(users + " total users are now connected."));
+      //this.receiveRelayMessage(this.makeInfoMessage(users + " total users are now connected."));
     });
+  }
+
+  componentDidMount() {
+    this.loadPreferences();
+    this.sendRelayMessage(this.makeInfoMessage(model.state.user.username + " joined the lobby."));
+  }
+
+  componentDidUpdate() {
+    this.savePreferences();
+  }
+
+  savePreferences() {
+    let preferences = {};
+    for (const pref of this.persistent) {
+      preferences[pref] = this.state[pref];
+    }
+    //debug(JSON.stringify(preferences));
+    window.localStorage.setItem(
+      "harmonytv-chatbox",
+      JSON.stringify(preferences)
+    );
+  }
+
+  loadPreferences() {
+    let state = Object.assign({}, this.state);
+    try {
+      let preferences = JSON.parse(
+        window.localStorage.getItem("harmonytv-chatbox")
+      );
+      for (const pref in preferences) {
+        state[pref] = preferences[pref];
+      }
+      //debug("LOADED THE PREFERENCES!!! " + JSON.stringify(preferences));
+    } finally {
+      this.setState(state);
+    }
   }
 
   openStream(kind, data={}) {
@@ -104,13 +141,14 @@ export default observer(class ChatBox extends React.Component {
   }
 
   closeStream(streamIndex) {
-    if (this.state.streams[streamIndex]) {
-      this.setState(prevState => {
-        let state = Object.assign({}, prevState);
+    console.log('CLOSING ', streamIndex, this.state.streams)
+    this.setState(prevState => {
+      let state = Object.assign({}, prevState);
+      if (state.streams[streamIndex]) {
         state.streams[streamIndex].open = false;
-        return state;
-      });
-    }
+      }
+      return state;
+    });
   }
 
   streamData(streamIndex, key=null, val=null) {
@@ -254,6 +292,7 @@ export default observer(class ChatBox extends React.Component {
       this.closeStream(streamIndex);
     } else {
       this.commands[command].handler(argstr,streamIndex);
+      //this.print(streamIndex, {content: JSON.stringify(this.commands[command].opts)});
       if (! this.commands[command].opts.keepStreamOpen) {
         this.closeStream(streamIndex);
       }
@@ -263,7 +302,7 @@ export default observer(class ChatBox extends React.Component {
   render() {
     console.log('RENDERING STATE',this.state);
     return (
-      <div className={"chatbox"} display={this.state.display} display-side={this.state.displaySide}>
+      <div className={"chatbox"} display={this.state.display} display-side={this.state.displayOptions.side} display-visibility={this.state.displayOptions.visibility}>
         <div className="chat-area" ref={this.chatArea}>
           {this.state.streams.map(stream =>
             <div className={"chat-stream " + (stream.lines.map(line => line.classlist.includes('old')).includes(false) ? '' : 'old')} open={stream.open ? true : false} kind={stream.kind} key={stream.key}>
@@ -297,7 +336,9 @@ export default observer(class ChatBox extends React.Component {
                   }
                 });
               } else {
-                if (!this.state.display == "docked") {
+                console.log(this.state.display);
+                //this.textEntry.current.blur();
+                if (this.state.display !== "docked") {
                   this.textEntry.current.blur();
                 }
               }

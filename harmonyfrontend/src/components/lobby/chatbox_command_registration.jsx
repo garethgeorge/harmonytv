@@ -1,6 +1,8 @@
 import React from "react";
 
 export default (chatbox) => {
+  chatbox.commands = {}
+  
   chatbox.registerCommand = (command, handler, opts = null) => {
     if (!opts)
       opts = {};

@@ -102,13 +102,13 @@
     //position: absolute;
     //bottom: 0;
 
-    outline-color: rgba(255, 255, 255, 1);
+    outline-color: rgba(255, 255, 255, 0.5);
     outline-width: 1px;
     outline-style: solid;
     outline-offset: -1px;
     border: none;
     fill: none;
-    background: transparent;
+    background: rgba(0,0,0,0.5);
     color: white;
 
     width: 300px;
@@ -119,7 +119,7 @@
     padding: 0 0.35em;
 
     transition: opacity 0.3s, background-color 0.3s;
-    opacity: 0.5;
+    //opacity: 0.5;
 
     &.command {
       font-size: 1.15em;
@@ -128,6 +128,18 @@
     &:focus {
       background-color: rgba(0, 0, 0, 0.8);
       opacity: 1;
+    }
+  }
+
+  &[display=float][display-visibility=invisible] {
+    opacity: 0.75;
+
+    .chatboxTextEntry {
+      opacity: 0;
+
+      &:focus {
+        opacity: 1;
+      }
     }
   }
 
@@ -157,7 +169,7 @@
     }
   }
 
-  &[display=float] {
+  &:not([display=docked]) {
     .chat-stream {
       &.old {
         display: none !important;
