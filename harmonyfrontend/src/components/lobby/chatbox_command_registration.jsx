@@ -18,9 +18,9 @@ export default (chatbox) => {
     if (!arglist && opts.args) {
       arglist = opts.args.map(arg => {
         if (arg.optional) {
-          return <span className="command-arg optional">{" ["+arg.name+"]"}</span>;
+          return <span className="command-arg optional" key={arg.name}>{" ["+arg.name+"]"}</span>;
         }
-        return <span className="command-arg">{" <"+arg.name+">"}</span>;
+        return <span className="command-arg" key={arg.name}>{" <"+arg.name+">"}</span>;
       });
     }
     const usage = <span className="command">{"\\" + command}{arglist}</span>;

@@ -13,6 +13,14 @@ function randomColor() {
     return color;
 }
 
+function randomId() {
+    var letters = "0123456789ABCDEF";
+    var id = 'id_';
+    for (var i = 0; i < 32; i++)
+       id += letters[(Math.floor(Math.random() * 16))];
+    return id;
+}
+
 export default observer(class ChatBox extends React.Component {
   state = {
     composition: "",
@@ -23,6 +31,10 @@ export default observer(class ChatBox extends React.Component {
       side: "left",
     },
   }
+
+  userColor = randomColor()
+
+  uniqueId = randomId()
 
   streamCount = 0
 
@@ -48,19 +60,18 @@ export default observer(class ChatBox extends React.Component {
 
     chatboxCommands(this);
 
-    // this.receiveRelayMessage(JSON.stringify({
-    //   version: "2",
-    //   type: "info-message",
-    //   text:
-    //     <div>Type <span className="command">\?</span> for a list of commands.</div>,
-    // }));
-
     setTimeout(() => {
+      // this.receiveRelayMessage(JSON.stringify({
+      //   version: "2",
+      //   type: "info-message",
+      //   text: <div>Type <span className="command">\?</span> for a list of commands.</div>,
+      // }));
       this.receiveRelayMessage(this.makeInfoMessage("type \\? for a list of commands"));
     }, 0);
 
     this.props.socket.on("server:message", (message) => {
       //this.receiveRelayMessage(this.makeInfoMessage("INFO"));
+      console.log('MESSAGE FROM SERVER', message);
       this.receiveRelayMessage(message);
     });
 
@@ -93,11 +104,13 @@ export default observer(class ChatBox extends React.Component {
   }
 
   closeStream(streamIndex) {
-    this.setState(prevState => {
-      let state = Object.assign({}, prevState);
-      state.streams[streamIndex].open = false;
-      return state;
-    });
+    if (this.state.streams[streamIndex]) {
+      this.setState(prevState => {
+        let state = Object.assign({}, prevState);
+        state.streams[streamIndex].open = false;
+        return state;
+      });
+    }
   }
 
   streamData(streamIndex, key=null, val=null) {
@@ -124,13 +137,15 @@ export default observer(class ChatBox extends React.Component {
     line = Object.assign({kind: 'normal', classlist: []}, line);
     this.setState(prevState => {
       let state = Object.assign({}, prevState);
-      if (state.streams[streamIndex].open) {
+      if (state.streams[streamIndex] && state.streams[streamIndex].open) {
         let k = state.streams[streamIndex].lines.length;
         state.streams[streamIndex].lines.push(line);
         setTimeout(() => {
           this.setState(prevState2 => {
             let newstate = Object.assign({}, prevState2);
-            newstate.streams[streamIndex].lines[k].classlist.push('old');
+            if (newstate.streams[streamIndex]) {
+              newstate.streams[streamIndex].lines[k].classlist.push('old');
+            }
             return newstate;
           });
         }, time);
@@ -139,7 +154,7 @@ export default observer(class ChatBox extends React.Component {
       }
       return state;
     }, () => {
-      console.log(this.chatArea.current);
+      //console.log(this.chatArea.current);
       if (this.chatArea.current)
         this.chatArea.current.scrollTop = this.chatArea.current.scrollHeight + 1000;
     });
@@ -162,9 +177,14 @@ export default observer(class ChatBox extends React.Component {
       if ( this.messageStream === null
         || this.messageStream < this.streamCount-1
         || (this.stream(this.messageStream).kind != 'user-chunk')
-        || (this.streamData(this.messageStream).sender != message.sender)) {
+        || (this.streamData(this.messageStream).sender != message.sender)
+        || (this.streamData(this.messageStream).sender_id != message.sender_id)) {
+        if (this.messageStream !== null) {
+          this.closeStream(this.messageStream);
+        }
         this.messageStream = this.openStream('user-chunk', {
           sender: message.sender,
+          sender_id: message.sender_id,
         });
       }
       //console.log('STREAM!', this.state.streams[this.messageStream]);
@@ -183,12 +203,15 @@ export default observer(class ChatBox extends React.Component {
       if ( this.messageStream === null
         || this.messageStream < this.streamCount-1
         || (this.stream(this.messageStream).kind != 'info-chunk')) {
+        if (this.messageStream !== null) {
+          this.closeStream(this.messageStream);
+        }
         this.messageStream = this.openStream('info-chunk');
       }
       //console.log('STREAM!', this.state.streams[this.messageStream]);
       this.print(this.messageStream, {
         content:
-          <span className="info-message">
+          <span className="info">
             <span className="message-content">{message.text}</span>
           </span>,
         kind: 'info-message'
@@ -204,8 +227,9 @@ export default observer(class ChatBox extends React.Component {
       version: "2",
       type: 'user-message',
       sender: model.state.user.username,
+      sender_id: this.uniqueId,
       text: composition,
-      color: this.state.userColor,
+      color: this.userColor,
     });
   }
 
@@ -222,20 +246,18 @@ export default observer(class ChatBox extends React.Component {
     const argstr = (composition+' ').split(' ').slice(1).join(' ');
     let streamIndex = this.openStream('command-box');
     this.print(streamIndex, {content: composition, kind: 'command-entered'});
-    // this.commandHistory.push(composition);
-    // this.commandHistory = this.commandHistory.filter((item,pos,arr) => {
-    //   return pos === 0 || item !== arr[pos-1]; // remove consecutive duplicates
-    // })
-    // this.commandHistoryIndex = null;
     if (!this.commands[command]) {
       this.print(streamIndex, {
         content: <span>Unknown command <span className="command">\{command}</span>.</span>,
         kind: 'error'
       });
+      this.closeStream(streamIndex);
     } else {
       this.commands[command].handler(argstr,streamIndex);
+      if (! this.commands[command].opts.keepStreamOpen) {
+        this.closeStream(streamIndex);
+      }
     }
-    //this.closeStream(streamIndex);
   }
 
   render() {
@@ -244,7 +266,7 @@ export default observer(class ChatBox extends React.Component {
       <div className={"chatbox"} display={this.state.display} display-side={this.state.displaySide}>
         <div className="chat-area" ref={this.chatArea}>
           {this.state.streams.map(stream =>
-            <div className={"chat-stream " + (stream.lines.map(line => line.classlist.includes('old')).includes(false) ? '' : 'old')} kind={stream.kind} key={stream.key}>
+            <div className={"chat-stream " + (stream.lines.map(line => line.classlist.includes('old')).includes(false) ? '' : 'old')} open={stream.open ? true : false} kind={stream.kind} key={stream.key}>
               {stream.lines.map(line => <div className={"stream-line " + line.classlist.join(' ')} kind={line.kind} key={line.key}>{line.content}</div>)}
             </div>
           )}

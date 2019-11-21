@@ -99,9 +99,11 @@ export default (chatbox) => {
 
   chatbox.registerCommand("clear", (args,stream) => {
     const stateCpy = Object.assign({}, chatbox.state);
-    stateCpy.messages = [];
+    stateCpy.streams = [];
+    chatbox.messageStream = null;
+    chatbox.streamCount = 0;
     chatbox.setState(stateCpy);
-    chatbox.print(stream, {content: `Clearing chat.`, kind: "success" });
+    //chatbox.print(stream, {content: `Clearing chat.`, kind: "success" });
   }, {
     help: "clears chat messages",
   });
