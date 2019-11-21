@@ -1,7 +1,7 @@
 import React from "react";
 import { observer } from "mobx-react";
 import "./chatbox.scss";
-import model from "../../model";
+import model from "../../../model";
 import chatboxCommands from "./chatbox_commands.jsx";
 const debug = require("debug")("components:lobby:chatbox");
 
@@ -39,6 +39,8 @@ export default observer(
     messageStream = null;
     chatArea = React.createRef();
     textEntry = React.createRef();
+    notes = [];
+    userList = [];
 
     commandHistory = [];
     commandHistoryIndex = null;
@@ -81,6 +83,9 @@ export default observer(
       this.loadPreferences();
       this.sendRelayMessage(
         this.makeInfoMessage(model.state.user.username + " joined the lobby.")
+      );
+      this.sendRelayMessage(
+        this.makeMetaMessage('join', {user: model.state.user.username})
       );
     }
 
@@ -236,11 +241,46 @@ export default observer(
           kind: "user-message"
         });
       }
-      if (message.type == "info-message") {
-        console.log("MS", this.messageStream);
+      if (message.type == "whisper-message" && (
+          message.to == model.state.user.username // ideally deal with this serverside
+          || message.sender_id == this.streamData(this.messageStream).sender_id)) {
         if (
           this.messageStream === null ||
           this.messageStream < this.streamCount - 1 ||
+          this.stream(this.messageStream).kind != "whisper-chunk" ||
+          this.streamData(this.messageStream).sender != message.sender ||
+          this.streamData(this.messageStream).sender_id != message.sender_id
+        ) {
+          if (this.messageStream !== null) {
+            this.closeStream(this.messageStream);
+          }
+          this.messageStream = this.openStream("whisper-chunk", {
+            sender: message.sender,
+            sender_id: message.sender_id
+          });
+        }
+        this.print(this.messageStream, {
+          content: (
+            <span
+              className={"whisper-message " + (options.mine ? "my-message " : "")}
+            >
+              <span className="message-sender" style={{ color: message.color }}>
+                {message.sender}
+                <span className="whisper-indicator">
+                  (whisper{message.to != model.state.user.username ? ' to '+message.to : ''})
+                </span>:
+              </span>
+              <span className="message-content">{message.text}</span>
+            </span>
+          ),
+          kind: "whisper-message"
+        });
+      }
+      if (message.type == "info-message") {
+        if (
+          this.messageStream === null ||
+          this.messageStream < this.streamCount - 1 ||
+          !this.stream(this.messageStream).kind ||
           this.stream(this.messageStream).kind != "info-chunk"
         ) {
           if (this.messageStream !== null) {
@@ -256,6 +296,11 @@ export default observer(
           ),
           kind: "info-message"
         });
+      }
+      if (message.type == "meta-message") {
+        if (message.event == 'join') {
+          this.userList.push(message.data.user);
+        }
       }
       setTimeout(() => {
         console.log(this.messageStream, this.state);
@@ -273,11 +318,32 @@ export default observer(
       });
     }
 
+    makeWhisperMessage(composition, to) {
+      return JSON.stringify({
+        version: "2",
+        type: "whisper-message",
+        sender: model.state.user.username,
+        sender_id: this.uniqueId,
+        to: to,
+        text: composition,
+        color: this.userColor
+      });
+    }
+
     makeInfoMessage(composition) {
       return JSON.stringify({
         version: "2",
         type: "info-message",
         text: composition
+      });
+    }
+
+    makeMetaMessage(ev,data) {
+      return JSON.stringify({
+        version: "2",
+        type: "meta-message",
+        event: ev,
+        data: data,
       });
     }
 
