@@ -260,7 +260,6 @@ export default {
 
     video.addEventListener("ended", () => {
       if (videoQueue.videos.length > 1) {
-        alert("autoplaying!");
         model.lobby.playNextInQueue();
       }
     });
