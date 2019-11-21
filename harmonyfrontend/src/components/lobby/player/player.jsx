@@ -74,6 +74,7 @@ class Player extends React.Component {
         "play_pause",
         "time_and_duration",
         "spacer",
+        "myshowqueue",
         "skip",
         "mute",
         "volume",
