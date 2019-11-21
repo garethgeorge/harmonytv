@@ -15,7 +15,7 @@
 
   font-size: 1em;
 
-  .messages {
+  .chat-area {
     width: 300px;
     padding-left: 0.5em;
     padding-right: 0.5em;
@@ -25,19 +25,30 @@
   }
 
   // class for chatbox when docked to the left
-  &.left {
+  &[display-side=left] {
     left: 1em;
   }
 
   // class for chatbox when docked right
-  &.right {
+  &[display-side=right] {
     left: auto;
     right: 1em;
     order: -1;
   }
 
+  .chat-stream {
+    &[kind=user-chunk] {
+      margin: 0.15em 0;
+    }
+
+    // &[open] {
+    //   border: 1px solid rgba(191,191,0,0.5);
+    // }
+  }
+
+
   // styling for chat text
-  .chat-text {
+  .stream-line {
     height: auto;
     // float: right;
     /* font-weight: bold; */
@@ -46,57 +57,58 @@
     vertical-align: middle;
     color: rgba(255, 255, 255, 0.7);
 
-    &.old {
-      display: none;
-    }
+    &[kind=user-message] {
 
-    &.info {
-      @include notification;
-      color: rgba(127, 127, 255, 0.7);
-    }
-
-    &.warning {
-      @include notification;
-      color: rgba(255, 255, 127, 0.7);
-    }
-
-    &.success {
-      @include notification;
-      color: rgba(127, 255, 127, 0.7);
-    }
-
-    &.error {
-      @include notification;
-      color: rgba(255, 127, 127, 0.7);
-    }
-
-    .command-list {
-      list-style-type: none;
-      padding-left: 0.5em;
-      margin: 0;
-      background-color: rgba(0, 0, 0, 0.5);
-      border: 1px solid rgba(63, 63, 63, 0.3);
-      border-radius: 0.4em;
-      padding: 0.2em;
-
-      li {
-        margin: 0px;
-        line-height: 1.7;
+      .user-message {
+        padding: 0;
       }
+      .message-sender {
+        display: none;
+      }
+      .message-content {
+        padding-top: .1em;
+      }
+
+      &:first-child {
+        .message-sender {
+          display: block;
+        }
+      }
+    }
+
+    &[kind=info],
+    &[kind=info-message] {
+      @include notification;
+      color: rgba(127, 127, 255, 0.9);
+    }
+
+    &[kind=warning] {
+      @include notification;
+      color: rgba(255, 255, 127, 0.9);
+    }
+
+    &[kind=success] {
+      @include notification;
+      color: rgba(127, 255, 127, 0.9);
+    }
+
+    &[kind=error] {
+      @include notification;
+      color: rgba(255, 127, 127, 0.9);
     }
   }
 
   .chatboxTextEntry {
-    position: absolute;
-    bottom: 0;
+    //position: absolute;
+    //bottom: 0;
 
-    outline-color: rgba(255, 255, 255, 1);
+    outline-color: rgba(255, 255, 255, 0.5);
     outline-width: 1px;
     outline-style: solid;
     outline-offset: -1px;
     border: none;
     fill: none;
-    background: transparent;
+    background: rgba(0,0,0,0.5);
     color: white;
 
     width: 300px;
@@ -107,7 +119,7 @@
     padding: 0 0.35em;
 
     transition: opacity 0.3s, background-color 0.3s;
-    opacity: 0.5;
+    //opacity: 0.5;
 
     &.command {
       font-size: 1.15em;
@@ -119,15 +131,27 @@
     }
   }
 
+  &[display=float][display-visibility=invisible] {
+    opacity: 0.75;
+
+    .chatboxTextEntry {
+      opacity: 0;
+
+      &:focus {
+        opacity: 1;
+      }
+    }
+  }
+
   // docked flavor of the chatbox
-  &.docked {
+  &[display=docked] {
     position: relative;
     bottom: 1px;
     left: 1px;
     // background-color: rgba(15,15,15,1);
     background-color: rgb(7, 7, 7);
 
-    .messages {
+    .chat-area {
       flex-grow: 1;
       width: 300px;
       overflow-y: scroll;
@@ -136,12 +160,31 @@
       flex-direction: column;
     }
 
-    .chat-text.old {
-      display: initial;
-    }
+    // .stream-line.old {
+    //   display: initial;
+    // }
 
     .chatboxTextEntry {
       position: relative;
+    }
+  }
+
+  &:not([display=docked]) {
+    .chat-stream {
+      &.old {
+        display: none !important;
+      }
+    }
+
+    .stream-line {
+      &.old {
+        display: none !important;
+      }
+      &.old + .stream-line:not(.old) {
+        .message-sender {
+          display: block;
+        }
+      }
     }
   }
 
@@ -171,7 +214,22 @@
     opacity: 0.7;
   }
 
-  .command-box {
+  .command-list {
+    list-style-type: none;
+    padding-left: 0.5em;
+    margin: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(63, 63, 63, 0.3);
+    border-radius: 0.4em;
+    padding: 0.2em;
+
+    li {
+      margin: 0px;
+      line-height: 1.7;
+    }
+  }
+
+  .chat-stream[kind=command-box] {
     display: flex;
     flex-direction: column;
     width: 100%;
@@ -187,6 +245,10 @@
     margin: 0.25em 0;
     line-height: 1;
 
+    &[open] {
+      border: 1px solid rgba(191,191,0,0.5);
+    }
+
     > * {
       display: block;
       padding: 0 0.5em;
@@ -196,21 +258,18 @@
     > *:last-child {
       border-bottom: none;
     }
-
-    .command-entered {
-      font-family: monospace;
-      border-radius: 0.15em;
-      background-color: rgba(47,0,11, 0.5);
-      color: mix(mix($color-primary-accent, white, 70%), transparent, 85%);
-      font-style: normal;
-      border: none;
-      border-bottom: 1px solid rgba(255, 0, 95, 0.15);
-      width: 100%;
-      margin-top: 0em;
-      // position: absolute;
-      // top: 0;
-      // left: 0;
-      // right: 0;
+    > *:first-child {
+      &[kind=command-entered] {
+        font-family: monospace;
+        border-radius: 0.15em;
+        background-color: rgba(47,0,11, 0.5);
+        color: mix(mix($color-primary-accent, white, 70%), transparent, 85%);
+        font-style: normal;
+        border: none;
+        border-bottom: 1px solid rgba(255, 0, 95, 0.15);
+        width: 100%;
+        margin-top: 0em;
+      }
     }
   }
 
@@ -237,4 +296,13 @@
       padding-bottom: 0.3em;
     }
   }
+
+  // :not(.old) + .message .same-sender,
+  // &.docked .same-sender {
+  //   padding-top: 0;
+  //
+  //   .message-sender {
+  //     display: none;
+  //   }
+  // }
 }
