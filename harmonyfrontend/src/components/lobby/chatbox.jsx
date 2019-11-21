@@ -44,6 +44,8 @@ export default observer(class ChatBox extends React.Component {
       }
     });
 
+    this.chatArea = React.createRef();
+
     chatboxCommands(this);
 
     // this.receiveRelayMessage(JSON.stringify({
@@ -117,16 +119,29 @@ export default observer(class ChatBox extends React.Component {
     return this.state.streams[streamIndex];
   }
 
-  print(streamIndex, line) {
+  print(streamIndex, line, time=10000) {
     // line = {kind: kind, content: content};
+    line = Object.assign({kind: 'normal', classlist: []}, line);
     this.setState(prevState => {
       let state = Object.assign({}, prevState);
       if (state.streams[streamIndex].open) {
+        let k = state.streams[streamIndex].lines.length;
         state.streams[streamIndex].lines.push(line);
+        setTimeout(() => {
+          this.setState(prevState2 => {
+            let newstate = Object.assign({}, prevState2);
+            newstate.streams[streamIndex].lines[k].classlist.push('old');
+            return newstate;
+          });
+        }, time);
       } else {
         console.log('tried to print to closed stream.');
       }
       return state;
+    }, () => {
+      console.log(this.chatArea.current);
+      if (this.chatArea.current)
+        this.chatArea.current.scrollTop = this.chatArea.current.scrollHeight + 1000;
     });
   }
 
@@ -227,10 +242,10 @@ export default observer(class ChatBox extends React.Component {
     console.log('RENDERING STATE',this.state);
     return (
       <div className={"chatbox"} display={this.state.display} display-side={this.state.displaySide}>
-        <div className="chat-area" ref={this.streams}>
+        <div className="chat-area" ref={this.chatArea}>
           {this.state.streams.map(stream =>
-            <div className="chat-stream" kind={stream.kind} key={stream.key}>
-              {stream.lines.map(line => <div className="stream-line" kind={line.kind} key={line.key}>{line.content}</div>)}
+            <div className={"chat-stream " + (stream.lines.map(line => line.classlist.includes('old')).includes(false) ? '' : 'old')} kind={stream.kind} key={stream.key}>
+              {stream.lines.map(line => <div className={"stream-line " + line.classlist.join(' ')} kind={line.kind} key={line.key}>{line.content}</div>)}
             </div>
           )}
         </div>

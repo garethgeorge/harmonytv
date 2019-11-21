@@ -37,8 +37,11 @@
   }
 
   .chat-stream {
-    border: 1px solid red;
+    &[kind=user-chunk] {
+      margin: 0.15em 0;
+    }
   }
+
 
   // styling for chat text
   .stream-line {
@@ -50,8 +53,23 @@
     vertical-align: middle;
     color: rgba(255, 255, 255, 0.7);
 
-    &.old {
-      display: none;
+    &[kind=user-message] {
+
+      .user-message {
+        padding: 0;
+      }
+      .message-sender {
+        display: none;
+      }
+      .message-content {
+        padding-top: .1em;
+      }
+
+      &:first-child {
+        .message-sender {
+          display: block;
+        }
+      }
     }
 
     &[kind=info] {
@@ -125,12 +143,31 @@
       flex-direction: column;
     }
 
-    .chat-text.old {
-      display: initial;
-    }
+    // .stream-line.old {
+    //   display: initial;
+    // }
 
     .chatboxTextEntry {
       position: relative;
+    }
+  }
+
+  &[display=float] {
+    .chat-stream {
+      &.old {
+        display: none !important;
+      }
+    }
+
+    .stream-line {
+      &.old {
+        display: none !important;
+      }
+      &.old + .stream-line:not(.old) {
+        .message-sender {
+          display: block;
+        }
+      }
     }
   }
 
@@ -239,12 +276,12 @@
     }
   }
 
-  :not(.old) + .message .same-sender,
-  &.docked .same-sender {
-    padding-top: 0;
-
-    .message-sender {
-      display: none;
-    }
-  }
+  // :not(.old) + .message .same-sender,
+  // &.docked .same-sender {
+  //   padding-top: 0;
+  //
+  //   .message-sender {
+  //     display: none;
+  //   }
+  // }
 }
