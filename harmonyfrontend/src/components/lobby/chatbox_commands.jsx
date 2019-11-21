@@ -402,4 +402,14 @@ export default (chatbox) => {
     ]
   });
 
+  chatbox.registerCommand("listusers", (args,stream) => {
+    chatbox.print(stream, {content: 'There are at most '+chatbox.userList.length+' users here:'});
+    for (let user of chatbox.userList) {
+      chatbox.print(stream, {content: user});
+    }
+  }, {
+    help: "list users in lobby",
+    category: 'chat',
+  });
+
 }

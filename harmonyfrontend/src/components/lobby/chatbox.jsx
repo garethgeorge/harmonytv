@@ -40,6 +40,7 @@ export default observer(
     chatArea = React.createRef();
     textEntry = React.createRef();
     notes = [];
+    userList = [];
 
     commandHistory = [];
     commandHistoryIndex = null;
@@ -82,6 +83,9 @@ export default observer(
       this.loadPreferences();
       this.sendRelayMessage(
         this.makeInfoMessage(model.state.user.username + " joined the lobby.")
+      );
+      this.sendRelayMessage(
+        this.makeMetaMessage('join', {user: model.state.user.username})
       );
     }
 
@@ -273,7 +277,6 @@ export default observer(
         });
       }
       if (message.type == "info-message") {
-        console.log("MS", this.messageStream);
         if (
           this.messageStream === null ||
           this.messageStream < this.streamCount - 1 ||
@@ -292,6 +295,11 @@ export default observer(
           ),
           kind: "info-message"
         });
+      }
+      if (message.type == "meta-message") {
+        if (message.event == 'join') {
+          this.userList.push(message.data.user);
+        }
       }
       setTimeout(() => {
         console.log(this.messageStream, this.state);
@@ -326,6 +334,15 @@ export default observer(
         version: "2",
         type: "info-message",
         text: composition
+      });
+    }
+
+    makeMetaMessage(ev,data) {
+      return JSON.stringify({
+        version: "2",
+        type: "meta-message",
+        event: ev,
+        data: data,
       });
     }
 
