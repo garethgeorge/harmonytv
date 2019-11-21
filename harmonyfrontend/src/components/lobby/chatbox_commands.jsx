@@ -13,31 +13,9 @@ export default (chatbox) => {
       content:
         "Use \\listcommands [category] to list commands of a given category. " +
         "Or don't mention a category, and get all commands. " +
-        "Categories: help, chat, video, notes.",
+        "Categories: help, chat, video, queue, notes.",
       kind: 'info'
     })
-    // const commands = Object.values(chatbox.commands).map(command => {
-    //   if (command.opts.secret) {
-    //     return;
-    //   }
-    //   let text = null;
-    //   if (!text && command.opts.help)
-    //     text = command.opts.help
-    //
-    //   return (
-    //     <li>{command.usage} {text}</li>
-    //   )
-    // });
-    // debug(commands);
-    //
-    // chatbox.print(stream, {content:
-    //   <div>
-    //     Commands:
-    //     <ul className="command-list">
-    //       {commands}
-    //     </ul>
-    //   </div>,
-    //   kind: "info" });
   }, {
     help: 'show command list',
     category: 'help',
@@ -80,6 +58,10 @@ export default (chatbox) => {
   chatbox.registerCommand("test", (args,stream) => {
     // chatbox.sendRelayMessage({version: "1", type: "user-joined", sender: model.state.user.username, color: chatbox.userColor});
     console.log('MODEL:',model);
+    console.log('LIBS:',model.state.libraries);
+    console.log('LIB:',model.library);
+    console.log('MEDIAINFO:',model.media.getInfo());
+    console.log('PROPS:',chatbox.props);
     let count = 5;
     let interval = setInterval( () => {
       console.log('TEST');
@@ -410,6 +392,40 @@ export default (chatbox) => {
   }, {
     help: "list users in lobby",
     category: 'chat',
+  });
+
+  chatbox.registerCommand("showqueue", (args,stream) => {
+    console.log(model.state.videoQueue);
+    if (!model.state.videoQueue) {
+      chatbox.print(stream, {content: 'There is no queue to show.', kind: 'warning'});
+    }
+    else if (model.state.videoQueue.videos.length < 1) {
+      chatbox.print(stream, {content: 'The queue is empty.', kind: 'info'});
+    }
+    else {
+      for (let vid of model.state.videoQueue.videos) {
+        chatbox.print(stream, {content: vid});
+      }
+    }
+  }, {
+    help: "list videos in the queue",
+    category: 'queue',
+  });
+
+  chatbox.registerCommand("playnext", (args,stream) => {
+    if (!model.state.videoQueue) {
+      chatbox.print(stream, {content: 'There is no queue.', kind: 'error'});
+    }
+    else if (model.state.videoQueue.videos.length <= 1) {
+      chatbox.print(stream, {content: 'There is no next video.', kind: 'error'});
+    }
+    else {
+      model.lobby.playNextInQueue().catch(alert);
+      chatbox.print(stream, {content: 'playing next video.', kind: 'success'});
+    }
+  }, {
+    help: "play the next video in the queue",
+    category: 'queue',
   });
 
 }
