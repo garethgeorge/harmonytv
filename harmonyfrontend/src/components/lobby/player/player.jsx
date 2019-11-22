@@ -5,6 +5,7 @@ import model from "../../../model";
 import { observer } from "mobx-react";
 import "./player.scss";
 import customUI from "./player_customui.jsx";
+import "./player_videoqueue";
 
 // load shaka, example from: https://github.com/amit08255/shaka-player-react-with-ui-config/blob/master/with-default-ui/src/components/VideoPlayer.js
 import "shaka-player/dist/controls.css";
@@ -74,7 +75,7 @@ class Player extends React.Component {
         "play_pause",
         "time_and_duration",
         "spacer",
-        "myshowqueue",
+        "player_videoqueue",
         "skip",
         "mute",
         "volume",

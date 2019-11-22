@@ -3,6 +3,7 @@ import { observer } from "mobx-react";
 import "./chatbox.scss";
 import model from "../../../model";
 import chatboxCommands from "./chatbox_commands.jsx";
+import uuidv4 from "uuid/v4";
 const debug = require("debug")("components:lobby:chatbox");
 
 function randomColor() {
@@ -34,7 +35,7 @@ export default observer(
 
     persistent = ["display", "displayOptions"];
     userColor = randomColor();
-    uniqueId = randomId();
+    uniqueId = uuidv4();
     streamCount = 0;
     messageStream = null;
     chatArea = React.createRef();
@@ -85,7 +86,7 @@ export default observer(
         this.makeInfoMessage(model.state.user.username + " joined the lobby.")
       );
       this.sendRelayMessage(
-        this.makeMetaMessage('join', {user: model.state.user.username})
+        this.makeMetaMessage("join", { user: model.state.user.username })
       );
     }
 
@@ -120,7 +121,7 @@ export default observer(
       let state = Object.assign({}, this.state);
       const key = this.streamCount;
       this.streamCount++;
-      console.log("CALL open");
+      debug("CALL open");
       this.setState(prevState => {
         let state = Object.assign({}, prevState);
         state.streams.push({
@@ -130,14 +131,14 @@ export default observer(
           data: data,
           kind: kind
         });
-        console.log("OPEN");
+        debug("OPEN");
         return state;
       });
       return key;
     }
 
     closeStream(streamIndex) {
-      console.log("CLOSING ", streamIndex, this.state.streams);
+      debug("CLOSING ", streamIndex, this.state.streams);
       this.setState(prevState => {
         let state = Object.assign({}, prevState);
         if (state.streams[streamIndex]) {
@@ -185,7 +186,7 @@ export default observer(
               });
             }, time);
           } else {
-            console.log("tried to print to closed stream.");
+            debug("tried to print to closed stream.");
           }
           return state;
         },
@@ -204,9 +205,9 @@ export default observer(
 
     receiveRelayMessage(relayMessage, options = { mine: false }) {
       const message = JSON.parse(relayMessage);
-      console.log("RECEIVING MESSAGE", message);
+      debug("RECEIVING MESSAGE", message);
       if (!["1", "2"].includes(message.version)) {
-        console.log("wrong version");
+        debug("wrong version");
         this.receiveRelayMessage(
           this.makeInfoMessage("Your version is out of date.")
         );
@@ -241,9 +242,11 @@ export default observer(
           kind: "user-message"
         });
       }
-      if (message.type == "whisper-message" && (
-          message.to == model.state.user.username // ideally deal with this serverside
-          || message.sender_id == this.streamData(this.messageStream).sender_id)) {
+      if (
+        message.type == "whisper-message" &&
+        (message.to == model.state.user.username || // ideally deal with this serverside
+          message.sender_id == this.streamData(this.messageStream).sender_id)
+      ) {
         if (
           this.messageStream === null ||
           this.messageStream < this.streamCount - 1 ||
@@ -262,13 +265,20 @@ export default observer(
         this.print(this.messageStream, {
           content: (
             <span
-              className={"whisper-message " + (options.mine ? "my-message " : "")}
+              className={
+                "whisper-message " + (options.mine ? "my-message " : "")
+              }
             >
               <span className="message-sender" style={{ color: message.color }}>
                 {message.sender}
                 <span className="whisper-indicator">
-                  (whisper{message.to != model.state.user.username ? ' to '+message.to : ''})
-                </span>:
+                  (whisper
+                  {message.to != model.state.user.username
+                    ? " to " + message.to
+                    : ""}
+                  )
+                </span>
+                :
               </span>
               <span className="message-content">{message.text}</span>
             </span>
@@ -298,13 +308,10 @@ export default observer(
         });
       }
       if (message.type == "meta-message") {
-        if (message.event == 'join') {
+        if (message.event == "join") {
           this.userList.push(message.data.user);
         }
       }
-      setTimeout(() => {
-        console.log(this.messageStream, this.state);
-      }, 100);
     }
 
     makeUserMessage(composition) {
@@ -338,12 +345,12 @@ export default observer(
       });
     }
 
-    makeMetaMessage(ev,data) {
+    makeMetaMessage(ev, data) {
       return JSON.stringify({
         version: "2",
         type: "meta-message",
         event: ev,
-        data: data,
+        data: data
       });
     }
 
@@ -444,7 +451,6 @@ export default observer(
                     }
                   });
                 } else {
-                  console.log(this.state.display);
                   if (this.state.display !== "docked") {
                     this.textEntry.current.blur();
                   }

@@ -9,7 +9,6 @@ import "shaka-player/dist/controls.css";
 const shaka = require("shaka-player/dist/shaka-player.ui.js");
 const debug = require("debug")("components:lobby:player");
 
-
 class SkipButton extends shaka.ui.Element {
   constructor(parent, controls) {
     super(parent, controls);
@@ -64,12 +63,12 @@ class MyFullscreen extends shaka.ui.Element {
     const FSButton = observer(
       class FSButton extends React.Component {
         state = {
-          fullscreen: false,
-        }
+          fullscreen: false
+        };
         constructor(props) {
           super(props);
-          document.addEventListener('fullscreenchange', (event) => {
-            this.setState({fullscreen: document.fullscreenElement});
+          document.addEventListener("fullscreenchange", event => {
+            this.setState({ fullscreen: document.fullscreenElement });
           });
         }
         render() {
@@ -98,9 +97,13 @@ class MyFullscreen extends shaka.ui.Element {
     this.parent.appendChild(this.elem);
 
     this.eventManager.listen(this.elem, "click", () => {
-      const elem = document.getElementById('root') || document.documentElement;
-      if (!document.fullscreenElement && !document.mozFullScreenElement &&
-        !document.webkitFullscreenElement && !document.msFullscreenElement) {
+      const elem = document.getElementById("root") || document.documentElement;
+      if (
+        !document.fullscreenElement &&
+        !document.mozFullScreenElement &&
+        !document.webkitFullscreenElement &&
+        !document.msFullscreenElement
+      ) {
         if (elem.requestFullscreen) {
           elem.requestFullscreen();
         } else if (elem.msRequestFullscreen) {
@@ -137,37 +140,52 @@ class MyShowQueue extends shaka.ui.Element {
 
     const ShowQueueButton = observer(
       class ShowQueueButton extends React.Component {
+        state = {};
         render() {
           return (
             <button
+              className={
+                this.state.collapsed
+                  ? "player-queue-list collapsed"
+                  : "player-queue-list"
+              }
               style={{
                 border: "none",
                 background: "none",
                 paddingTop: "4px",
-                position: "relative",
+                position: "relative"
               }}
             >
+              <ol>
+                <li>TEST TEST TEST</li>
+              </ol>
               <i
                 className="material-icons md-light"
                 style={{ fontSize: "24px" }}
               >
                 list
               </i>
-              <div className="playerQueueList"><ol></ol></div>
             </button>
           );
         }
       }
     );
 
-    this.button = <ShowQueueButton />;
-    ReactDOM.render(this.button, this.elem);
+    ReactDOM.render(
+      <ShowQueueButton
+        ref={component => {
+          this.elem.addEventListener("click", () => {
+            component.setState({
+              collapsed: !component.state.collapsed
+            });
+          });
+        }}
+        the
+        I
+      />,
+      this.elem
+    );
     this.parent.appendChild(this.elem);
-
-    this.eventManager.listen(this.elem, "click", () => {
-      this.elem.classList.toggle('collapsed');
-      // show queue
-    });
   }
 
   static create(rootElement, controls) {
@@ -179,4 +197,4 @@ export default () => {
   shaka.ui.Controls.registerElement("skip", SkipButton);
   shaka.ui.Controls.registerElement("myfullscreen", MyFullscreen);
   shaka.ui.Controls.registerElement("myshowqueue", MyShowQueue);
-}
+};

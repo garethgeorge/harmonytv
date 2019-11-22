@@ -13,7 +13,6 @@ export default chatbox => {
     (args, stream) => {
       chatbox.print(stream, {
         content:
-          "Press [Enter] to open chat." +
           "Use \\listcommands [category] to list commands of a given category. " +
           "Or don't mention a category, and get all commands. " +
           "Categories: help, chat, video, queue, notes.",
