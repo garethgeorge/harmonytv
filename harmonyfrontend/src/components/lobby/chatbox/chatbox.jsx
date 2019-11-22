@@ -417,7 +417,7 @@ export default observer(
           <input
             ref={this.textEntry}
             className={
-              "chatboxTextEntry " +
+              "chatbox-text-entry " +
               (this.state.composition[0] == "\\" ? "command" : "")
             }
             type="text"
