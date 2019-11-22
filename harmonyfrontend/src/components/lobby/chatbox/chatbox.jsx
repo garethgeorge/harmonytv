@@ -13,13 +13,6 @@ function randomColor() {
   return color;
 }
 
-function randomId() {
-  var letters = "0123456789ABCDEF";
-  var id = "id_";
-  for (var i = 0; i < 32; i++) id += letters[Math.floor(Math.random() * 16)];
-  return id;
-}
-
 export default observer(
   class ChatBox extends React.Component {
     state = {
