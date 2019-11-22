@@ -8,6 +8,7 @@ import LoginView from "./views/login-view";
 import model from "./model";
 import { observer } from "mobx-react";
 import Loading from "./components/loading";
+import config from "./config";
 
 const Lobby = React.lazy(() => import("./views/lobby/lobbyview"));
 
@@ -53,6 +54,15 @@ const App = observer(
       model.user.getCurrentUser().then(() => {
         this.setState({ loading: false });
       });
+      (function() {
+        if (config.development) {
+          var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
+          link.type = 'image/x-icon';
+          link.rel = 'shortcut icon';
+          link.href = 'devlogo512.png';
+          document.getElementsByTagName('head')[0].appendChild(link);
+        }
+      })();
     }
 
     render() {
