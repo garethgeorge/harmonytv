@@ -4,6 +4,8 @@ import "./chatbox.scss";
 import model from "../../../model";
 import chatboxCommands from "./chatbox_commands.jsx";
 import uuidv4 from "uuid/v4";
+import config from "../../../config";
+import messageHandler from "./message_handler";
 const debug = require("debug")("components:lobby:chatbox");
 
 function randomColor() {
@@ -26,11 +28,11 @@ export default observer(
       }
     };
 
-    persistent = ["display", "displayOptions"];
+    persistentState = ["display", "displayOptions"];
+    persistentVars = ["userColor"];
     userColor = randomColor();
     uniqueId = uuidv4();
     streamCount = 0;
-    messageStream = null;
     chatArea = React.createRef();
     textEntry = React.createRef();
     notes = [];
@@ -52,41 +54,54 @@ export default observer(
       });
 
       chatboxCommands(this);
+      messageHandler(this);
 
       setTimeout(() => {
-        this.receiveRelayMessage(
-          this.makeInfoMessage("type \\? for a list of commands")
-        );
+        this.addMessage({
+          metaData: {
+            streamKind: "info-chunk",
+            messageType: "info",
+            group: "info",
+          },
+          content: {
+            text: "type \\? for a list of commands",
+          }
+        });
       }, 0);
 
       this.props.socket.on("server:message", message => {
-        this.receiveRelayMessage(message);
+        this.receiveMessage(message);
       });
 
       this.props.socket.on("server:lobby-connected-users", users => {
         const state = Object.assign({}, this.state);
         state.users = users;
         this.setState(state);
-        this.receiveRelayMessage(
-          this.makeInfoMessage(users + " total users are now connected.")
-        );
+        this.addMessage({
+          metaData: {
+            streamKind: "info-chunk",
+            messageType: "conn-user-joined",
+            messageKind: "info",
+            group: "info",
+          },
+          content: {
+            users: users,
+          }
+        });
       });
     }
 
     componentDidMount() {
       this.loadPreferences();
-      this.sendRelayMessage(
-        this.makeInfoMessage(model.state.user.username + " joined the lobby.")
-      );
-      this.sendRelayMessage(
-        this.makeMetaMessage("join", { user: model.state.user.username })
-      );
     }
 
     savePreferences() {
-      let preferences = {};
-      for (const pref of this.persistent) {
-        preferences[pref] = this.state[pref];
+      let preferences = {state: {}, vars: {}};
+      for (const pref of this.persistentState) {
+        preferences.state[pref] = this.state[pref];
+      }
+      for (const pref of this.persistentVars) {
+        preferences.vars[pref] = this[pref];
       }
       debug(JSON.stringify(preferences));
       window.localStorage.setItem(
@@ -101,10 +116,12 @@ export default observer(
         let preferences = JSON.parse(
           window.localStorage.getItem("harmonytv-chatbox")
         );
-        for (const pref in preferences) {
-          state[pref] = preferences[pref];
+        for (const pref in preferences.vars) {
+          this[pref] = preferences.vars[pref];
         }
-        //debug("LOADED THE PREFERENCES!!! " + JSON.stringify(preferences));
+        for (const pref in preferences.state) {
+          state[pref] = preferences.state[pref];
+        }
       } finally {
         this.setState(state);
       }
@@ -191,162 +208,6 @@ export default observer(
       );
     }
 
-    sendRelayMessage(relayMessage) {
-      this.props.socket.emit("client:message", relayMessage);
-      this.receiveRelayMessage(relayMessage, { mine: true });
-    }
-
-    receiveRelayMessage(relayMessage, options = { mine: false }) {
-      const message = JSON.parse(relayMessage);
-      debug("RECEIVING MESSAGE", message);
-      if (!["1", "2"].includes(message.version)) {
-        debug("wrong version");
-        this.receiveRelayMessage(
-          this.makeInfoMessage("Your version is out of date.")
-        );
-      }
-      if (message.type == "user-message") {
-        if (
-          this.messageStream === null ||
-          this.messageStream < this.streamCount - 1 ||
-          this.stream(this.messageStream).kind != "user-chunk" ||
-          this.streamData(this.messageStream).sender != message.sender ||
-          this.streamData(this.messageStream).sender_id != message.sender_id
-        ) {
-          if (this.messageStream !== null) {
-            this.closeStream(this.messageStream);
-          }
-          this.messageStream = this.openStream("user-chunk", {
-            sender: message.sender,
-            sender_id: message.sender_id
-          });
-        }
-        this.print(this.messageStream, {
-          content: (
-            <span
-              className={"user-message " + (options.mine ? "my-message " : "")}
-            >
-              <span className="message-sender" style={{ color: message.color }}>
-                {message.sender}:
-              </span>
-              <span className="message-content">{message.text}</span>
-            </span>
-          ),
-          kind: "user-message"
-        });
-      }
-      if (
-        message.type == "whisper-message" &&
-        (message.to == model.state.user.username || // ideally deal with this serverside
-          message.sender_id == this.streamData(this.messageStream).sender_id)
-      ) {
-        if (
-          this.messageStream === null ||
-          this.messageStream < this.streamCount - 1 ||
-          this.stream(this.messageStream).kind != "whisper-chunk" ||
-          this.streamData(this.messageStream).sender != message.sender ||
-          this.streamData(this.messageStream).sender_id != message.sender_id
-        ) {
-          if (this.messageStream !== null) {
-            this.closeStream(this.messageStream);
-          }
-          this.messageStream = this.openStream("whisper-chunk", {
-            sender: message.sender,
-            sender_id: message.sender_id
-          });
-        }
-        this.print(this.messageStream, {
-          content: (
-            <span
-              className={
-                "whisper-message " + (options.mine ? "my-message " : "")
-              }
-            >
-              <span className="message-sender" style={{ color: message.color }}>
-                {message.sender}
-                <span className="whisper-indicator">
-                  (whisper
-                  {message.to != model.state.user.username
-                    ? " to " + message.to
-                    : ""}
-                  )
-                </span>
-                :
-              </span>
-              <span className="message-content">{message.text}</span>
-            </span>
-          ),
-          kind: "whisper-message"
-        });
-      }
-      if (message.type == "info-message") {
-        if (
-          this.messageStream === null ||
-          this.messageStream < this.streamCount - 1 ||
-          !this.stream(this.messageStream).kind ||
-          this.stream(this.messageStream).kind != "info-chunk"
-        ) {
-          if (this.messageStream !== null) {
-            this.closeStream(this.messageStream);
-          }
-          this.messageStream = this.openStream("info-chunk");
-        }
-        this.print(this.messageStream, {
-          content: (
-            <span className="info">
-              <span className="message-content">{message.text}</span>
-            </span>
-          ),
-          kind: "info-message"
-        });
-      }
-      if (message.type == "meta-message") {
-        if (message.event == "join") {
-          this.userList.push(message.data.user);
-        }
-      }
-    }
-
-    makeUserMessage(composition) {
-      return JSON.stringify({
-        version: "2",
-        type: "user-message",
-        sender: model.state.user.username,
-        sender_id: this.uniqueId,
-        text: composition,
-        color: this.userColor
-      });
-    }
-
-    makeWhisperMessage(composition, to) {
-      return JSON.stringify({
-        version: "2",
-        type: "whisper-message",
-        sender: model.state.user.username,
-        sender_id: this.uniqueId,
-        to: to,
-        text: composition,
-        color: this.userColor
-      });
-    }
-
-    makeInfoMessage(composition) {
-      return JSON.stringify({
-        version: "2",
-        type: "info-message",
-        text: composition
-      });
-    }
-
-    makeMetaMessage(ev, data) {
-      return JSON.stringify({
-        version: "2",
-        type: "meta-message",
-        event: ev,
-        data: data
-      });
-    }
-
     execCommand(composition) {
       const command = composition.split(" ")[0].substr(1);
       const argstr = (composition + " ")
@@ -377,7 +238,9 @@ export default observer(
     }
 
     render() {
-      if (this.state.users <= 1) return null;
+      if (!config.development) {
+        if (this.state.users <= 1) return null;
+      }
 
       return (
         <div
@@ -436,8 +299,16 @@ export default observer(
                   this.setState(state, () => {
                     // send the message if it is not a special command
                     if (composition[0] != "\\") {
-                      const message = this.makeUserMessage(composition);
-                      this.sendRelayMessage(message);
+                      this.sendMessage({
+                        metaData: {
+                          streamKind: "user-chunk",
+                          messageType: "user-message",
+                        },
+                        content: {
+                          text: composition,
+                          userColor: this.userColor,
+                        }
+                      });
                     } else {
                       // do the command if it is known
                       this.execCommand(composition);

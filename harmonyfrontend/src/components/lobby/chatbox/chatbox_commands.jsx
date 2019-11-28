@@ -106,7 +106,7 @@ export default chatbox => {
       if (side !== null) {
         stateCpy.displayOptions.side = side;
       }
-      chatbox.setState(stateCpy);
+      chatbox.setState(stateCpy, chatbox.savePreferences.bind(chatbox));
       chatbox.print(stream, {
         content: `Chatbox docking to ${stateCpy.displayOptions.side} side.`,
         kind: "success"
@@ -422,6 +422,7 @@ export default chatbox => {
     (args, stream) => {
       const color = args.color;
       chatbox.userColor = args.color;
+      chatbox.savePreferences();
       // in future change colors for other ppl too.
     },
     {

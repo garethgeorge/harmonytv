@@ -95,10 +95,26 @@
       .message-content {
         padding-top: .1em;
       }
+      .message-time {
+        color: rgba(191,191,191,0.75);
+        // font-size: 0.6em;
+        float: right;
+        position: relative;
+        width: 3em;
+        height: 1.2em;
+
+        span {
+          font-size: 0.6em;
+          position: absolute;
+          bottom: 0;
+          right: 6px;
+        }
+      }
 
       &:first-child {
         .message-sender {
           display: block;
+          padding-top: 0.1em;
         }
       }
     }
@@ -333,7 +349,7 @@
       line-height: 1em;
       padding: 0;
       margin: 0;
-      padding-bottom: 0.3em;
+      // padding-bottom: 0.3em;
     }
   }
 
