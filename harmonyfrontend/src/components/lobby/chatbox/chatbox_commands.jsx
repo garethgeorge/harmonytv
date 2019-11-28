@@ -442,14 +442,23 @@ export default chatbox => {
   chatbox.registerCommand(
     "whisper",
     (args, stream) => {
-      chatbox.sendRelayMessage(
-        chatbox.makeWhisperMessage(args.message, args.user)
-      );
+      chatbox.sendMessage({
+        metaData: {
+          streamKind: "whisper-chunk",
+          messageType: "whisper-message",
+        },
+        content: {
+          text: args.message,
+          userColor: chatbox.userColor,
+          recipient: args.user,
+        }
+      });
       // ideally deal with this serverside
     },
     {
       help: "send a message to a specific user",
       category: "chat",
+      noOutput: true,
       args: [
         {
           name: "user",

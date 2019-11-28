@@ -111,6 +111,35 @@ function messageHandler(chatbox) {
     chatbox.addMessage(JSON.parse(message));
   }
 
+  function enrichContent(content) {
+    if (content.raw) {
+      return content.text;
+    } else if (!content.rich) {
+      let contentParts = [];
+      var urlfinder = new RegExp('(^|\\s)(https?:\\/\\/)?'+ // protocol
+        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+        '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+        '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+        '(\\#[-a-z\\d_]*)?(\\s|$)','gi'); // fragment locator
+      var textIndex = 0;
+      var urlmatch = urlfinder.exec(content.text);
+      while (urlmatch) {
+        console.log(urlmatch);
+        contentParts.push(<span> {content.text.substring(textIndex,urlmatch.index)} </span>);
+        const url = urlmatch[0].trim();
+        contentParts.push(<a target="_" href={url.split('://').length > 1 ? url : 'https://'+url}>{url}</a>);
+        textIndex += urlmatch.index + urlmatch[0].length;
+        urlmatch = urlfinder.exec(content.text);
+      }
+      contentParts.push(<span> {content.text.substring(textIndex)}</span>);
+      return <>{contentParts}</>;
+    } else {
+      // fill this in.
+      return content.text;
+    }
+  }
+
   // Registering Handlers:
   chatbox.registerMessageType("info", (message) => {
     return (
@@ -131,38 +160,7 @@ function messageHandler(chatbox) {
     )
   });
   chatbox.registerMessageType("user-message", (message) => {
-    var messageContent;
-    if (message.content.raw) {
-      messageContent = message.content.text;
-    } else if (!message.content.rich) {
-      let contentParts = [];
-      var urlfinder = new RegExp('(^|\\s)(https?:\\/\\/)?'+ // protocol
-        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
-        '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
-        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
-        '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
-        '(\\#[-a-z\\d_]*)?(\\s|$)','gi'); // fragment locator
-      var textIndex = 0;
-      var urlmatch = urlfinder.exec(message.content.text);
-      while (urlmatch) {
-        console.log(urlmatch);
-        contentParts.push(<span> {message.content.text.substring(textIndex,urlmatch.index)} </span>);
-        const url = urlmatch[0].trim();
-        contentParts.push(<a target="_" href={url.split('://').length > 1 ? url : 'https://'+url}>{url}</a>);
-        textIndex += urlmatch.index + urlmatch[0].length;
-        urlmatch = urlfinder.exec(message.content.text);
-      }
-      contentParts.push(<span> {message.content.text.substring(textIndex)}</span>);
-      messageContent = <>{contentParts}</>;
-      // urlfinder.lastIndex = 0;
-      // console.log('URLS:',message.content.text.match(urlfinder));
-      // if (urlfinder.test(message.content.text)) {
-      //   messageContent = <a target="_" href={message.content.text}>{message.content.text}</a>;
-      // }
-    } else {
-      // fill this in.
-      messageContent = message.content.text;
-    }
+    const messageContent = enrichContent(message.content);
     let date = new Date(message.metaData.timeSent);
     const timestamp = date.toLocaleTimeString([],{hour: "numeric", minute: "2-digit"});
     return (
@@ -171,6 +169,26 @@ function messageHandler(chatbox) {
       >
         <span className="message-sender" style={{ color: message.content.userColor }}>
           {message.metaData.senderName}:
+        </span>
+        <span className="message-content">{messageContent}
+          <div className="message-time"><span>{timestamp}</span></div>
+        </span>
+      </span>
+    )
+  });
+  chatbox.registerMessageType("whisper-message", (message) => {
+    const messageContent = enrichContent(message.content);
+    let date = new Date(message.metaData.timeSent);
+    const timestamp = date.toLocaleTimeString([],{hour: "numeric", minute: "2-digit"});
+    return (
+      <span
+        className={"whisper-message " + (chatbox.uniqueId == message.metaData.senderDeviceId ? "my-message " : "")}
+      >
+        <span className="message-sender" style={{ color: message.content.userColor }}>
+          {message.metaData.senderName}<span class="whisper-indicator"> (whisper{
+            message.metaData.senderName == model.state.user.username
+            ? " to "+message.content.recipient
+            : ""})</span>:
         </span>
         <span className="message-content">{messageContent}
           <div className="message-time"><span>{timestamp}</span></div>

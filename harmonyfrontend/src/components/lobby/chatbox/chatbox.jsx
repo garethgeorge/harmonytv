@@ -179,6 +179,10 @@ export default observer(
 
     print(streamIndex, line, time = 10000) {
       // line = {kind: kind, content: content};
+      if (streamIndex == null) {
+        debug("tried to print to nonexistent stream.");
+        return ;
+      }
       line = Object.assign({ kind: "normal", classlist: [] }, line);
       this.setState(
         prevState => {
@@ -214,12 +218,12 @@ export default observer(
         .split(" ")
         .slice(1)
         .join(" ");
-      let streamIndex = this.openStream("command-box");
-      this.print(streamIndex, {
-        content: composition,
-        kind: "command-entered"
-      });
       if (!this.commands[command]) {
+        let streamIndex = this.openStream("command-box");
+        this.print(streamIndex, {
+          content: composition,
+          kind: "command-entered"
+        });
         this.print(streamIndex, {
           content: (
             <span>
@@ -230,8 +234,16 @@ export default observer(
         });
         this.closeStream(streamIndex);
       } else {
+        let streamIndex = null;
+        if (!this.commands[command].opts.noOutput) {
+          streamIndex = this.openStream("command-box");
+          this.print(streamIndex, {
+            content: composition,
+            kind: "command-entered"
+          });
+        }
         this.commands[command].handler(argstr, streamIndex);
-        if (!this.commands[command].opts.keepStreamOpen) {
+        if (!this.commands[command].opts.noOutput || !this.commands[command].opts.keepStreamOpen) {
           this.closeStream(streamIndex);
         }
       }
