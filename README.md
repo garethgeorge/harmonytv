@@ -20,6 +20,7 @@ cd harmonytv/harmonybackend/ && npm i && cd ../harmonyfrontend/ && npm i && cd .
 ```
 harmonybackend/src/config.example.js -> harmonyfrontend/src/config.js
 harmonyfrontend/src/config.example.js -> harmonyfrontend/src/config.js
+```
  - step 3: start the development website
 ```
 docker-compose -f docker-compose.dev.yml up 
