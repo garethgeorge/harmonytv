@@ -135,16 +135,30 @@ function messageHandler(chatbox) {
     if (message.content.raw) {
       messageContent = message.content.text;
     } else if (!message.content.rich) {
-      messageContent = message.content.text;
-      var urlfinder = new RegExp('^(https?:\\/\\/)?'+ // protocol
+      let contentParts = [];
+      var urlfinder = new RegExp('(^|\\s)(https?:\\/\\/)?'+ // protocol
         '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
         '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
         '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
         '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
-        '(\\#[-a-z\\d_]*)?$','i'); // fragment locator
-      if (urlfinder.test(message.content.text)) {
-        messageContent = <a target="_" href={message.content.text}>{message.content.text}</a>;
+        '(\\#[-a-z\\d_]*)?(\\s|$)','gi'); // fragment locator
+      var textIndex = 0;
+      var urlmatch = urlfinder.exec(message.content.text);
+      while (urlmatch) {
+        console.log(urlmatch);
+        contentParts.push(<span> {message.content.text.substring(textIndex,urlmatch.index)} </span>);
+        const url = urlmatch[0].trim();
+        contentParts.push(<a target="_" href={url.split('://').length > 1 ? url : 'https://'+url}>{url}</a>);
+        textIndex += urlmatch.index + urlmatch[0].length;
+        urlmatch = urlfinder.exec(message.content.text);
       }
+      contentParts.push(<span> {message.content.text.substring(textIndex)}</span>);
+      messageContent = <>{contentParts}</>;
+      // urlfinder.lastIndex = 0;
+      // console.log('URLS:',message.content.text.match(urlfinder));
+      // if (urlfinder.test(message.content.text)) {
+      //   messageContent = <a target="_" href={message.content.text}>{message.content.text}</a>;
+      // }
     } else {
       // fill this in.
       messageContent = message.content.text;
