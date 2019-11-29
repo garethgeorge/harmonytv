@@ -4,6 +4,27 @@
   font-style: italic;
 }
 
+@mixin my-scrollbar($color) {
+  &::-webkit-scrollbar {
+    background-color: transparent;
+    width: 0.5em;
+  }
+  &::-webkit-scrollbar-button {
+
+  }
+  &::-webkit-scrollbar-track {
+    //background-color: rgba(255,191,223,0.05);
+    //border-radius: 1em;
+  }
+  &::-webkit-scrollbar-track-piece {
+
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: $color;
+    border-radius: 1em;
+  }
+}
+
 .chatbox {
   position: fixed;
   bottom: calc(55px + 3vw);
@@ -144,6 +165,12 @@
   .chatbox-text-entry {
     //position: absolute;
     //bottom: 0;
+    @include my-scrollbar(rgba(255,223,239,0.35));
+    overflow-x: hidden;
+    resize: none;
+    max-height: calc(5 * 1.2em + 2px);
+    min-height: calc(1.2em + 0.5em + 2px);
+    box-sizing: border-box;
     margin-top: 0.3em;
 
     outline: none;
@@ -158,11 +185,13 @@
     color: white;
 
     width: 300px;
-    height: 30px;
+    //height: 30px;
+    height: calc(1.5em + 4px);
     vertical-align: middle;
-    line-height: 30px;
+    line-height: 1.2em;
 
-    padding: 0 0.35em;
+    //padding: 0 0.35em;
+    padding: 0.25em 0.35em;
 
     transition: opacity 0.3s, background-color 0.3s, border-color 0.3s;
     //opacity: 0.5;
@@ -346,9 +375,13 @@
     }
 
     .message-content {
-      line-height: 1em;
-      padding: 0;
-      margin: 0;
+      line-height: 1.2em;
+      // padding: 0;
+      // margin: 0;
+      margin: 0.075em;
+      border-radius: 0.2em;
+      background-color: rgba(255,255,255,0.085);
+      padding: 0.3em;
       // padding-bottom: 0.3em;
     }
   }

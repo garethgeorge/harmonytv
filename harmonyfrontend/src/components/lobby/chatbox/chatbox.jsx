@@ -289,7 +289,7 @@ export default observer(
             ))}
           </div>
           {/* this is the actual text input */}
-          <input
+          <textarea
             ref={this.textEntry}
             className={
               "chatbox-text-entry " +
@@ -297,18 +297,28 @@ export default observer(
             }
             type="text"
             value={this.state.composition}
-            onChange={e => {
+            onInput={e => {
               const state = Object.assign({}, this.state);
-              state.composition = e.target.value;
+              //console.log('comp: ', this.textEntry.current);
+              const textArea = this.textEntry.current;
+              textArea.style.height = 0;
+              textArea.style.overflowY = "hidden";
+              textArea.style.height = "calc(" + (textArea.scrollHeight) + "px + 2px)";
+              textArea.style.overflowY = "auto";
+              state.composition = textArea.value;//e.target.value;
               this.setState(state);
             }}
             onKeyDown={e => {
-              if (e.key === "Enter") {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
                 if (this.state.composition.length > 0) {
                   const state = Object.assign({}, this.state);
                   const composition = this.state.composition;
                   state.composition = "";
                   this.setState(state, () => {
+                    const textArea = this.textEntry.current;
+                    textArea.style.height = 0;
+                    textArea.style.height = (textArea.scrollHeight + 2) + "px";
                     // send the message if it is not a special command
                     if (composition[0] != "\\") {
                       this.sendMessage({
@@ -333,9 +343,55 @@ export default observer(
                 }
               }
             }}
-          />
+          >Type Here</textarea>
         </div>
       );
     }
   }
 );
+
+// <input
+//   ref={this.textEntry}
+//   className={
+//     "chatbox-text-entry " +
+//     (this.state.composition[0] == "\\" ? "command" : "")
+//   }
+//   type="text"
+//   value={this.state.composition}
+//   onChange={e => {
+//     const state = Object.assign({}, this.state);
+//     state.composition = e.target.value;
+//     this.setState(state);
+//   }}
+//   onKeyDown={e => {
+//     if (e.key === "Enter") {
+//       if (this.state.composition.length > 0) {
+//         const state = Object.assign({}, this.state);
+//         const composition = this.state.composition;
+//         state.composition = "";
+//         this.setState(state, () => {
+//           // send the message if it is not a special command
+//           if (composition[0] != "\\") {
+//             this.sendMessage({
+//               metaData: {
+//                 streamKind: "user-chunk",
+//                 messageType: "user-message",
+//               },
+//               content: {
+//                 text: composition,
+//                 userColor: this.userColor,
+//               }
+//             });
+//           } else {
+//             // do the command if it is known
+//             this.execCommand(composition);
+//           }
+//         });
+//       } else {
+//         if (this.state.display !== "docked") {
+//           this.textEntry.current.blur();
+//         }
+//       }
+//     }
+//   }}
+// />
