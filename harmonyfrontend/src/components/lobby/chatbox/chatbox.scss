@@ -114,21 +114,21 @@
         display: none;
       }
       .message-content {
-        padding-top: .1em;
+        // padding-top: .1em;
       }
       .message-time {
         color: rgba(191,191,191,0.75);
         // font-size: 0.6em;
         float: right;
         position: relative;
-        width: 3em;
+        // width: 3em;
         height: 1.2em;
 
         span {
           font-size: 0.6em;
-          position: absolute;
-          bottom: 0;
-          right: 6px;
+          // position: absolute;
+          // bottom: 0;
+          // right: 6px;
         }
       }
 
@@ -208,7 +208,7 @@
   }
 
   &[display=float][display-visibility=invisible] {
-    opacity: 0.75;
+    opacity: 0.95;
 
     .chatbox-text-entry {
       opacity: 0;
@@ -288,7 +288,7 @@
     background-color: rgba(0, 0, 0, 0.9);
     color: mix($color-primary-accent, white, 70%);
     font-style: normal;
-    padding: 0.1em;
+    // padding: 0.1em;
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
@@ -357,10 +357,6 @@
     }
   }
 
-  .message-sender {
-    font-weight: bold;
-  }
-
   .user-message,
   .whisper-message {
     display: flex;
@@ -372,27 +368,39 @@
       line-height: 1.4;
       padding: 0;
       margin: 0;
+      font-weight: bold;
+
+      .sender-tab {
+        background-color: rgba(31,31,39, 0.5);
+        padding: 0.1em 0.4em 0.05em;
+        border-radius: 0.25em;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+
+        .whisper-indicator {
+          // color: rgba(191,127,255,0.4);
+          font-weight: 500;
+          font-style: italic;
+          font-size: 0.9em;
+          margin-left: 0.3em;
+        }
+      }
     }
 
     .message-content {
       line-height: 1.2em;
       // padding: 0;
       // margin: 0;
-      margin: 0.075em;
+      // margin: 0.075em;
+      margin: 0;
+      margin-bottom: 0.15em;
       border-radius: 0.2em;
-      background-color: rgba(255,255,255,0.085);
-      padding: 0.3em;
+      border-top-left-radius: 0;
+      // background-color: rgba(255,255,255,0.085);
+      background-color: rgba(31,31,39, 0.5);
+      padding: 0.2em 0.3em;
+      // padding: 0.3em;
       // padding-bottom: 0.3em;
-    }
-  }
-
-  .whisper-message {
-    .whisper-indicator {
-      // color: rgba(191,127,255,0.4);
-      font-weight: 300;
-      font-style: italic;
-      font-size: 0.9em;
-      margin-left: 0.3em;
     }
   }
 

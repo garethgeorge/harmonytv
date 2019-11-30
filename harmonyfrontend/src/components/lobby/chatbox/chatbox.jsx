@@ -177,7 +177,7 @@ export default observer(
       return this.state.streams[streamIndex];
     }
 
-    print(streamIndex, line, time = 10000) {
+    print(streamIndex, line, time = 17000) {
       // line = {kind: kind, content: content};
       if (streamIndex == null) {
         debug("tried to print to nonexistent stream.");

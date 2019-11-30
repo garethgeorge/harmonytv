@@ -168,7 +168,7 @@ function messageHandler(chatbox) {
         className={"user-message " + (chatbox.uniqueId == message.metaData.senderDeviceId ? "my-message " : "")}
       >
         <span className="message-sender" style={{ color: message.content.userColor }}>
-          {message.metaData.senderName}:
+          <span className="sender-tab">{message.metaData.senderName}</span>
         </span>
         <span className="message-content">{messageContent}
           <div className="message-time"><span>{timestamp}</span></div>
@@ -185,10 +185,10 @@ function messageHandler(chatbox) {
         className={"whisper-message " + (chatbox.uniqueId == message.metaData.senderDeviceId ? "my-message " : "")}
       >
         <span className="message-sender" style={{ color: message.content.userColor }}>
-          {message.metaData.senderName}<span class="whisper-indicator"> (whisper{
+          <span className="sender-tab">{message.metaData.senderName}<span class="whisper-indicator"> (whisper{
             message.metaData.senderName == model.state.user.username
             ? " to "+message.content.recipient
-            : ""})</span>:
+            : ""})</span></span>
         </span>
         <span className="message-content">{messageContent}
           <div className="message-time"><span>{timestamp}</span></div>
