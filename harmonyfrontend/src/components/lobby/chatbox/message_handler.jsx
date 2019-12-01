@@ -150,18 +150,19 @@ function messageHandler(chatbox) {
       let newtext = "";
       let specs = [];
       let textIndex = 0;
+
       // URL LINKING
-      let urlfinder = new RegExp('(^|\\s)(https?:\\/\\/)?'+ // protocol
+      let urlfinder = new RegExp('(^|\\s)((https?:\\/\\/)?'+ // protocol
         '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
         '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
         '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
         '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
-        '(\\#[-a-z\\d_]*)?(\\s|$)','gi'); // fragment locator
+        '(\\#[-a-z\\d_]*)?)($|\\s)','gi'); // fragment locator
       let urlmatch;
       textIndex = 0;
       while ((urlmatch = urlfinder.exec(text)) !== null) {
         newtext += content.text.substring(textIndex,urlmatch.index);
-        const url = urlmatch[0].trim();
+        const url = urlmatch[2].trim();
         newtext += ' {{'+specs.length+':'+url+':'+specs.length+'}} ';
         specs.push({tag: 'a', props: {target: "_", href: url.split('://').length > 1 ? url : 'https://'+url}});
         textIndex += urlmatch.index + urlmatch[0].length;
@@ -169,6 +170,7 @@ function messageHandler(chatbox) {
       newtext += text.substring(textIndex);
       text = newtext;
       newtext = "";
+
       // EMPHASIZING
       let boldfinder = /\*([^\s].*?[^\s])\*/g;
       let boldmatch;
@@ -182,32 +184,33 @@ function messageHandler(chatbox) {
       newtext += text.substring(textIndex);
       text = newtext;
       newtext = "";
-      // UNDERLINING
-      let ulinefinder = /_([^\s].*?[^\s])_/g;
-      let ulinematch;
-      textIndex = 0;
-      while ((ulinematch = ulinefinder.exec(text)) !== null) {
-        newtext += content.text.substring(textIndex,ulinematch.index);
-        newtext += '{{'+specs.length+':'+ulinematch[1]+':'+specs.length+'}}';
-        specs.push({tag: 'span', props: {className: 'markup-underline'}});
-        textIndex += ulinematch.index + ulinematch[0].length;
-      }
-      newtext += text.substring(textIndex);
-      text = newtext;
-      newtext = "";
-      // STRIKING THROUGH
-      let strikefinder = /-([^\s].*?[^\s])-/g;
-      let strikematch;
-      textIndex = 0;
-      while ((strikematch = strikefinder.exec(text)) !== null) {
-        newtext += content.text.substring(textIndex,strikematch.index);
-        newtext += '{{'+specs.length+':'+strikematch[1]+':'+specs.length+'}}';
-        specs.push({tag: 'span', props: {className: 'markup-strikethrough'}});
-        textIndex += strikematch.index + strikematch[0].length;
-      }
-      newtext += text.substring(textIndex);
-      text = newtext;
-      newtext = "";
+
+      // // UNDERLINING
+      // let ulinefinder = /[\^|\s|\*|-]_([^\s][^\*_-]*?[^\s])_[$|\s|\*|-]/g;
+      // let ulinematch;
+      // textIndex = 0;
+      // while ((ulinematch = ulinefinder.exec(text)) !== null) {
+      //   newtext += content.text.substring(textIndex,ulinematch.index);
+      //   newtext += '{{'+specs.length+':'+ulinematch[1]+':'+specs.length+'}}';
+      //   specs.push({tag: 'span', props: {className: 'markup-underline'}});
+      //   textIndex += ulinematch.index + ulinematch[0].length;
+      // }
+      // newtext += text.substring(textIndex);
+      // text = newtext;
+      // newtext = "";
+      // // STRIKING THROUGH
+      // let strikefinder = /[\^|\s|\*|_]-([^\s][^\*_-]*?[^\s])-[$|\s|\*|_]/g;
+      // let strikematch;
+      // textIndex = 0;
+      // while ((strikematch = strikefinder.exec(text)) !== null) {
+      //   newtext += content.text.substring(textIndex,strikematch.index);
+      //   newtext += '{{'+specs.length+':'+strikematch[1]+':'+specs.length+'}}';
+      //   specs.push({tag: 'span', props: {className: 'markup-strikethrough'}});
+      //   textIndex += strikematch.index + strikematch[0].length;
+      // }
+      // newtext += text.substring(textIndex);
+      // text = newtext;
+      // newtext = "";
       // FINAL CONVERSION
       return reactifyMyMarkup(text.replace(/\\([\\{}])/,"$1"),specs);
       // let contentParts = [];
