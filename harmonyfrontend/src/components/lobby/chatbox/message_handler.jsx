@@ -2,6 +2,33 @@ import React from "react";
 import model from "../../../model";
 const debug = require("debug")("components:lobby:chatbox");
 
+
+function reactifyMyMarkup(str,specs=[]) {
+  // console.log(str,specs)
+  let markupOpen = /{{(\d+):(.*)$/g;
+  let richContent = [];
+  let remainder = str;
+  while (remainder.length > 0) {
+    let markOpen = markupOpen.exec(remainder);
+    markupOpen.lastIndex = 0;
+    if (markOpen == null) {
+      richContent.push(remainder);
+      remainder = "";
+    } else if (markOpen.index == 0) {
+      let number = markOpen[1];
+      let internals = markOpen[2].split(':'+number+'}}')[0];
+      remainder = markOpen[2].split(':'+number+'}}')[1];
+      let spec = specs[parseInt(number)];
+      richContent.push(React.createElement(spec.tag, {key: number, ...spec.props}, reactifyMyMarkup(internals,specs)));
+    } else {
+      richContent.push(remainder.substring(0,markOpen.index));
+      remainder = remainder.substring(markOpen.index);
+    }
+  }
+  // console.log(richContent);
+  return <>{richContent}</>;
+}
+
 function messageHandler(chatbox) {
 
   // Template Message:
@@ -11,6 +38,7 @@ function messageHandler(chatbox) {
   //     senderName: sender,
   //     senderDeviceId: senderId,
   //     timeSent: timestamp,
+  //     videoTime: timestamp,
   //     group: group,
   //     streamKind: kind,
   //     messageType: type,
@@ -40,6 +68,9 @@ function messageHandler(chatbox) {
     }
     if (!newMessage.metaData.timeSent) {
       newMessage.metaData.timeSent = Date.now();
+    }
+    if (!newMessage.metaData.videoTime) {
+      newMessage.metaData.videoTime = document.getElementById('video').currentTime;
     }
     if (!newMessage.metaData.streamKind) {
       newMessage.metaData.streamKind = "normal";
@@ -115,25 +146,90 @@ function messageHandler(chatbox) {
     if (content.raw) {
       return content.text;
     } else if (!content.rich) {
-      let contentParts = [];
-      var urlfinder = new RegExp('(^|\\s)(https?:\\/\\/)?'+ // protocol
+      let text = content.text.replace(/[\\{}]/,"\\$&");
+      let newtext = "";
+      let specs = [];
+      let textIndex = 0;
+      // URL LINKING
+      let urlfinder = new RegExp('(^|\\s)(https?:\\/\\/)?'+ // protocol
         '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
         '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
         '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
         '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
         '(\\#[-a-z\\d_]*)?(\\s|$)','gi'); // fragment locator
-      var textIndex = 0;
-      var urlmatch = urlfinder.exec(content.text);
-      while (urlmatch) {
-        console.log(urlmatch);
-        contentParts.push(<span> {content.text.substring(textIndex,urlmatch.index)} </span>);
+      let urlmatch;
+      textIndex = 0;
+      while ((urlmatch = urlfinder.exec(text)) !== null) {
+        newtext += content.text.substring(textIndex,urlmatch.index);
         const url = urlmatch[0].trim();
-        contentParts.push(<a target="_" href={url.split('://').length > 1 ? url : 'https://'+url}>{url}</a>);
+        newtext += ' {{'+specs.length+':'+url+':'+specs.length+'}} ';
+        specs.push({tag: 'a', props: {target: "_", href: url.split('://').length > 1 ? url : 'https://'+url}});
         textIndex += urlmatch.index + urlmatch[0].length;
-        urlmatch = urlfinder.exec(content.text);
       }
-      contentParts.push(<span> {content.text.substring(textIndex)}</span>);
-      return <>{contentParts}</>;
+      newtext += text.substring(textIndex);
+      text = newtext;
+      newtext = "";
+      // EMPHASIZING
+      let boldfinder = /\*([^\s].*?[^\s])\*/g;
+      let boldmatch;
+      textIndex = 0;
+      while ((boldmatch = boldfinder.exec(text)) !== null) {
+        newtext += content.text.substring(textIndex,boldmatch.index);
+        newtext += '{{'+specs.length+':'+boldmatch[1]+':'+specs.length+'}}';
+        specs.push({tag: 'span', props: {className: 'markup-emphasis'}});
+        textIndex += boldmatch.index + boldmatch[0].length;
+      }
+      newtext += text.substring(textIndex);
+      text = newtext;
+      newtext = "";
+      // UNDERLINING
+      let ulinefinder = /_([^\s].*?[^\s])_/g;
+      let ulinematch;
+      textIndex = 0;
+      while ((ulinematch = ulinefinder.exec(text)) !== null) {
+        newtext += content.text.substring(textIndex,ulinematch.index);
+        newtext += '{{'+specs.length+':'+ulinematch[1]+':'+specs.length+'}}';
+        specs.push({tag: 'span', props: {className: 'markup-underline'}});
+        textIndex += ulinematch.index + ulinematch[0].length;
+      }
+      newtext += text.substring(textIndex);
+      text = newtext;
+      newtext = "";
+      // STRIKING THROUGH
+      let strikefinder = /-([^\s].*?[^\s])-/g;
+      let strikematch;
+      textIndex = 0;
+      while ((strikematch = strikefinder.exec(text)) !== null) {
+        newtext += content.text.substring(textIndex,strikematch.index);
+        newtext += '{{'+specs.length+':'+strikematch[1]+':'+specs.length+'}}';
+        specs.push({tag: 'span', props: {className: 'markup-strikethrough'}});
+        textIndex += strikematch.index + strikematch[0].length;
+      }
+      newtext += text.substring(textIndex);
+      text = newtext;
+      newtext = "";
+      // FINAL CONVERSION
+      return reactifyMyMarkup(text.replace(/\\([\\{}])/,"$1"),specs);
+      // let contentParts = [];
+      // let boldfinder = /\*([^\s][^\*]*[^\s])\*/gi;
+      // let urlfinder = new RegExp('(^|\\s)(https?:\\/\\/)?'+ // protocol
+      //   '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
+      //   '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
+      //   '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
+      //   '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
+      //   '(\\#[-a-z\\d_]*)?(\\s|$)','gi'); // fragment locator
+      // var textIndex = 0;
+      // var urlmatch = urlfinder.exec(content.text);
+      // while (urlmatch) {
+      //   // console.log(urlmatch);
+      //   contentParts.push(<span> {content.text.substring(textIndex,urlmatch.index)} </span>);
+      //   const url = urlmatch[0].trim();
+      //   contentParts.push(<a target="_" href={url.split('://').length > 1 ? url : 'https://'+url}>{url}</a>);
+      //   textIndex += urlmatch.index + urlmatch[0].length;
+      //   urlmatch = urlfinder.exec(content.text);
+      // }
+      // contentParts.push(<span> {content.text.substring(textIndex)}</span>);
+      // return <>{contentParts}</>;
     } else {
       // fill this in.
       return content.text;

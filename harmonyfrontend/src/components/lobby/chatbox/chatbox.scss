@@ -401,6 +401,17 @@
       padding: 0.2em 0.3em;
       // padding: 0.3em;
       // padding-bottom: 0.3em;
+
+      .markup-emphasis {
+        font-weight: 500;
+        font-style: italic;
+      }
+      .markup-strikethrough {
+        text-decoration: line-through;
+      }
+      .markup-underline {
+        text-decoration: underline;
+      }
     }
   }
 

@@ -15,7 +15,8 @@ export default chatbox => {
         content:
           "Use \\listcommands [category] to list commands of a given category. " +
           "Or don't mention a category, and get all commands. " +
-          "Categories: help, chat, video, queue, notes.",
+          "Categories: help, chat, video, queue, notes. " +
+          "Surround text to *emphasize*, _underline_, or -strikethrough- it.",
         kind: "info"
       });
     },
