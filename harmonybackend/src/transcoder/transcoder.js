@@ -148,6 +148,9 @@ module.exports = async args => {
       }
     }
 
+    if (!videoStream)
+      throw new Error(args.filename + " was unable to find a video stream");
+
     const videoStream = mediaInfo.streams[videoStreamIdx];
 
     // NOTE: todo burn in the subtitles

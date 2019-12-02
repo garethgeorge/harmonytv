@@ -1,43 +1,42 @@
-const ArgumentParser = require('argparse').ArgumentParser;
-const _ = require('lodash');
+const ArgumentParser = require("argparse").ArgumentParser;
+const _ = require("lodash");
 const fs = require("fs");
 const fsutil = require("../src/util/fsutil");
 const mkdirpsync = require("mkdirpsync");
-const model = require('../src/model');
+const model = require("../src/model");
 const path = require("path");
-const pgformat = require('pg-format');
+const pgformat = require("pg-format");
 const process = require("process");
-const rimraf = require('rimraf');
-const uuidv4 = require('uuid/v4');
+const rimraf = require("rimraf");
+const uuidv4 = require("uuid/v4");
 const os = require("os");
 const async = require("async");
+const mediainfo = require("../src/transcoder/mediainfo");
 
 // const TVDB = require('node-tvdb');
 // const tvdb = new TVDB("FVPW8O55SRM7SMNJ");
 
 parser = new ArgumentParser({
-  help: true, 
+  help: true,
   description: "command line tool for uploading a video to plex"
 });
 
-parser.addArgument(
-  'library',
-  {
-    help: 'the name of the library it belongs to',
-  }
-);
+parser.addArgument("library", {
+  help: "the name of the library it belongs to"
+});
 
-parser.addArgument(
-  'originPath',
-  {
-    help: 'the path to the file to be uploaded, it will be transcoded before uploading',
-  }
-);
+parser.addArgument("originPath", {
+  help:
+    "the path to the file to be uploaded, it will be transcoded before uploading"
+});
 
 const args = parser.parseArgs();
 args.originPath = path.resolve(args.originPath);
 
-// mimetypes
+if (mediainfo.mediaExtensions.indexOf(path.extname(args.originPath)) === -1) {
+  console.log(`file ${args.originPath} is not a video file`);
+  process.exit(0);
+}
 
 (async () => {
   // const series = await tvdb.getSeriesByName('Breaking Bad');
@@ -60,16 +59,18 @@ args.originPath = path.resolve(args.originPath);
     const library = await model.getLibraryByName(args.library);
     if (library === null) {
       console.log("Error: no library with name '" + args.library + "'");
-      console.log("Did you mean one of the following: ", (await model.getAllLibraries()).map((library) => {
-        return library.libraryname;
-      }));
+      console.log(
+        "Did you mean one of the following: ",
+        (await model.getAllLibraries()).map(library => {
+          return library.libraryname;
+        })
+      );
       process.exit(1);
     }
     console.log("LIBRARY TYPE: " + library.librarytype);
 
     let newMediaInfo = null;
 
-    const mediainfo = require("../src/transcoder/mediainfo");
     if (library.librarytype === "tv") {
       newMediaInfo = mediainfo.infoFromEpisodePath(args.originPath);
       console.log("PARSED PATH INFORMATION");
@@ -81,16 +82,20 @@ args.originPath = path.resolve(args.originPath);
       newMediaInfo = mediainfo.infoFromMoviePath(args.originPath);
       console.log("PARSED PATH INFORMATION");
       console.log("\tmedia name: " + newMediaInfo.niceName);
-    } else 
-      throw new Error("no path parsing implemented for other library type: " + library.librarytype + " at the moment.");
-    
+    } else
+      throw new Error(
+        "no path parsing implemented for other library type: " +
+          library.librarytype +
+          " at the moment."
+      );
+
     /*
       optionally transcode if necessary
     */
     console.log("checking the originPath: " + args.originPath);
     if (!fs.lstatSync(args.originPath).isFile()) {
       console.log("Fatal error: args.originalPath must point to a valid file");
-      return ;
+      return;
     }
 
     console.log("determined origin path is a file, we need to transcode.");
@@ -101,52 +106,69 @@ args.originPath = path.resolve(args.originPath);
       outputdir: uploadDir
     });
 
-    console.log("transcode completed! metadata: " + JSON.stringify(metadata, false, 3));
+    console.log(
+      "transcode completed! metadata: " + JSON.stringify(metadata, false, 3)
+    );
 
     /*
       scan files for upload 
     */
 
-    const files = _.filter(fsutil.dirtree(uploadDir), (f) => {
-      if (f.endsWith('.DS_Store'))
-        return false;
+    const files = _.filter(fsutil.dirtree(uploadDir), f => {
+      if (f.endsWith(".DS_Store")) return false;
       return true;
-    }).map((value) => {
+    }).map(value => {
       return path.relative(uploadDir, value);
     });
-    
+
     /*
       upload the media assets
     */
     await client.query("BEGIN");
 
     // get the sizes of all the files
-    // TODO: use a fsutil here that can be tested independently :P 
+    // TODO: use a fsutil here that can be tested independently :P
 
     // creating a new media object
     const mediaId = uuidv4();
     if (library.librarytype === "tv") {
-      await client.query(pgformat(`
+      await client.query(
+        pgformat(
+          `
         INSERT INTO media
         (mediaId, libraryId, name, originPath, metadata, seriesName, seasonNumber, episodeNumber)
         VALUES (%L, %L, %L, %L, %L, %L, %L, %L)
-      `, mediaId, library.libraryid, newMediaInfo.niceName,
-        args.originPath, JSON.stringify(metadata),
-        newMediaInfo.seriesName, newMediaInfo.seasonNumber, newMediaInfo.episodeNumber
-      ));
+      `,
+          mediaId,
+          library.libraryid,
+          newMediaInfo.niceName,
+          args.originPath,
+          JSON.stringify(metadata),
+          newMediaInfo.seriesName,
+          newMediaInfo.seasonNumber,
+          newMediaInfo.episodeNumber
+        )
+      );
     } else if (library.librarytype === "movies") {
-      await client.query(pgformat(`
+      await client.query(
+        pgformat(
+          `
         INSERT INTO media
         (mediaId, libraryId, name, originPath, metadata)
         VALUES (%L, %L, %L, %L, %L)
-      `, mediaId, library.libraryid, newMediaInfo.niceName,
-        args.originPath, JSON.stringify(metadata)
-      ));
+      `,
+          mediaId,
+          library.libraryid,
+          newMediaInfo.niceName,
+          args.originPath,
+          JSON.stringify(metadata)
+        )
+      );
     }
-    
+
     console.log("inserted new media with id: " + mediaId);
 
-    // TODO: parallelize this again, this was disabled for the time being due 
+    // TODO: parallelize this again, this was disabled for the time being due
     // to some errors during upload resulting in corrupted files
     const uploadQueue = async.queue((file, callback) => {
       (async () => {
@@ -154,12 +176,19 @@ args.originPath = path.resolve(args.originPath);
           const mimetype = model.media.mimetypes[path.extname(file)];
           if (!mimetype) {
             console.log("\tskipping file " + file + " mimetype not recognized");
-            callback(new Error("\tskipping file " + file + " mimetype not recognized"));
-            return ;
+            callback(
+              new Error("\tskipping file " + file + " mimetype not recognized")
+            );
+            return;
           }
 
           console.log(`uploading file ${file} with mimetype ${mimetype}`);
-          const blockId = await model.media.putStreamObject(mediaId, uploadDir, file, client);
+          const blockId = await model.media.putStreamObject(
+            mediaId,
+            uploadDir,
+            file,
+            client
+          );
           callback();
         } catch (e) {
           console.log(`UPLOAD ENCOUNTERED ERROR ON FILE: ${file}, error: ${e}`);
@@ -173,15 +202,23 @@ args.originPath = path.resolve(args.originPath);
     }
 
     await uploadQueue.drain();
-    
+
     // verify that all of the uploads completed successfully
     for (const file of files) {
-      const res = await client.query(pgformat("SELECT objectid FROM media_objects WHERE mediaId = %L AND path = %L", mediaId, file))
+      const res = await client.query(
+        pgformat(
+          "SELECT objectid FROM media_objects WHERE mediaId = %L AND path = %L",
+          mediaId,
+          file
+        )
+      );
       if (res.rows.length === 0)
         throw new Error("failed to find file " + file + " in media_objects");
-      console.log(`validating, file ${file} was uploaded as ${res.rows[0].objectid}`);
+      console.log(
+        `validating, file ${file} was uploaded as ${res.rows[0].objectid}`
+      );
     }
-    
+
     await client.query("COMMIT");
   } catch (e) {
     await client.query("ROLLBACK");
