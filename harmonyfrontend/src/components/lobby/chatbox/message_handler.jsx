@@ -323,6 +323,13 @@ function messageHandler(chatbox) {
       hour: "numeric",
       minute: "2-digit",
     });
+    // IDEALLY, THIS LOGIC SHOULD BE SERVERSIDE.
+    if (
+      model.state.user.username != message.content.recipient &&
+      model.state.user.username != message.metaData.senderName
+    ) {
+      return null;
+    }
     return (
       <span
         className={
