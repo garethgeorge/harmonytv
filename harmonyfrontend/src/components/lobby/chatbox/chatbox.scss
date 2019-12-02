@@ -23,11 +23,37 @@
   }
 }
 
+@mixin fullchat {
+  width: 100%;
+  min-width: 250px;
+  position: relative;
+  bottom: 1px;
+  left: 0px;
+  right: 0px;
+  background-color: rgb(7, 7, 7);
+
+  .chat-area {
+    flex-grow: 1;
+    overflow-y: scroll;
+    padding: 0.5em;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 0.75em;
+    max-height: none;
+  }
+
+  .chatbox-text-entry {
+    margin: 0;
+    position: relative;
+  }
+}
+
 .chatbox {
   position: fixed;
   bottom: calc(55px + 3vw);
   width: 300px;
   left: 1em;
+  right: 1em;
   z-index: 1000;
   height: auto;
   display: flex;
@@ -68,13 +94,14 @@
 
   // class for chatbox when docked to the left
   &[display-side="left"] {
-    left: 1em;
+    // left: 1em;
+    right: auto;
   }
 
   // class for chatbox when docked right
   &[display-side="right"] {
     left: auto;
-    right: 1em;
+    // right: 1em;
     order: -1;
   }
 
@@ -216,38 +243,11 @@
 
   // docked flavor of the chatbox
   &[display="docked"] {
-    width: 100%;
-    min-width: 250px;
-    position: relative;
-    bottom: 1px;
-    left: 0px;
-    // background-color: rgba(15,15,15,1);
-    background-color: rgb(7, 7, 7);
+    @include fullchat;
+  }
 
-    .chat-area {
-      flex-grow: 1;
-
-      overflow-y: scroll;
-      padding: 0.5em;
-      display: flex;
-      flex-direction: column;
-      padding-bottom: 0.75em;
-      max-height: none;
-
-      &::-webkit-scrollbar-track {
-        // background-color: rgba(255,191,223,0.05);
-        // border-radius: 1em;
-      }
-    }
-
-    // .stream-line.old {
-    //   display: initial;
-    // }
-
-    .chatbox-text-entry {
-      margin: 0;
-      position: relative;
-    }
+  @media only screen and (max-width: 600px) {
+    @include fullchat;
   }
 
   &:not([display="docked"]) {
