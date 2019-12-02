@@ -4,6 +4,27 @@
   font-style: italic;
 }
 
+@mixin my-scrollbar($color) {
+  &::-webkit-scrollbar {
+    background-color: transparent;
+    width: 0.5em;
+  }
+  &::-webkit-scrollbar-button {
+
+  }
+  &::-webkit-scrollbar-track {
+    //background-color: rgba(255,191,223,0.05);
+    //border-radius: 1em;
+  }
+  &::-webkit-scrollbar-track-piece {
+
+  }
+  &::-webkit-scrollbar-thumb {
+    background-color: $color;
+    border-radius: 1em;
+  }
+}
+
 .chatbox {
   position: fixed;
   bottom: calc(55px + 3vw);
@@ -22,8 +43,9 @@
     display: flex;
     flex-direction: column;
     background-color: rgba(0, 0, 0, 0.65);
-    border-top-left-radius: 0.5em;
-    border-top-right-radius: 0.5em;
+    //border-top-left-radius: 0.5em;
+    //border-top-right-radius: 0.5em;
+    border-radius: 0.5em;
     overflow-y: scroll;
     max-height: 50vh;
 
@@ -92,12 +114,28 @@
         display: none;
       }
       .message-content {
-        padding-top: .1em;
+        // padding-top: .1em;
+      }
+      .message-time {
+        color: rgba(191,191,191,0.75);
+        // font-size: 0.6em;
+        float: right;
+        position: relative;
+        // width: 3em;
+        height: 1.2em;
+
+        span {
+          font-size: 0.6em;
+          // position: absolute;
+          // bottom: 0;
+          // right: 6px;
+        }
       }
 
       &:first-child {
         .message-sender {
           display: block;
+          padding-top: 0.1em;
         }
       }
     }
@@ -124,27 +162,38 @@
     }
   }
 
-  .chatboxTextEntry {
+  .chatbox-text-entry {
     //position: absolute;
     //bottom: 0;
+    @include my-scrollbar(rgba(255,223,239,0.35));
+    overflow-x: hidden;
+    resize: none;
+    max-height: calc(5 * 1.2em + 2px);
+    min-height: calc(1.2em + 0.5em + 2px);
+    box-sizing: border-box;
+    margin-top: 0.3em;
 
-    outline-color: rgba(255, 255, 255, 0.4);
-    outline-width: 1px;
-    outline-style: solid;
-    outline-offset: -1px;
-    border: none;
+    outline: none;
+    border: rgba(255, 255, 255, 0.4);
+    border-width: 1px;
+    border-style: solid;
+    // outline-offset: -1px;
+    // border: none;
+    border-radius: 0.2em;
     fill: none;
     background: rgba(0,0,0,0.4);
     color: white;
 
     width: 300px;
-    height: 30px;
+    //height: 30px;
+    height: calc(1.5em + 4px);
     vertical-align: middle;
-    line-height: 30px;
+    line-height: 1.2em;
 
-    padding: 0 0.35em;
+    //padding: 0 0.35em;
+    padding: 0.25em 0.35em;
 
-    transition: opacity 0.3s, background-color 0.3s, outline-color 0.3s;
+    transition: opacity 0.3s, background-color 0.3s, border-color 0.3s;
     //opacity: 0.5;
 
     &.command {
@@ -152,16 +201,16 @@
     }
 
     &:focus {
-      outline-color: rgba(255, 255, 255, 1);
+      border-color: rgba(255, 255, 255, 1);
       background-color: rgba(0, 0, 0, 0.8);
       opacity: 1;
     }
   }
 
   &[display=float][display-visibility=invisible] {
-    opacity: 0.75;
+    opacity: 0.95;
 
-    .chatboxTextEntry {
+    .chatbox-text-entry {
       opacity: 0;
 
       &:focus {
@@ -198,7 +247,8 @@
     //   display: initial;
     // }
 
-    .chatboxTextEntry {
+    .chatbox-text-entry {
+      margin: 0;
       position: relative;
     }
   }
@@ -238,7 +288,7 @@
     background-color: rgba(0, 0, 0, 0.9);
     color: mix($color-primary-accent, white, 70%);
     font-style: normal;
-    padding: 0.1em;
+    // padding: 0.1em;
     border: 1px solid rgba(255, 255, 255, 0.1);
   }
 
@@ -307,10 +357,6 @@
     }
   }
 
-  .message-sender {
-    font-weight: bold;
-  }
-
   .user-message,
   .whisper-message {
     display: flex;
@@ -322,23 +368,46 @@
       line-height: 1.4;
       padding: 0;
       margin: 0;
+      font-weight: bold;
+
+      .sender-tab {
+        background-color: rgba(31,31,39, 0.5);
+        padding: 0.1em 0.4em 0.05em;
+        border-radius: 0.25em;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+
+        .whisper-indicator {
+          // color: rgba(191,127,255,0.4);
+          font-weight: 500;
+          font-style: italic;
+          font-size: 0.9em;
+          margin-left: 0.3em;
+        }
+      }
     }
 
     .message-content {
-      line-height: 1em;
-      padding: 0;
+      line-height: 1.2em;
+      // padding: 0;
+      // margin: 0;
+      // margin: 0.075em;
       margin: 0;
-      padding-bottom: 0.3em;
-    }
-  }
+      margin-bottom: 0.15em;
+      border-radius: 0.2em;
+      border-top-left-radius: 0;
+      // background-color: rgba(255,255,255,0.085);
+      background-color: rgba(31,31,39, 0.5);
+      padding: 0.2em 0.3em;
+      // padding: 0.3em;
+      // padding-bottom: 0.3em;
 
-  .whisper-message {
-    .whisper-indicator {
-      // color: rgba(191,127,255,0.4);
-      font-weight: 300;
-      font-style: italic;
-      font-size: 0.9em;
-      margin-left: 0.3em;
+      .markup-bold {
+        font-weight: bold;
+      }
+      .markup-italic {
+        font-style: italic;
+      }
     }
   }
 

@@ -13,14 +13,23 @@ export default chatbox => {
     (args, stream) => {
       chatbox.print(stream, {
         content:
-          "Use \\listcommands [category] to list commands of a given category. " +
-          "Or don't mention a category, and get all commands. " +
-          "Categories: help, chat, video, queue, notes.",
+          <>
+          Use \listcommands [category] to list commands of a given category.
+          Or don't mention a category, and get all commands. <br/>
+          Categories: help, chat, video, queue, notes.
+          </>,
+        kind: "info"
+      });
+      chatbox.print(stream, {
+        content:
+          <>
+          Surround text to make it *bold*, or _italic_.
+          </>,
         kind: "info"
       });
     },
     {
-      help: "show command list",
+      help: "show helpful info",
       category: "help"
     }
   );
@@ -73,14 +82,14 @@ export default chatbox => {
     "test",
     (args, stream) => {
       // chatbox.sendRelayMessage({version: "1", type: "user-joined", sender: model.state.user.username, color: chatbox.userColor});
-      console.log("MODEL:", model);
-      console.log("LIBS:", model.state.libraries);
-      console.log("LIB:", model.library);
-      console.log("MEDIAINFO:", model.media.getInfo());
-      console.log("PROPS:", chatbox.props);
+      // console.log("MODEL:", model);
+      // console.log("LIBS:", model.state.libraries);
+      // console.log("LIB:", model.library);
+      // console.log("MEDIAINFO:", model.media.getInfo());
+      // console.log("PROPS:", chatbox.props);
       let count = 5;
       let interval = setInterval(() => {
-        console.log("TEST");
+        // console.log("TEST", stream);
         chatbox.print(stream, { content: `did test.`, kind: "info" });
         count--;
         if (count <= 0) {
@@ -106,7 +115,7 @@ export default chatbox => {
       if (side !== null) {
         stateCpy.displayOptions.side = side;
       }
-      chatbox.setState(stateCpy);
+      chatbox.setState(stateCpy, chatbox.savePreferences.bind(chatbox));
       chatbox.print(stream, {
         content: `Chatbox docking to ${stateCpy.displayOptions.side} side.`,
         kind: "success"
@@ -422,6 +431,7 @@ export default chatbox => {
     (args, stream) => {
       const color = args.color;
       chatbox.userColor = args.color;
+      chatbox.savePreferences();
       // in future change colors for other ppl too.
     },
     {
@@ -441,14 +451,23 @@ export default chatbox => {
   chatbox.registerCommand(
     "whisper",
     (args, stream) => {
-      chatbox.sendRelayMessage(
-        chatbox.makeWhisperMessage(args.message, args.user)
-      );
+      chatbox.sendMessage({
+        metaData: {
+          streamKind: "whisper-chunk",
+          messageType: "whisper-message",
+        },
+        content: {
+          text: args.message,
+          userColor: chatbox.userColor,
+          recipient: args.user,
+        }
+      });
       // ideally deal with this serverside
     },
     {
       help: "send a message to a specific user",
       category: "chat",
+      noOutput: true,
       args: [
         {
           name: "user",
