@@ -12,7 +12,7 @@ import config from "./config";
 
 const Lobby = React.lazy(() => import("./views/lobby/lobbyview"));
 
-const lobbyPage = props => {
+const lobbyPage = (props) => {
   const lobbyid = props.match.params.lobbyid;
   return (
     <React.Suspense fallback={<Loading />}>
@@ -48,7 +48,7 @@ const FullRouter = () => {
 const App = observer(
   class App extends React.Component {
     state = {
-      loading: true
+      loading: true,
     };
     componentDidMount() {
       model.user.getCurrentUser().then(() => {
@@ -56,11 +56,13 @@ const App = observer(
       });
       (function() {
         if (config.development) {
-          var link = document.querySelector("link[rel*='icon']") || document.createElement('link');
-          link.type = 'image/x-icon';
-          link.rel = 'shortcut icon';
-          link.href = 'devlogo512.png';
-          document.getElementsByTagName('head')[0].appendChild(link);
+          var link =
+            document.querySelector("link[rel*='icon']") ||
+            document.createElement("link");
+          link.type = "image/x-icon";
+          link.rel = "shortcut icon";
+          link.href = "devlogo512.png";
+          document.getElementsByTagName("head")[0].appendChild(link);
         }
       })();
     }

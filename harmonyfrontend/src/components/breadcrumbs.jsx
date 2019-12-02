@@ -9,20 +9,22 @@ export default observer((props) => {
     const seg = props.breadcrumbs[idx];
     if (idx == props.breadcrumbs.length - 1) {
       divs.push(
-        <li className="active" key={seg.href}><a>{seg.text}</a></li>
+        <li className="active" key={seg.href}>
+          <a>{seg.text}</a>
+        </li>
       );
     } else {
       divs.push(
-        <li key={seg.href}><Link to={seg.href}>{seg.text}</Link></li>
+        <li key={seg.href}>
+          <Link to={seg.href}>{seg.text}</Link>
+        </li>
       );
     }
   }
 
   return (
     <nav className="ink-navigation navbar-top">
-      <ul className="breadcrumbs">
-        {divs}
-      </ul>
+      <ul className="breadcrumbs">{divs}</ul>
     </nav>
-  )
-})
+  );
+});

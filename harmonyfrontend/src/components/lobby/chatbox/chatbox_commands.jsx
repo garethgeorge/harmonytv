@@ -5,39 +5,37 @@ import chatboxParsers from "./chatbox_parsers.jsx";
 import chatboxValidaters from "./chatbox_validaters.jsx";
 const debug = require("debug")("components:lobby:chatbox:commands");
 
-export default chatbox => {
+export default (chatbox) => {
   chatboxCommandRegister(chatbox);
 
   chatbox.registerCommand(
     "?",
     (args, stream) => {
       chatbox.print(stream, {
-        content:
+        content: (
           <>
-          Use \listcommands [category] to list commands of a given category.
-          Or don't mention a category, and get all commands. <br/>
-          Categories: help, chat, video, queue, notes.
-          </>,
-        kind: "info"
+            Use \listcommands [category] to list commands of a given category.
+            Or don't mention a category, and get all commands. <br />
+            Categories: help, chat, video, queue, notes.
+          </>
+        ),
+        kind: "info",
       });
       chatbox.print(stream, {
-        content:
-          <>
-          Surround text to make it *bold*, or _italic_.
-          </>,
-        kind: "info"
+        content: <>Surround text to make it *bold*, or _italic_.</>,
+        kind: "info",
       });
     },
     {
       help: "show helpful info",
-      category: "help"
+      category: "help",
     }
   );
 
   chatbox.registerCommand(
     "listcommands",
     (args, stream) => {
-      const commands = Object.values(chatbox.commands).map(command => {
+      const commands = Object.values(chatbox.commands).map((command) => {
         if (
           command.opts.secret ||
           (args.category != null &&
@@ -63,7 +61,7 @@ export default chatbox => {
             <ul className="command-list">{commands}</ul>
           </div>
         ),
-        kind: "info"
+        kind: "info",
       });
     },
     {
@@ -72,9 +70,9 @@ export default chatbox => {
       args: [
         {
           name: "category",
-          optional: true
-        }
-      ]
+          optional: true,
+        },
+      ],
     }
   );
 
@@ -101,7 +99,7 @@ export default chatbox => {
     {
       secret: true,
       category: "test",
-      keepStreamOpen: true
+      keepStreamOpen: true,
     }
   );
 
@@ -118,7 +116,7 @@ export default chatbox => {
       chatbox.setState(stateCpy, chatbox.savePreferences.bind(chatbox));
       chatbox.print(stream, {
         content: `Chatbox docking to ${stateCpy.displayOptions.side} side.`,
-        kind: "success"
+        kind: "success",
       });
     },
     {
@@ -128,9 +126,9 @@ export default chatbox => {
         {
           name: "side",
           optional: true,
-          validate: chatboxValidaters.choice(["left", "right"])
-        }
-      ]
+          validate: chatboxValidaters.choice(["left", "right"]),
+        },
+      ],
     }
   );
 
@@ -151,7 +149,7 @@ export default chatbox => {
       chatbox.setState(stateCpy, chatbox.savePreferences.bind(chatbox));
       chatbox.print(stream, {
         content: `Chatbox floating to ${stateCpy.displayOptions.side} side.`,
-        kind: "success"
+        kind: "success",
       });
     },
     {
@@ -161,14 +159,14 @@ export default chatbox => {
         {
           name: "side",
           optional: true,
-          validate: chatboxValidaters.choice(["left", "right"])
+          validate: chatboxValidaters.choice(["left", "right"]),
         },
         {
           name: "visibility",
           optional: true,
-          validate: chatboxValidaters.choice(["invisible", "visible"])
-        }
-      ]
+          validate: chatboxValidaters.choice(["invisible", "visible"]),
+        },
+      ],
     }
   );
 
@@ -184,7 +182,7 @@ export default chatbox => {
     },
     {
       help: "clears chat messages",
-      category: "chat"
+      category: "chat",
     }
   );
 
@@ -196,7 +194,7 @@ export default chatbox => {
     },
     {
       help: "plays the video",
-      category: "video"
+      category: "video",
     }
   );
 
@@ -208,7 +206,7 @@ export default chatbox => {
     },
     {
       help: "pauses the video",
-      category: "video"
+      category: "video",
     }
   );
 
@@ -220,7 +218,7 @@ export default chatbox => {
     {
       help: "change playback speed",
       category: "video",
-      secret: true
+      secret: true,
     }
   );
 
@@ -233,12 +231,12 @@ export default chatbox => {
       if (skipby > 0) {
         chatbox.print(stream, {
           content: "Skipping ahead " + skipby + " seconds.",
-          kind: "success"
+          kind: "success",
         });
       } else {
         chatbox.print(stream, {
           content: "Skipping back " + -skipby + " seconds.",
-          kind: "success"
+          kind: "success",
         });
       }
     },
@@ -253,23 +251,23 @@ export default chatbox => {
             "forward",
             "ahead",
             "back",
-            "backward"
+            "backward",
           ]),
           parse: chatboxParsers.choice({
             forward: 1,
             ahead: 1,
             back: -1,
-            backward: -1
+            backward: -1,
           }),
-          fallback: 1
+          fallback: 1,
         },
         {
           name: "seconds",
           optional: false,
           validate: chatboxValidaters.number,
-          parse: parseInt
-        }
-      ]
+          parse: parseInt,
+        },
+      ],
     }
   );
 
@@ -280,7 +278,7 @@ export default chatbox => {
       document.getElementById("video").currentTime = args.time.seconds;
       chatbox.print(stream, {
         content: "Seeking to " + args.time.timestamp + ".",
-        kind: "success"
+        kind: "success",
       });
     },
     {
@@ -291,9 +289,9 @@ export default chatbox => {
           name: "time",
           optional: false,
           validate: chatboxValidaters.timestamp,
-          parse: chatboxParsers.timestamp
-        }
-      ]
+          parse: chatboxParsers.timestamp,
+        },
+      ],
     }
   );
 
@@ -310,7 +308,7 @@ export default chatbox => {
         );
         chatbox.print(stream, {
           content: "Increasing volume.",
-          kind: "success"
+          kind: "success",
         });
       } else if (arg == "down") {
         document.getElementById("video").muted = false;
@@ -320,7 +318,7 @@ export default chatbox => {
         );
         chatbox.print(stream, {
           content: "Decreasing volume.",
-          kind: "success"
+          kind: "success",
         });
       } else if (arg == "mute") {
         document.getElementById("video").muted = true;
@@ -333,7 +331,7 @@ export default chatbox => {
         document.getElementById("video").volume = parseInt(arg) / 100;
         chatbox.print(stream, {
           content: "Setting volume to " + arg + ".",
-          kind: "success"
+          kind: "success",
         });
       }
     },
@@ -349,10 +347,10 @@ export default chatbox => {
             "down",
             "mute",
             "unmute",
-            chatboxValidaters.percent.source
-          ])
-        }
-      ]
+            chatboxValidaters.percent.source,
+          ]),
+        },
+      ],
     }
   );
 
@@ -365,7 +363,7 @@ export default chatbox => {
     {
       secret: true,
       category: "video",
-      help: "mutes the video"
+      help: "mutes the video",
     }
   );
 
@@ -381,7 +379,7 @@ export default chatbox => {
     {
       secret: true,
       help: "unmutes the video",
-      category: "video"
+      category: "video",
     }
   );
 
@@ -417,12 +415,12 @@ export default chatbox => {
       }
       chatbox.print(stream, {
         content: "Toggling fullscreen.",
-        kind: "success"
+        kind: "success",
       });
     },
     {
       help: "toggle fullscreen",
-      category: "chat video"
+      category: "chat video",
     }
   );
 
@@ -442,9 +440,9 @@ export default chatbox => {
           name: "color",
           optional: false,
           validate: chatboxValidaters.color,
-          parse: chatboxParsers.color
-        }
-      ]
+          parse: chatboxParsers.color,
+        },
+      ],
     }
   );
 
@@ -460,7 +458,7 @@ export default chatbox => {
           text: args.message,
           userColor: chatbox.userColor,
           recipient: args.user,
-        }
+        },
       });
       // ideally deal with this serverside
     },
@@ -471,13 +469,13 @@ export default chatbox => {
       args: [
         {
           name: "user",
-          optional: false
+          optional: false,
         },
         {
           name: "message",
-          optional: false
-        }
-      ]
+          optional: false,
+        },
+      ],
     }
   );
 
@@ -492,9 +490,9 @@ export default chatbox => {
       args: [
         {
           name: "text",
-          optional: false
-        }
-      ]
+          optional: false,
+        },
+      ],
     }
   );
 
@@ -510,7 +508,7 @@ export default chatbox => {
     },
     {
       help: "read your notes",
-      category: "notes"
+      category: "notes",
     }
   );
 
@@ -522,7 +520,7 @@ export default chatbox => {
     },
     {
       help: "deleta all your notes",
-      category: "notes"
+      category: "notes",
     }
   );
 
@@ -531,7 +529,7 @@ export default chatbox => {
     (args, stream) => {
       chatbox.print(stream, { content: "deleted note " + args.index });
       chatbox.print(stream, {
-        content: chatbox.notes.splice(args.index - 1, 1)
+        content: chatbox.notes.splice(args.index - 1, 1),
       });
     },
     {
@@ -542,9 +540,9 @@ export default chatbox => {
           name: "index",
           optional: false,
           validate: chatboxValidaters.integer,
-          parse: parseInt
-        }
-      ]
+          parse: parseInt,
+        },
+      ],
     }
   );
 
@@ -552,7 +550,8 @@ export default chatbox => {
     "listusers",
     (args, stream) => {
       chatbox.print(stream, {
-        content: "There are at most " + chatbox.userList.length + " users here:"
+        content:
+          "There are at most " + chatbox.userList.length + " users here:",
       });
       for (let user of chatbox.userList) {
         chatbox.print(stream, { content: user });
@@ -560,7 +559,7 @@ export default chatbox => {
     },
     {
       help: "list users in lobby",
-      category: "chat"
+      category: "chat",
     }
   );
 
@@ -571,7 +570,7 @@ export default chatbox => {
       if (!model.state.videoQueue) {
         chatbox.print(stream, {
           content: "There is no queue to show.",
-          kind: "warning"
+          kind: "warning",
         });
       } else if (model.state.videoQueue.videos.length < 1) {
         chatbox.print(stream, { content: "The queue is empty.", kind: "info" });
@@ -583,7 +582,7 @@ export default chatbox => {
     },
     {
       help: "list videos in the queue",
-      category: "queue"
+      category: "queue",
     }
   );
 
@@ -595,19 +594,19 @@ export default chatbox => {
       } else if (model.state.videoQueue.videos.length <= 1) {
         chatbox.print(stream, {
           content: "There is no next video.",
-          kind: "error"
+          kind: "error",
         });
       } else {
         model.lobby.playNextInQueue().catch(alert);
         chatbox.print(stream, {
           content: "playing next video.",
-          kind: "success"
+          kind: "success",
         });
       }
     },
     {
       help: "play the next video in the queue",
-      category: "queue"
+      category: "queue",
     }
   );
 };

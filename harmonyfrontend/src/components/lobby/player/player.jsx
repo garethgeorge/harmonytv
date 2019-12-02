@@ -60,8 +60,8 @@ class Player extends React.Component {
       streaming: {
         rebufferingGoal: 2,
         bufferingGoal: 60,
-        bufferBehind: 60
-      }
+        bufferBehind: 60,
+      },
     });
 
     // read up on this for chrome cast: https://github.com/google/shaka-player/issues/1142
@@ -81,16 +81,16 @@ class Player extends React.Component {
         "volume",
         // "fullscreen",
         "myfullscreen",
-        "overflow_menu"
+        "overflow_menu",
       ],
       overflowMenuButtons: [
         "captions",
         "cast",
         "quality",
         "language",
-        "picture_in_picture"
+        "picture_in_picture",
       ],
-      addBigPlayButton: false
+      addBigPlayButton: false,
     });
     const controls = ui.getControls();
 
@@ -102,7 +102,7 @@ class Player extends React.Component {
   playVideo(mediaid, callback = null) {
     debug("Player::playVideo(" + mediaid + ")");
 
-    model.media.getInfo(mediaid).then(media => {
+    model.media.getInfo(mediaid).then((media) => {
       debug("MEDIA INFO: " + JSON.stringify(media));
 
       if (!this.shakaPlayer) {
@@ -156,7 +156,7 @@ class Player extends React.Component {
 
           if (callback) callback();
         })
-        .catch(err => {
+        .catch((err) => {
           console.error("Encountered an error loading the manifestUrl", err);
           alert("failed to load the media manifest, could not play this file.");
         });

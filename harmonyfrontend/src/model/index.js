@@ -12,5 +12,5 @@ export default {
   state,
   library,
   lobby,
-  media
+  media,
 };

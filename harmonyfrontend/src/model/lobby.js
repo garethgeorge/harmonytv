@@ -6,7 +6,7 @@ import model from ".";
 const debug = require("debug")("model:lobby");
 
 export default {
-  create: async mediaid => {
+  create: async (mediaid) => {
     const res = await axios.get(
       config.apiHost + "/lobby/create?mediaid=" + mediaid
     );
@@ -27,7 +27,7 @@ export default {
   playNextInQueue: async () => {
     const newQueue = {
       queueId: uuidv4(),
-      videos: state.videoQueue.videos.slice(1)
+      videos: state.videoQueue.videos.slice(1),
     };
     await model.lobby.setQueue(model.state.lobbyid, newQueue);
   },
@@ -41,7 +41,7 @@ export default {
       TODO: add ping based offset
     */
     let delta = 0;
-    socket.on("server:curtime", time => {
+    socket.on("server:curtime", (time) => {
       delta = time - new Date().getTime();
       debug("server:curtime servertime: ", time, "delta: ", delta);
     });
@@ -54,7 +54,7 @@ export default {
       synchronize the number of currently connected users
     */
     let numConnectedUsers = 0;
-    socket.on("server:lobby-connected-users", _numConnectedUsers => {
+    socket.on("server:lobby-connected-users", (_numConnectedUsers) => {
       if (numConnectedUsers === 0 && _numConnectedUsers === 1) {
         // autoplay the video if we are the first user to connect to the lobby
         const toClear = setInterval(() => {
@@ -78,7 +78,7 @@ export default {
     let syncState = null;
     let videoQueue = null;
 
-    socket.on("server:sync-queue", _videoQueue => {
+    socket.on("server:sync-queue", (_videoQueue) => {
       debug("server:sync-queue: " + JSON.stringify(_videoQueue, false, 2));
       state.videoQueue = _videoQueue;
       videoQueue = _videoQueue;
@@ -98,11 +98,11 @@ export default {
         });
         model.media
           .getInfo(currentlyPlayingVideo)
-          .then(mediaInfo => {
+          .then((mediaInfo) => {
             debug("GOT THE MEDIA INFO: " + JSON.stringify(mediaInfo, false, 3));
             document.title = mediaInfo.name;
           })
-          .catch(err => {
+          .catch((err) => {
             alert(err);
           });
       }
@@ -137,7 +137,7 @@ export default {
 
     let syncPlaybackStateTimer = null;
     let didAck = false;
-    socket.on("server:sync-playback-state", _syncState => {
+    socket.on("server:sync-playback-state", (_syncState) => {
       // much more complicated sync handling code for the case where there
       // are many users -- this is to avoid the formation of sync cycles / race conditions
       syncState = _syncState;
@@ -180,7 +180,7 @@ export default {
         updateTime: curTime(), // the time at which it was updated
         position: video.currentTime, // the position when it was updated
         state: player.videoElem.paused ? "paused" : "playing", // the state (can also be paused)
-        stateId: uuidv4()
+        stateId: uuidv4(),
       };
 
       syncState = newState;
@@ -202,14 +202,14 @@ export default {
         updateTime: curTime(),
         position: video.currentTime,
         state: "paused",
-        stateId: uuidv4()
+        stateId: uuidv4(),
       };
       syncState = newState;
       applySyncState();
       socket.emit("client:sync-playback-state", newState);
 
       // once everyon is ready, play the video, and resync the state automatically
-      const onceSynchronized = stateId => {
+      const onceSynchronized = (stateId) => {
         if (stateId === newState.stateId) {
           socket.removeListener("server:all-clients-acked", onceSynchronized);
           video.play();
@@ -246,5 +246,5 @@ export default {
     return () => {
       clearInterval(updateResumeWatchingTimer);
     };
-  }
+  },
 };

@@ -10,14 +10,12 @@
     width: 0.5em;
   }
   &::-webkit-scrollbar-button {
-
   }
   &::-webkit-scrollbar-track {
     //background-color: rgba(255,191,223,0.05);
     //border-radius: 1em;
   }
   &::-webkit-scrollbar-track-piece {
-
   }
   &::-webkit-scrollbar-thumb {
     background-color: $color;
@@ -54,36 +52,34 @@
       width: 0.5em;
     }
     &::-webkit-scrollbar-button {
-
     }
     &::-webkit-scrollbar-track {
       //background-color: rgba(255,191,223,0.05);
       //border-radius: 1em;
     }
     &::-webkit-scrollbar-track-piece {
-
     }
     &::-webkit-scrollbar-thumb {
-      background-color: rgba(255,223,239,0.15);
+      background-color: rgba(255, 223, 239, 0.15);
       border-radius: 1em;
     }
   }
 
   // class for chatbox when docked to the left
-  &[display-side=left] {
+  &[display-side="left"] {
     left: 1em;
   }
 
   // class for chatbox when docked right
-  &[display-side=right] {
+  &[display-side="right"] {
     left: auto;
     right: 1em;
     order: -1;
   }
 
   .chat-stream {
-    &[kind=user-chunk],
-    &[kind=whisper-chunk], {
+    &[kind="user-chunk"],
+    &[kind="whisper-chunk"] {
       margin: 0.15em 0;
     }
 
@@ -91,7 +87,6 @@
     //   border: 1px solid rgba(191,191,0,0.5);
     // }
   }
-
 
   // styling for chat text
   .stream-line {
@@ -103,9 +98,8 @@
     vertical-align: middle;
     color: rgba(255, 255, 255, 0.7);
 
-    &[kind=user-message],
-    &[kind=whisper-message] {
-
+    &[kind="user-message"],
+    &[kind="whisper-message"] {
       .user-message,
       .whisper-message {
         padding: 0;
@@ -117,7 +111,7 @@
         // padding-top: .1em;
       }
       .message-time {
-        color: rgba(191,191,191,0.75);
+        color: rgba(191, 191, 191, 0.75);
         // font-size: 0.6em;
         float: right;
         position: relative;
@@ -140,23 +134,23 @@
       }
     }
 
-    &[kind=info],
-    &[kind=info-message] {
+    &[kind="info"],
+    &[kind="info-message"] {
       @include notification;
       color: rgba(127, 127, 255, 0.9);
     }
 
-    &[kind=warning] {
+    &[kind="warning"] {
       @include notification;
       color: rgba(255, 255, 127, 0.9);
     }
 
-    &[kind=success] {
+    &[kind="success"] {
       @include notification;
       color: rgba(127, 255, 127, 0.9);
     }
 
-    &[kind=error] {
+    &[kind="error"] {
       @include notification;
       color: rgba(255, 127, 127, 0.9);
     }
@@ -165,7 +159,7 @@
   .chatbox-text-entry {
     //position: absolute;
     //bottom: 0;
-    @include my-scrollbar(rgba(255,223,239,0.35));
+    @include my-scrollbar(rgba(255, 223, 239, 0.35));
     overflow-x: hidden;
     resize: none;
     max-height: calc(5 * 1.2em + 2px);
@@ -181,7 +175,7 @@
     // border: none;
     border-radius: 0.2em;
     fill: none;
-    background: rgba(0,0,0,0.4);
+    background: rgba(0, 0, 0, 0.4);
     color: white;
 
     width: 300px;
@@ -207,7 +201,7 @@
     }
   }
 
-  &[display=float][display-visibility=invisible] {
+  &[display="float"][display-visibility="invisible"] {
     opacity: 0.95;
 
     .chatbox-text-entry {
@@ -220,7 +214,7 @@
   }
 
   // docked flavor of the chatbox
-  &[display=docked] {
+  &[display="docked"] {
     position: relative;
     bottom: 1px;
     left: 1px;
@@ -253,7 +247,7 @@
     }
   }
 
-  &:not([display=docked]) {
+  &:not([display="docked"]) {
     .chat-stream {
       &.old {
         display: none !important;
@@ -313,14 +307,14 @@
     }
   }
 
-  .chat-stream[kind=command-box] {
+  .chat-stream[kind="command-box"] {
     display: flex;
     flex-direction: column;
     width: 100%;
     font-family: monospace;
     border-radius: 0.45em;
     // background-color: rgba(255, 127, 191, 0.1);
-    background-color: rgba(31,31,31, 0.5);
+    background-color: rgba(31, 31, 31, 0.5);
     color: mix($color-primary-accent, white, 70%);
     font-style: normal;
     padding: 0;
@@ -330,7 +324,7 @@
     line-height: 1;
 
     &[open] {
-      border: 1px solid rgba(191,191,0,0.5);
+      border: 1px solid rgba(191, 191, 0, 0.5);
     }
 
     > * {
@@ -343,10 +337,10 @@
       border-bottom: none;
     }
     > *:first-child {
-      &[kind=command-entered] {
+      &[kind="command-entered"] {
         font-family: monospace;
         border-radius: 0.15em;
-        background-color: rgba(47,0,11, 0.5);
+        background-color: rgba(47, 0, 11, 0.5);
         color: mix(mix($color-primary-accent, white, 70%), transparent, 85%);
         font-style: normal;
         border: none;
@@ -371,7 +365,7 @@
       font-weight: bold;
 
       .sender-tab {
-        background-color: rgba(31,31,39, 0.5);
+        background-color: rgba(31, 31, 39, 0.5);
         padding: 0.1em 0.4em 0.05em;
         border-radius: 0.25em;
         border-bottom-left-radius: 0;
@@ -397,7 +391,7 @@
       border-radius: 0.2em;
       border-top-left-radius: 0;
       // background-color: rgba(255,255,255,0.085);
-      background-color: rgba(31,31,39, 0.5);
+      background-color: rgba(31, 31, 39, 0.5);
       padding: 0.2em 0.3em;
       // padding: 0.3em;
       // padding-bottom: 0.3em;

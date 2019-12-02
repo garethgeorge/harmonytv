@@ -24,7 +24,7 @@ class Library {
       },
       set media(media) {
         this._media = media;
-      }
+      },
     });
   }
 
@@ -44,7 +44,7 @@ class Library {
     axios
       .get(config.apiHost + "/library/" + this._library.libraryid + "/getMedia")
       .then(
-        action(res => {
+        action((res) => {
           res.data.sort((a, b) => {
             return a > b ? 1 : -1;
           });
@@ -55,7 +55,7 @@ class Library {
 }
 
 const exports = {
-  findByName: computedFn(name => {
+  findByName: computedFn((name) => {
     if (name === null || !state.libraries) {
       return null;
     }
@@ -69,7 +69,7 @@ const exports = {
     return axios
       .get(config.apiHost + "/library/getAll")
       .then(
-        action(res => {
+        action((res) => {
           console.log(
             "LibraryManager::refreshLibraries() - libraries list: ",
             JSON.stringify(res.data, false, 3)
@@ -81,10 +81,10 @@ const exports = {
           state.libraries = newlibraries;
         })
       )
-      .catch(err => {
+      .catch((err) => {
         console.log("ERROR FETCHING LIBRARIES");
       });
-  }
+  },
 };
 
 // automatically refresh the libraries when we detect we are signed in

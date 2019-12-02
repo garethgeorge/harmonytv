@@ -18,7 +18,7 @@ const exports = {
   login: async (username, password) => {
     const res = await axios.post(config.apiHost + "/login", {
       username: username,
-      password: password
+      password: password,
     });
     action(() => {
       state.user = res.data.user;
@@ -44,11 +44,11 @@ const exports = {
       {
         position: position,
         total_duration: total_duration,
-        mediaid: mediaid
+        mediaid: mediaid,
       }
     );
     return resp.data;
-  }
+  },
 };
 
 window.addEventListener("focus", () => {

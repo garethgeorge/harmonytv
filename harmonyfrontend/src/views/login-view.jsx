@@ -10,7 +10,7 @@ const LoginView = observer(
   class LoginView extends React.Component {
     state = {
       username: "",
-      password: ""
+      password: "",
     };
 
     async login(event) {
@@ -20,7 +20,7 @@ const LoginView = observer(
       this.setState({
         loading: true,
         username: "",
-        password: ""
+        password: "",
       });
       const userObj = await model.user.login(username, password);
 
@@ -28,7 +28,7 @@ const LoginView = observer(
         this.setState({
           loading: false,
           username: "",
-          password: ""
+          password: "",
         });
 
         if (!userObj) {

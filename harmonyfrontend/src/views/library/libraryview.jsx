@@ -19,8 +19,8 @@ export default observer(
           model.state.breadcrumbs = [
             {
               text: library.name,
-              href: "/library/" + library.id
-            }
+              href: "/library/" + library.id,
+            },
           ];
         } else {
           model.state.breadcrumbs = [];

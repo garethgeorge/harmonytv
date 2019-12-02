@@ -9,7 +9,6 @@ import "shaka-player/dist/controls.css";
 const shaka = require("shaka-player/dist/shaka-player.ui.js");
 const debug = require("debug")("components:lobby:player");
 
-
 class SkipButton extends shaka.ui.Element {
   constructor(parent, controls) {
     super(parent, controls);
@@ -27,7 +26,7 @@ class SkipButton extends shaka.ui.Element {
               style={{
                 border: "none",
                 background: "none",
-                paddingTop: "4px"
+                paddingTop: "4px",
               }}
             >
               <i
@@ -65,11 +64,11 @@ class MyFullscreen extends shaka.ui.Element {
       class FSButton extends React.Component {
         state = {
           fullscreen: false,
-        }
+        };
         constructor(props) {
           super(props);
-          document.addEventListener('fullscreenchange', (event) => {
-            this.setState({fullscreen: document.fullscreenElement});
+          document.addEventListener("fullscreenchange", (event) => {
+            this.setState({ fullscreen: document.fullscreenElement });
           });
         }
         render() {
@@ -78,7 +77,7 @@ class MyFullscreen extends shaka.ui.Element {
               style={{
                 border: "none",
                 background: "none",
-                paddingTop: "4px"
+                paddingTop: "4px",
               }}
             >
               <i
@@ -98,9 +97,13 @@ class MyFullscreen extends shaka.ui.Element {
     this.parent.appendChild(this.elem);
 
     this.eventManager.listen(this.elem, "click", () => {
-      const elem = document.getElementById('root') || document.documentElement;
-      if (!document.fullscreenElement && !document.mozFullScreenElement &&
-        !document.webkitFullscreenElement && !document.msFullscreenElement) {
+      const elem = document.getElementById("root") || document.documentElement;
+      if (
+        !document.fullscreenElement &&
+        !document.mozFullScreenElement &&
+        !document.webkitFullscreenElement &&
+        !document.msFullscreenElement
+      ) {
         if (elem.requestFullscreen) {
           elem.requestFullscreen();
         } else if (elem.msRequestFullscreen) {
@@ -132,4 +135,4 @@ class MyFullscreen extends shaka.ui.Element {
 export default () => {
   shaka.ui.Controls.registerElement("skip", SkipButton);
   shaka.ui.Controls.registerElement("myfullscreen", MyFullscreen);
-}
+};

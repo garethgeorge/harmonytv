@@ -32,13 +32,13 @@ export default observer(
           model.state.breadcrumbs = [
             {
               text: library.name,
-              href: "/library/" + library.name
+              href: "/library/" + library.name,
             },
             {
               text: this.props.seriesName,
               href:
-                "/library/" + library.name + "/series/" + this.props.seriesName
-            }
+                "/library/" + library.name + "/series/" + this.props.seriesName,
+            },
           ];
         } else {
           model.state.breadcrumbs = [];

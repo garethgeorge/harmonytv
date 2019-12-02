@@ -1,5 +1,5 @@
-const shaka = require("shaka-player/dist/shaka-player.ui.js");
-const debug = require("debug")("components:lobby:player_videoqueue");
+const shaka = require('shaka-player/dist/shaka-player.ui.js');
+const debug = require('debug')('components:lobby:player_videoqueue');
 
 /**
  * @extends {shaka.ui.Element}
@@ -24,10 +24,10 @@ class UiOverflowMenu extends shaka.ui.Element {
     this.createChildren_();
     const backToOverflowMenuButtons = this.controls
       .getVideoContainer()
-      .getElementsByClassName("shaka-back-to-overflow-button");
+      .getElementsByClassName('shaka-back-to-overflow-button');
     for (let i = 0; i < backToOverflowMenuButtons.length; i++) {
       const button = backToOverflowMenuButtons[i];
-      this.eventManager.listen(button, "click", () => {
+      this.eventManager.listen(button, 'click', () => {
         // Hide the submenus, display the overflow menu
         this.controls.hideSettingsMenus();
         shaka.ui.Utils.setDisplay(this.overflowMenu_, true);
@@ -54,21 +54,21 @@ class UiOverflowMenu extends shaka.ui.Element {
         this.updateAriaLabel_();
       }
     );
-    this.eventManager.listen(this.controls, "submenuopen", () => {
+    this.eventManager.listen(this.controls, 'submenuopen', () => {
       // Hide the main overflow menu if one of the sub menus has
       // been opened.
       shaka.ui.Utils.setDisplay(this.overflowMenu_, false);
     });
-    this.eventManager.listen(this.overflowMenu_, "touchstart", event => {
+    this.eventManager.listen(this.overflowMenu_, 'touchstart', event => {
       this.controls.setLastTouchEventTime(Date.now());
       event.stopPropagation();
     });
-    this.eventManager.listen(this.overflowMenuButton_, "click", () => {
+    this.eventManager.listen(this.overflowMenuButton_, 'click', () => {
       this.onOverflowMenuButtonClick_();
     });
-    this.eventManager.listen(this.controlsContainer_, "touchstart", event => {
+    this.eventManager.listen(this.controlsContainer_, 'touchstart', event => {
       // If the overflow menu is showing, hide it on a touch event
-      if (this.overflowMenu_.classList.contains("shaka-displayed")) {
+      if (this.overflowMenu_.classList.contains('shaka-displayed')) {
         shaka.ui.Utils.setDisplay(this.overflowMenu_, false);
         // Stop this event from becoming a click event.
         event.preventDefault();
@@ -96,11 +96,11 @@ class UiOverflowMenu extends shaka.ui.Element {
    */
   addOverflowMenu_() {
     /** @private {!HTMLElement} */
-    this.overflowMenu_ = shaka.util.Dom.createHTMLElement("div");
-    this.overflowMenu_.classList.add("shaka-overflow-menu");
-    this.overflowMenu_.classList.add("shaka-no-propagation");
-    this.overflowMenu_.classList.add("shaka-show-controls-on-mouse-over");
-    this.overflowMenu_.classList.add("shaka-settings-menu");
+    this.overflowMenu_ = shaka.util.Dom.createHTMLElement('div');
+    this.overflowMenu_.classList.add('shaka-overflow-menu');
+    this.overflowMenu_.classList.add('shaka-no-propagation');
+    this.overflowMenu_.classList.add('shaka-show-controls-on-mouse-over');
+    this.overflowMenu_.classList.add('shaka-settings-menu');
     this.controlsContainer_.appendChild(this.overflowMenu_);
   }
   /**
@@ -108,10 +108,10 @@ class UiOverflowMenu extends shaka.ui.Element {
    */
   addOverflowMenuButton_() {
     /** @private {!HTMLElement} */
-    this.overflowMenuButton_ = shaka.util.Dom.createHTMLElement("button");
-    this.overflowMenuButton_.classList.add("shaka-overflow-menu-button");
-    this.overflowMenuButton_.classList.add("shaka-no-propagation");
-    this.overflowMenuButton_.classList.add("material-icons");
+    this.overflowMenuButton_ = shaka.util.Dom.createHTMLElement('button');
+    this.overflowMenuButton_.classList.add('shaka-overflow-menu-button');
+    this.overflowMenuButton_.classList.add('shaka-no-propagation');
+    this.overflowMenuButton_.classList.add('material-icons');
     // this.overflowMenuButton_.textContent = "list";
     this.parent.appendChild(this.overflowMenuButton_);
   }
@@ -145,7 +145,7 @@ class UiOverflowMenu extends shaka.ui.Element {
       // If overflow menu has currently visible buttons, focus on the
       // first one, when the menu opens.
       const isDisplayed = function(element) {
-        return element.classList.contains("shaka-hidden") == false;
+        return element.classList.contains('shaka-hidden') == false;
       };
       const Iterables = shaka.util.Iterables;
       if (Iterables.some(this.overflowMenu_.childNodes, isDisplayed)) {
@@ -180,7 +180,7 @@ UiOverflowMenu.Factory = class {
   }
 };
 shaka.ui.Controls.registerElement(
-  "player_videoqueue",
+  'player_videoqueue',
   new UiOverflowMenu.Factory()
 );
 /** @private {!Map.<string, !shaka.extern.IUIElement.Factory>} */

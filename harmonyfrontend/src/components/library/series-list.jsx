@@ -8,7 +8,7 @@ import "./library.scss";
 export default observer(
   class SeriesList extends React.Component {
     state = {
-      width: 400
+      width: 400,
     };
 
     constructor(props) {
@@ -21,7 +21,7 @@ export default observer(
         const newWidth = this.container.clientWidth / canFitCount - 15;
         if (newWidth != this.state.width)
           this.setState({
-            width: newWidth
+            width: newWidth,
           });
       };
     }
@@ -75,7 +75,7 @@ export default observer(
       return (
         <div
           className="seriesList"
-          ref={elem => {
+          ref={(elem) => {
             this.container = elem;
             this.resizeHook();
           }}

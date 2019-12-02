@@ -24,8 +24,8 @@ export default observer(
       display: "docked",
       displayOptions: {
         side: "left",
-        visibility: true
-      }
+        visibility: true,
+      },
     };
 
     persistentState = ["display", "displayOptions"];
@@ -43,7 +43,7 @@ export default observer(
 
     constructor(props) {
       super(props);
-      document.addEventListener("keydown", e => {
+      document.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !(e.ctrlKey || e.metaKey)) {
           if (document.activeElement != this.textEntry.current) {
             this.textEntry.current.focus();
@@ -65,15 +65,15 @@ export default observer(
           },
           content: {
             text: "type \\? for a list of commands",
-          }
+          },
         });
       }, 0);
 
-      this.props.socket.on("server:message", message => {
+      this.props.socket.on("server:message", (message) => {
         this.receiveMessage(message);
       });
 
-      this.props.socket.on("server:lobby-connected-users", users => {
+      this.props.socket.on("server:lobby-connected-users", (users) => {
         const state = Object.assign({}, this.state);
         state.users = users;
         this.setState(state);
@@ -86,7 +86,7 @@ export default observer(
           },
           content: {
             users: users,
-          }
+          },
         });
       });
     }
@@ -96,7 +96,7 @@ export default observer(
     }
 
     savePreferences() {
-      let preferences = {state: {}, vars: {}};
+      let preferences = { state: {}, vars: {} };
       for (const pref of this.persistentState) {
         preferences.state[pref] = this.state[pref];
       }
@@ -132,14 +132,14 @@ export default observer(
       const key = this.streamCount;
       this.streamCount++;
       debug("CALL open");
-      this.setState(prevState => {
+      this.setState((prevState) => {
         let state = Object.assign({}, prevState);
         state.streams.push({
           lines: [],
           key: key,
           open: true,
           data: data,
-          kind: kind
+          kind: kind,
         });
         debug("OPEN");
         return state;
@@ -149,7 +149,7 @@ export default observer(
 
     closeStream(streamIndex) {
       debug("CLOSING ", streamIndex, this.state.streams);
-      this.setState(prevState => {
+      this.setState((prevState) => {
         let state = Object.assign({}, prevState);
         if (state.streams[streamIndex]) {
           state.streams[streamIndex].open = false;
@@ -165,7 +165,7 @@ export default observer(
       if (val == null) {
         return this.state.streams[streamIndex].data[key];
       } else {
-        this.setState(prevState => {
+        this.setState((prevState) => {
           let state = Object.assign({}, prevState);
           state.streams[streamIndex].data[key] = val;
           return state;
@@ -181,17 +181,17 @@ export default observer(
       // line = {kind: kind, content: content};
       if (streamIndex == null) {
         debug("tried to print to nonexistent stream.");
-        return ;
+        return;
       }
       line = Object.assign({ kind: "normal", classlist: [] }, line);
       this.setState(
-        prevState => {
+        (prevState) => {
           let state = Object.assign({}, prevState);
           if (state.streams[streamIndex] && state.streams[streamIndex].open) {
             let k = state.streams[streamIndex].lines.length;
             state.streams[streamIndex].lines.push(line);
             setTimeout(() => {
-              this.setState(prevState2 => {
+              this.setState((prevState2) => {
                 let newstate = Object.assign({}, prevState2);
                 if (newstate.streams[streamIndex]) {
                   newstate.streams[streamIndex].lines[k].classlist.push("old");
@@ -222,7 +222,7 @@ export default observer(
         let streamIndex = this.openStream("command-box");
         this.print(streamIndex, {
           content: composition,
-          kind: "command-entered"
+          kind: "command-entered",
         });
         this.print(streamIndex, {
           content: (
@@ -230,7 +230,7 @@ export default observer(
               Unknown command <span className="command">\{command}</span>.
             </span>
           ),
-          kind: "error"
+          kind: "error",
         });
         this.closeStream(streamIndex);
       } else {
@@ -239,11 +239,14 @@ export default observer(
           streamIndex = this.openStream("command-box");
           this.print(streamIndex, {
             content: composition,
-            kind: "command-entered"
+            kind: "command-entered",
           });
         }
         this.commands[command].handler(argstr, streamIndex);
-        if (!this.commands[command].opts.noOutput || !this.commands[command].opts.keepStreamOpen) {
+        if (
+          !this.commands[command].opts.noOutput ||
+          !this.commands[command].opts.keepStreamOpen
+        ) {
           this.closeStream(streamIndex);
         }
       }
@@ -262,12 +265,12 @@ export default observer(
           display-visibility={this.state.displayOptions.visibility.toString()}
         >
           <div className="chat-area" ref={this.chatArea}>
-            {this.state.streams.map(stream => (
+            {this.state.streams.map((stream) => (
               <div
                 className={
                   "chat-stream " +
                   (stream.lines
-                    .map(line => line.classlist.includes("old"))
+                    .map((line) => line.classlist.includes("old"))
                     .includes(false)
                     ? ""
                     : "old")
@@ -276,7 +279,7 @@ export default observer(
                 kind={stream.kind}
                 key={stream.key}
               >
-                {stream.lines.map(line => (
+                {stream.lines.map((line) => (
                   <div
                     className={"stream-line " + line.classlist.join(" ")}
                     kind={line.kind}
@@ -297,18 +300,19 @@ export default observer(
             }
             type="text"
             value={this.state.composition}
-            onInput={e => {
+            onInput={(e) => {
               const state = Object.assign({}, this.state);
               //console.log('comp: ', this.textEntry.current);
               const textArea = this.textEntry.current;
               textArea.style.height = 0;
               textArea.style.overflowY = "hidden";
-              textArea.style.height = "calc(" + (textArea.scrollHeight) + "px + 2px)";
+              textArea.style.height =
+                "calc(" + textArea.scrollHeight + "px + 2px)";
               textArea.style.overflowY = "auto";
-              state.composition = textArea.value;//e.target.value;
+              state.composition = textArea.value; //e.target.value;
               this.setState(state);
             }}
-            onKeyDown={e => {
+            onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
                 e.preventDefault();
                 if (this.state.composition.length > 0) {
@@ -318,7 +322,7 @@ export default observer(
                   this.setState(state, () => {
                     const textArea = this.textEntry.current;
                     textArea.style.height = 0;
-                    textArea.style.height = (textArea.scrollHeight + 2) + "px";
+                    textArea.style.height = textArea.scrollHeight + 2 + "px";
                     // send the message if it is not a special command
                     if (composition[0] != "\\") {
                       this.sendMessage({
@@ -329,7 +333,7 @@ export default observer(
                         content: {
                           text: composition,
                           userColor: this.userColor,
-                        }
+                        },
                       });
                     } else {
                       // do the command if it is known
@@ -343,7 +347,9 @@ export default observer(
                 }
               }
             }}
-          >Type Here</textarea>
+          >
+            Type Here
+          </textarea>
         </div>
       );
     }

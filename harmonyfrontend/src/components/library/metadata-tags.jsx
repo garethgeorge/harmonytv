@@ -7,7 +7,7 @@ const betterThanResolution = (sizes, resolution) => {
     }
   }
   return false;
-}
+};
 
 export default (props) => {
   const metadata = props.metadata;
@@ -16,13 +16,11 @@ export default (props) => {
 
   if (metadata.sizes && betterThanResolution(metadata.sizes, 1920)) {
     flags.push(
-      <div key={"4K"} className="tag">4K</div>
-    )
+      <div key={"4K"} className="tag">
+        4K
+      </div>
+    );
   }
 
-  return (
-    <div className="metadata-tags">
-      {flags}
-    </div>
-  );
-}
+  return <div className="metadata-tags">{flags}</div>;
+};
