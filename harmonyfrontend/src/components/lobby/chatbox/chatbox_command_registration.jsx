@@ -59,24 +59,30 @@ export default (chatbox) => {
           return;
         } else {
           // if argstr is valid...
-          const argSplitter = /(?<=^|\s)((?:[A-Za-z]\w*=)?(?:(?:[^\s="]|\\=)+|".*(?<!\\)"|""))(?=\s|$)/g;
+          //const argSplitter = /(?<=^|\s)((?:[A-Za-z]\w*=)?(?:(?:[^\s="]|\\=)+|".*(?<!\\)"|""))(?=\s|$)/g;
+          //const argSplitter = /((?:\w*=)?(?:(?:[^\s="]|\\=)+|".*[^\\]"|""))/gi
+          const argSplitter = /(\w+=)?((\\=|\\"|[^\s="])+|".*[^\\]"|"")/gi;
           const splitArgs = Array.from(
             argstr.matchAll(argSplitter),
             (m) => m[0]
           );
-          const argPartSplitter = /^([A-Za-z]\w*(?==))|((?:[^\s="]|\\=)+|".*(?<!\\)"|"")$/g;
+          console.log("splitArgs:", splitArgs);
+          //const argPartSplitter = /^([A-Za-z]\w*(?==))|((?:[^\s="]|\\=)+|".*(?<!\\)"|"")$/g;
+          const argPartSplitter = /^(?:(\w+)=)?((?:\\=|\\"|[^\s="])+|".*[^\\]"|"")$/gi;
           let kwargsParsed = {};
           let posargsParsed = [];
           // get positional and keyword args
           for (const argtext of splitArgs) {
-            const argParts = Array.from(
-              argtext.matchAll(argPartSplitter),
-              (m) => m[0]
-            );
-            if (argParts.length == 1) {
-              posargsParsed.push(argParts[0]);
+            const argParts = argPartSplitter.exec(argtext);
+            argPartSplitter.lastIndex = 0;
+            // const argParts = Array.from(
+            //   argtext.matchAll(argPartSplitter),
+            //   (m) => m[0]
+            // );
+            if (!argParts[1]) {
+              posargsParsed.push(argParts[2]);
             } else {
-              kwargsParsed[argParts[0]] = argParts[1];
+              kwargsParsed[argParts[1]] = argParts[2];
             }
           }
           // figure out which arguments are which...
