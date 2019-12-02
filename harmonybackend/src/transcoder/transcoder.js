@@ -15,7 +15,7 @@ const prettyBytes = require("pretty-bytes");
 const extractSubtitleStream = async (sourcefn, streamno, outputSubsFile) => {
   const proc = ffmpeg({
     source: sourcefn,
-    cwd: "."
+    cwd: ".",
   });
   proc.output(outputSubsFile);
   proc.outputOptions(["-map 0:" + streamno]);
@@ -26,7 +26,7 @@ const waitForFFmpeg = proc => {
   return new Promise((accept, reject) => {
     const bar = new cliprogress.SingleBar(
       {
-        etaBuffer: 100
+        etaBuffer: 100,
       },
       cliprogress.Presets.legacy
     );
@@ -84,7 +84,7 @@ module.exports = async args => {
       dashStream: "stream.mpd",
       hlsStream: "master.m3u8",
       subtitles: {},
-      capabilities: ["dash", "hls", "subtitles"]
+      capabilities: ["dash", "hls", "subtitles"],
     };
 
     // scan for subtitles
@@ -130,7 +130,7 @@ module.exports = async args => {
             path.join(tmpDir, subtitleFile)
           );
           metadata.subtitles[stream.tags.language] = {
-            file: subtitleFile
+            file: subtitleFile,
           };
         } else {
           console.log("\tfound video subtitles, index: " + stream.index);
@@ -171,7 +171,7 @@ module.exports = async args => {
 
     const proc = ffmpeg({
       source: args.filename,
-      cwd: tmpDir
+      cwd: tmpDir,
     });
 
     // console.log("setting up fallback.mp4 generation");
@@ -240,7 +240,7 @@ module.exports = async args => {
           bitrate: calcBitrateForSize(
             widthForHeight(videoMinHeight),
             videoMinHeight
-          )
+          ),
         });
       }
     }
@@ -251,7 +251,7 @@ module.exports = async args => {
         sizes.push({
           height: 1080,
           width: widthForHeight(1080),
-          bitrate: calcBitrateForSize(widthForHeight(1080), 1080)
+          bitrate: calcBitrateForSize(widthForHeight(1080), 1080),
         });
       }
     }
@@ -260,7 +260,7 @@ module.exports = async args => {
     sizes.push({
       height: videoStream.height,
       width: videoStream.width,
-      bitrate: calcBitrateForSize(videoStream.height, videoStream.width)
+      bitrate: calcBitrateForSize(videoStream.height, videoStream.width),
     });
 
     sizes.sort((a, b) => {
@@ -291,7 +291,7 @@ module.exports = async args => {
         "-b:a 196k",
         "-hls_playlist 1",
         "-seg_duration 10",
-        "-max_muxing_queue_size 1024" // fixes a bug with some files
+        "-max_muxing_queue_size 1024", // fixes a bug with some files
       ]);
 
     for (const size of sizes) {
@@ -304,7 +304,7 @@ module.exports = async args => {
         `-map [A${index}]:v`,
         `-crf 24`,
         `-maxrate ${bitrate}k`,
-        `-bufsize ${bitrate * 2}k`
+        `-bufsize ${bitrate * 2}k`,
       ]);
     }
 
