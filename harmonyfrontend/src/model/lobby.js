@@ -42,8 +42,10 @@ export default {
     */
     let delta = 0;
     socket.on("server:curtime", (time) => {
-      delta = time - new Date().getTime();
-      debug("server:curtime servertime: ", time, "delta: ", delta);
+      if (delta === 0) {
+        delta = time - new Date().getTime();
+        debug("server:curtime servertime: ", time, "delta: ", delta);
+      }
     });
 
     const curTime = () => {
@@ -129,7 +131,7 @@ export default {
 
     const amInSync = () => {
       const syncPos = getSyncVideoPosition();
-      if (Math.abs(video.currentTime - syncPos) > 0.5) return false;
+      if (Math.abs(video.currentTime - syncPos) > 1) return false;
       if (syncState.state === "paused" && !video.paused) return false;
       if (syncState.state === "playing" && video.paused) return false;
       return true;

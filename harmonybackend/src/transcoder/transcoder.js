@@ -22,7 +22,7 @@ const extractSubtitleStream = async (sourcefn, streamno, outputSubsFile) => {
   return await waitForFFmpeg(proc);
 };
 
-const waitForFFmpeg = proc => {
+const waitForFFmpeg = (proc) => {
   return new Promise((accept, reject) => {
     const bar = new cliprogress.SingleBar(
       {
@@ -35,7 +35,7 @@ const waitForFFmpeg = proc => {
       bar.start(100, 0);
     });
     proc
-      .on("progress", info => {
+      .on("progress", (info) => {
         // console.log('progress', info);
         bar.update(Math.round(info.percent * 100) / 100);
       })
@@ -43,9 +43,9 @@ const waitForFFmpeg = proc => {
         bar.stop();
         accept();
       })
-      .on("stderr", console.log)
+      // .on("stderr", console.log)
       // .on("stdout", console.log)
-      .on("error", err => {
+      .on("error", (err) => {
         bar.stop();
         reject(err);
       });
@@ -56,7 +56,7 @@ const waitForFFmpeg = proc => {
 // NOTE: can only be one 'preprocess' process at a time :P
 // rimraf.sync(path.join(os.tmpdir(), "/plex_preprocess/"));
 
-module.exports = async args => {
+module.exports = async (args) => {
   args = Object.assign({}, args);
   args.filename = path.resolve(args.filename);
   args.outputdir = path.resolve(args.outputdir);
@@ -217,7 +217,7 @@ module.exports = async args => {
     // calculate an array of video sizes
     const videoStreamAspect = videoStream.width / videoStream.height;
 
-    const widthForHeight = height => {
+    const widthForHeight = (height) => {
       return Math.round(height * videoStreamAspect);
     };
 
