@@ -259,7 +259,7 @@ export default observer(
           className={"chatbox"}
           display={this.state.display}
           display-side={this.state.displayOptions.side}
-          display-visibility={this.state.displayOptions.visibility}
+          display-visibility={this.state.displayOptions.visibility.toString()}
         >
           <div className="chat-area" ref={this.chatArea}>
             {this.state.streams.map(stream => (

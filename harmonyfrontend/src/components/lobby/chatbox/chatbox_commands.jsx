@@ -13,15 +13,23 @@ export default chatbox => {
     (args, stream) => {
       chatbox.print(stream, {
         content:
-          "Use \\listcommands [category] to list commands of a given category. " +
-          "Or don't mention a category, and get all commands. " +
-          "Categories: help, chat, video, queue, notes. " +
-          "Surround text to *emphasize*, _underline_, or -strikethrough- it.",
+          <>
+          Use \listcommands [category] to list commands of a given category.
+          Or don't mention a category, and get all commands. <br/>
+          Categories: help, chat, video, queue, notes.
+          </>,
+        kind: "info"
+      });
+      chatbox.print(stream, {
+        content:
+          <>
+          Surround text to make it *bold*, or _italic_.
+          </>,
         kind: "info"
       });
     },
     {
-      help: "show command list",
+      help: "show helpful info",
       category: "help"
     }
   );
@@ -74,14 +82,14 @@ export default chatbox => {
     "test",
     (args, stream) => {
       // chatbox.sendRelayMessage({version: "1", type: "user-joined", sender: model.state.user.username, color: chatbox.userColor});
-      console.log("MODEL:", model);
-      console.log("LIBS:", model.state.libraries);
-      console.log("LIB:", model.library);
-      console.log("MEDIAINFO:", model.media.getInfo());
-      console.log("PROPS:", chatbox.props);
+      // console.log("MODEL:", model);
+      // console.log("LIBS:", model.state.libraries);
+      // console.log("LIB:", model.library);
+      // console.log("MEDIAINFO:", model.media.getInfo());
+      // console.log("PROPS:", chatbox.props);
       let count = 5;
       let interval = setInterval(() => {
-        console.log("TEST");
+        // console.log("TEST", stream);
         chatbox.print(stream, { content: `did test.`, kind: "info" });
         count--;
         if (count <= 0) {
