@@ -5,3 +5,13 @@
   display: flex;
   flex-direction: row-reverse;
 }
+
+.chatbox {
+  flex-basis: 0;
+  flex-grow: 1;
+}
+
+#videoContainer {
+  flex-basis: 0;
+  flex-grow: 3;
+}

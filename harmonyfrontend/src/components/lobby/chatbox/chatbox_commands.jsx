@@ -25,6 +25,31 @@ export default (chatbox) => {
         content: <>Surround text to make it *bold*, or _italic_.</>,
         kind: "info",
       });
+      chatbox.print(stream, {
+        content: (
+          <>
+            <a
+              href="about:blank"
+              target="popup"
+              onClick={() => {
+                let popup = window.open(
+                  "about:blank",
+                  "popup",
+                  "width=600,height=400"
+                );
+                setTimeout(() => {
+                  popup.document.body.innerHTML =
+                    "This is a popup we can put full chat documentation in.";
+                }, 0);
+                return false;
+              }}
+            >
+              Full Chat Documentation
+            </a>
+          </>
+        ),
+        kind: "info",
+      });
     },
     {
       help: "show helpful info",

@@ -26,6 +26,7 @@
 .chatbox {
   position: fixed;
   bottom: calc(55px + 3vw);
+  width: 300px;
   left: 1em;
   z-index: 1000;
   height: auto;
@@ -35,7 +36,7 @@
   font-size: 1em;
 
   .chat-area {
-    width: 300px;
+    // width: 300px;
     padding-left: 0.5em;
     padding-right: 0.5em;
     display: flex;
@@ -178,7 +179,7 @@
     background: rgba(0, 0, 0, 0.4);
     color: white;
 
-    width: 300px;
+    // width: 300px;
     //height: 30px;
     height: calc(1.5em + 4px);
     vertical-align: middle;
@@ -215,15 +216,17 @@
 
   // docked flavor of the chatbox
   &[display="docked"] {
+    width: 100%;
+    min-width: 250px;
     position: relative;
     bottom: 1px;
-    left: 1px;
+    left: 0px;
     // background-color: rgba(15,15,15,1);
     background-color: rgb(7, 7, 7);
 
     .chat-area {
       flex-grow: 1;
-      width: 300px;
+
       overflow-y: scroll;
       padding: 0.5em;
       display: flex;
