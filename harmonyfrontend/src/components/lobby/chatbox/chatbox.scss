@@ -402,15 +402,11 @@
       // padding: 0.3em;
       // padding-bottom: 0.3em;
 
-      .markup-emphasis {
-        font-weight: 500;
+      .markup-bold {
+        font-weight: bold;
+      }
+      .markup-italic {
         font-style: italic;
-      }
-      .markup-strikethrough {
-        text-decoration: line-through;
-      }
-      .markup-underline {
-        text-decoration: underline;
       }
     }
   }

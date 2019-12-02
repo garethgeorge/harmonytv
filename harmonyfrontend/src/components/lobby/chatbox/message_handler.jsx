@@ -142,97 +142,84 @@ function messageHandler(chatbox) {
     chatbox.addMessage(JSON.parse(message));
   }
 
-  function enrichContent(content) {
-    if (content.raw) {
-      return content.text;
-    } else if (!content.rich) {
-      let text = content.text.replace(/[\\{}]/,"\\$&");
-      let newtext = "";
-      let specs = [];
-      let textIndex = 0;
+  function enrich(text, specN=-1) {
+    if (specN == -1) {
+      text = text.replace(/[\\{}]/g,"\\$&");
+    }
 
-      // URL LINKING
-      let urlfinder = new RegExp('(^|\\s)((https?:\\/\\/)?'+ // protocol
-        '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
-        '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
-        '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
-        '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
-        '(\\#[-a-z\\d_]*)?)($|\\s)','gi'); // fragment locator
-      let urlmatch;
-      textIndex = 0;
-      while ((urlmatch = urlfinder.exec(text)) !== null) {
-        newtext += content.text.substring(textIndex,urlmatch.index);
-        const url = urlmatch[2].trim();
-        newtext += ' {{'+specs.length+':'+url+':'+specs.length+'}} ';
-        specs.push({tag: 'a', props: {target: "_", href: url.split('://').length > 1 ? url : 'https://'+url}});
-        textIndex += urlmatch.index + urlmatch[0].length;
+    let matches = {};
+    let firstmatch = null;
+    let firstmatchI = null;
+    for (let formatterI in registeredFormatters) {
+      let formatter = registeredFormatters[formatterI];
+      let match = formatter.regex.exec(text);
+      formatter.regex.lastIndex = 0;
+      matches[formatter.name] = match;
+      if (match != null && (firstmatch == null || match.index < matches[firstmatch].index)) {
+        firstmatch = formatter.name;
+        firstmatchI = formatterI;
       }
-      newtext += text.substring(textIndex);
-      text = newtext;
-      newtext = "";
+    }
+    if (firstmatch == null) {
+      return {text: text, specs: [], specN: specN};
+    }
+    let match = matches[firstmatch];
+    let mark = registeredFormatters[firstmatchI].handler(match);
+    specN = specN+1;
+    let n = specN;
+    let inner;
+    if (!mark.halt) {
+      inner = enrich(mark.text, specN);
+      specN = inner.specN;
+    } else {
+      inner = {text: mark.text, specs: [], specN: specN};
+    }
+    let rest = enrich(text.substring(match.index+match[0].length), specN);
+    specN = rest.specN;
+    let specs = [mark.spec].concat(inner.specs,rest.specs);
+    let newtext = text.substring(text,match.index) + (mark.before ? mark.before : '') + '{{'+n+':'+ inner.text +':'+n+'}}' + (mark.after ? mark.after : '') + rest.text;
 
-      // EMPHASIZING
-      let boldfinder = /\*([^\s].*?[^\s])\*/g;
-      let boldmatch;
-      textIndex = 0;
-      while ((boldmatch = boldfinder.exec(text)) !== null) {
-        newtext += content.text.substring(textIndex,boldmatch.index);
-        newtext += '{{'+specs.length+':'+boldmatch[1]+':'+specs.length+'}}';
-        specs.push({tag: 'span', props: {className: 'markup-emphasis'}});
-        textIndex += boldmatch.index + boldmatch[0].length;
-      }
-      newtext += text.substring(textIndex);
-      text = newtext;
-      newtext = "";
+    return {text: newtext, specs: specs, specN: specN};
+  }
 
-      // // UNDERLINING
-      // let ulinefinder = /[\^|\s|\*|-]_([^\s][^\*_-]*?[^\s])_[$|\s|\*|-]/g;
-      // let ulinematch;
-      // textIndex = 0;
-      // while ((ulinematch = ulinefinder.exec(text)) !== null) {
-      //   newtext += content.text.substring(textIndex,ulinematch.index);
-      //   newtext += '{{'+specs.length+':'+ulinematch[1]+':'+specs.length+'}}';
-      //   specs.push({tag: 'span', props: {className: 'markup-underline'}});
-      //   textIndex += ulinematch.index + ulinematch[0].length;
-      // }
-      // newtext += text.substring(textIndex);
-      // text = newtext;
-      // newtext = "";
-      // // STRIKING THROUGH
-      // let strikefinder = /[\^|\s|\*|_]-([^\s][^\*_-]*?[^\s])-[$|\s|\*|_]/g;
-      // let strikematch;
-      // textIndex = 0;
-      // while ((strikematch = strikefinder.exec(text)) !== null) {
-      //   newtext += content.text.substring(textIndex,strikematch.index);
-      //   newtext += '{{'+specs.length+':'+strikematch[1]+':'+specs.length+'}}';
-      //   specs.push({tag: 'span', props: {className: 'markup-strikethrough'}});
-      //   textIndex += strikematch.index + strikematch[0].length;
-      // }
-      // newtext += text.substring(textIndex);
-      // text = newtext;
-      // newtext = "";
-      // FINAL CONVERSION
-      return reactifyMyMarkup(text.replace(/\\([\\{}])/,"$1"),specs);
-      // let contentParts = [];
-      // let boldfinder = /\*([^\s][^\*]*[^\s])\*/gi;
-      // let urlfinder = new RegExp('(^|\\s)(https?:\\/\\/)?'+ // protocol
+  let registeredFormatters = [
+    {
+      name: 'urllink',
+      regex: /(https?:\/\/)?(([a-z\d]([a-z\d-]*[a-z\d])*)\.)+[a-z]{2,}(\:\d+)?(\/[-a-z\d%_.~+]*)*(\?[;&a-z\d%_.~+=-]*)?/gi,
+      //regex: /(^|\s)((https?:\/\/)?((([a-z\d]([a-z\d-]*[a-z\d])*)\.)+[a-z]{2,}|((\d{1,3}\.){3}\d{1,3}))(\:\d+)?(\/[-a-z\d%_.~+]*)*(\?[;&a-z\d%_.~+=-]*)?(\#[-a-z\d_]*)?)($|\s)/gi,
+      // regex: new RegExp('(^|\\s)((https?:\\/\\/)?'+ // protocol
       //   '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
       //   '((\\d{1,3}\\.){3}\\d{1,3}))'+ // OR ip (v4) address
       //   '(\\:\\d+)?(\\/[-a-z\\d%_.~+]*)*'+ // port and path
       //   '(\\?[;&a-z\\d%_.~+=-]*)?'+ // query string
-      //   '(\\#[-a-z\\d_]*)?(\\s|$)','gi'); // fragment locator
-      // var textIndex = 0;
-      // var urlmatch = urlfinder.exec(content.text);
-      // while (urlmatch) {
-      //   // console.log(urlmatch);
-      //   contentParts.push(<span> {content.text.substring(textIndex,urlmatch.index)} </span>);
-      //   const url = urlmatch[0].trim();
-      //   contentParts.push(<a target="_" href={url.split('://').length > 1 ? url : 'https://'+url}>{url}</a>);
-      //   textIndex += urlmatch.index + urlmatch[0].length;
-      //   urlmatch = urlfinder.exec(content.text);
-      // }
-      // contentParts.push(<span> {content.text.substring(textIndex)}</span>);
-      // return <>{contentParts}</>;
+      //   '(\\#[-a-z\\d_]*)?)($|\\s)','gi'), // fragment locator
+      handler: (match) => {
+        const url = match[0];
+        return {text: url, spec: {tag: 'a', props: {target: "_", href: url.split('://').length > 1 ? url : 'https://'+url}}, halt: true};
+      }
+    },
+    {
+      name: 'bold',
+      regex: /\*([^\s].*?[^\s]|[^\s])\*/g,
+      handler: (match) => {
+        return {text: match[1], spec: {tag: 'span', props: {className: 'markup-bold'}}};
+      }
+    },
+    {
+      name: 'italic',
+      regex: /_([^\s].*?[^\s]|[^\s])_/g,
+      handler: (match) => {
+        return {text: match[1], spec: {tag: 'span', props: {className: 'markup-italic'}}};
+      }
+    },
+  ]
+
+  function enrichContent(content) {
+    if (content.raw) {
+      return content.text;
+    } else if (!content.rich) {
+      let enriched = enrich(content.text.replace(/\\([\\{}])/,"$1"));
+      return reactifyMyMarkup(enriched.text, enriched.specs);
     } else {
       // fill this in.
       return content.text;
