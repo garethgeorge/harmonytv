@@ -531,10 +531,13 @@
     border-radius: 0.3em;
     border-bottom-left-radius: 0;
     border-bottom-right-radius: 0;
-  }
-  .chatbox-modifiers:not(:empty) + .chatbox-text-entry {
-    border-top-left-radius: 0;
-    border-top-right-radius: 0;
+    &:empty {
+      display: none;
+    }
+    &:not(:empty) + .chatbox-text-entry {
+      border-top-left-radius: 0;
+      border-top-right-radius: 0;
+    }
   }
 
   a {
