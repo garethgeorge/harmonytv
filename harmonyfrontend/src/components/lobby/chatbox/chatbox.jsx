@@ -284,11 +284,11 @@ export default observer(
                 kind={stream.kind}
                 key={stream.key}
               >
-                {stream.lines.map((line) => (
+                {stream.lines.map((line, i) => (
                   <div
                     className={"stream-line " + line.classlist.join(" ")}
                     kind={line.kind}
-                    key={line.key}
+                    key={line.key || i}
                   >
                     {line.content}
                   </div>
