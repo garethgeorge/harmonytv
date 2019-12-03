@@ -19,6 +19,10 @@ export default observer(
   class ChatBox extends React.Component {
     state = {
       composition: "",
+      modifiers: {
+        whisperTo: null,
+        replyTo: null,
+      },
       streams: [],
       users: 1,
       display: "docked",
@@ -292,6 +296,17 @@ export default observer(
             ))}
           </div>
           {/* this is the actual text input */}
+          <div className="chatbox-modifiers">
+            {this.state.modifiers.whisperTo ? (
+              <div>Whisper to {this.state.modifiers.whisperTo}</div>
+            ) : null}
+            {this.state.modifiers.replyTo ? (
+              <div>
+                Reply to "{this.state.modifiers.replyTo.content.text}" -
+                {this.state.modifiers.replyTo.metaData.senderName}
+              </div>
+            ) : null}
+          </div>
           <textarea
             ref={this.textEntry}
             className={
@@ -325,16 +340,39 @@ export default observer(
                     textArea.style.height = textArea.scrollHeight + 2 + "px";
                     // send the message if it is not a special command
                     if (composition[0] != "\\") {
-                      this.sendMessage({
-                        metaData: {
-                          streamKind: "user-chunk",
-                          messageType: "user-message",
-                        },
-                        content: {
-                          text: composition,
-                          userColor: this.userColor,
-                        },
-                      });
+                      if (!this.state.modifiers.whisperTo) {
+                        this.sendMessage({
+                          metaData: {
+                            streamKind: "user-chunk",
+                            messageType: "user-message",
+                          },
+                          content: {
+                            text: composition,
+                            userColor: this.userColor,
+                            replyTo: this.state.modifiers.replyTo,
+                          },
+                        });
+                      } else {
+                        this.sendMessage({
+                          metaData: {
+                            streamKind: "whisper-chunk",
+                            messageType: "whisper-message",
+                          },
+                          content: {
+                            text: composition,
+                            userColor: this.userColor,
+                            recipient: this.state.modifiers.whisperTo,
+                            replyTo: this.state.modifiers.replyTo,
+                          },
+                        });
+                      }
+                      if (this.state.modifiers.replyTo) {
+                        this.setState((prevState) => {
+                          let state = { ...prevState };
+                          state.modifiers.replyTo = null;
+                          return state;
+                        });
+                      }
                     } else {
                       // do the command if it is known
                       this.execCommand(composition);

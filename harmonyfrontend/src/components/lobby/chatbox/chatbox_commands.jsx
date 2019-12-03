@@ -505,6 +505,28 @@ export default (chatbox) => {
   );
 
   chatbox.registerCommand(
+    "whisperto",
+    (args, stream) => {
+      chatbox.setState((prevState) => {
+        let state = { ...prevState };
+        state.modifiers.whisperTo = args.user;
+        return state;
+      });
+    },
+    {
+      help: "set a user to whisper to",
+      category: "chat",
+      noOutput: true,
+      args: [
+        {
+          name: "user",
+          optional: true,
+        },
+      ],
+    }
+  );
+
+  chatbox.registerCommand(
     "writenote",
     (args, stream) => {
       chatbox.notes.push(args.text);
