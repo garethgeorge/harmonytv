@@ -389,7 +389,7 @@ function messageHandler(chatbox) {
               <div
                 className="message-menu-item"
                 onClick={() => {
-                  console.log(message);
+                  chatbox.textEntry.current.focus();
                   chatbox.setState((prevState) => {
                     let state = { ...prevState };
                     state.modifiers.replyTo = message;
@@ -492,7 +492,7 @@ function messageHandler(chatbox) {
               <div
                 className="message-menu-item"
                 onClick={() => {
-                  console.log(message);
+                  chatbox.textEntry.current.focus();
                   chatbox.setState((prevState) => {
                     let state = { ...prevState };
                     state.modifiers.whisperOnce = message.metaData.senderName;

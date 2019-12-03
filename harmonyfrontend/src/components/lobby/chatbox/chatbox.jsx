@@ -389,9 +389,17 @@ export default observer(
                     }
                   });
                 } else {
-                  if (this.state.display !== "docked") {
-                    this.textEntry.current.blur();
-                  }
+                  this.textEntry.current.blur();
+                  this.setState((prevState) => {
+                    let state = { ...prevState };
+                    state.modifiers.replyTo = null;
+                    state.modifiers.whisperOnce = null;
+                    state.modifiers.whisperTo = null;
+                    return state;
+                  });
+                  // if (this.state.display !== "docked") {
+                  //
+                  // }
                 }
               }
             }}
