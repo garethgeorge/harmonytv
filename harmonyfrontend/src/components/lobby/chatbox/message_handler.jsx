@@ -88,11 +88,15 @@ function messageHandler(chatbox) {
       newMessage.metaData.messageType = "none";
     }
     if (!newMessage.metaData.group) {
-      newMessage.metaData.group = {
+      let group = {
         streamKind: newMessage.metaData.streamKind,
         messageType: newMessage.metaData.messageType,
         senderDeviceId: newMessage.metaData.senderDeviceId,
       };
+      if (newMessage.metaData.messageType == "whisper-message") {
+        group.recipient = newMessage.content.recipient;
+      }
+      newMessage.metaData.group = group;
     }
     return newMessage;
   };
@@ -356,12 +360,21 @@ function messageHandler(chatbox) {
         <span className="message-content">
           {message.content.replyTo ? (
             <div className="message-replyto">
-              <blockquote>
+              <div class="message-replyuser">
+                <span
+                  style={{ color: message.content.replyTo.content.userColor }}
+                >
+                  {message.content.replyTo.metaData.senderName}
+                </span>{" "}
+                said:
+              </div>
+              <blockquote
+                style={{
+                  borderColor: message.content.replyTo.content.userColor,
+                }}
+              >
                 {enrichContent(message.content.replyTo.content).content}
               </blockquote>
-              <div class="message-replyuser">
-                {message.content.replyTo.metaData.senderName}
-              </div>
             </div>
           ) : null}
           {messageContent}
@@ -369,7 +382,7 @@ function messageHandler(chatbox) {
             <span>{timestamp}</span>
           </div>
           <span className="message-more">
-            <i className="material-icons md-light" style={{ fontSize: "16px" }}>
+            <i className="material-icons md-light" style={{ fontSize: "14px" }}>
               more_vert
             </i>
             <div className="message-menu">
@@ -386,7 +399,7 @@ function messageHandler(chatbox) {
               >
                 <i
                   className="material-icons md-light"
-                  style={{ fontSize: "16px" }}
+                  style={{ fontSize: "14px" }}
                 >
                   reply
                 </i>
@@ -448,10 +461,56 @@ function messageHandler(chatbox) {
           </span>
         </span>
         <span className="message-content">
+          {message.content.replyTo ? (
+            <div className="message-replyto">
+              <div class="message-replyuser">
+                <span
+                  style={{ color: message.content.replyTo.content.userColor }}
+                >
+                  {message.content.replyTo.metaData.senderName}
+                </span>{" "}
+                said:
+              </div>
+              <blockquote
+                style={{
+                  borderColor: message.content.replyTo.content.userColor,
+                }}
+              >
+                {enrichContent(message.content.replyTo.content).content}
+              </blockquote>
+            </div>
+          ) : null}
           {messageContent}
           <div className="message-time">
             <span>{timestamp}</span>
           </div>
+          <span className="message-more">
+            <i className="material-icons md-light" style={{ fontSize: "14px" }}>
+              more_vert
+            </i>
+            <div className="message-menu">
+              <div
+                className="message-menu-item"
+                onClick={() => {
+                  console.log(message);
+                  chatbox.setState((prevState) => {
+                    let state = { ...prevState };
+                    state.modifiers.whisperOnce = message.metaData.senderName;
+                    state.modifiers.replyTo = message;
+                    return state;
+                  });
+                }}
+              >
+                <i
+                  className="material-icons md-light"
+                  style={{ fontSize: "14px" }}
+                >
+                  reply
+                </i>
+                Reply
+              </div>
+            </div>
+          </span>
         </span>
         {messageExtras.map((extra, i) => {
           return (

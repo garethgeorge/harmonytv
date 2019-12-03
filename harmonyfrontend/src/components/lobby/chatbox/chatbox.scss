@@ -167,6 +167,8 @@
           position: absolute;
           top: 100%;
           right: 0;
+          border-radius: 0.4em;
+          overflow: hidden;
 
           .message-menu-item {
             background-color: rgb(15, 15, 15);
@@ -459,24 +461,24 @@
     }
 
     .message-replyto {
-      padding: 0.3em;
+      padding: 0 0.3em 0.3em;
       background-color: rgba(255, 255, 255, 0.07);
       margin-bottom: 0.4em;
       border-radius: 0.4em;
+      border: 1px solid rgba(0, 0, 0, 0.2);
 
       blockquote {
         margin: 0;
         padding: 0.1em 0.4em;
         font-size: 1em;
-      }
-      .message-replyuser::before {
-        content: "-";
+        font-weight: normal;
       }
       .message-replyuser {
         font-size: 0.8em;
-        text-align: right;
-        font-style: italic;
-        margin-right: 10%;
+        // text-align: right;
+        // font-style: italic;
+        // margin-right: 10%;
+        margin-bottom: 0.35em;
       }
     }
   }

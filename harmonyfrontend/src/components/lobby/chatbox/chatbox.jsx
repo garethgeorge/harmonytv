@@ -21,6 +21,7 @@ export default observer(
       composition: "",
       modifiers: {
         whisperTo: null,
+        whisperOnce: null,
         replyTo: null,
       },
       streams: [],
@@ -297,7 +298,9 @@ export default observer(
           </div>
           {/* this is the actual text input */}
           <div className="chatbox-modifiers">
-            {this.state.modifiers.whisperTo ? (
+            {this.state.modifiers.whisperOnce ? (
+              <div>Whisper to {this.state.modifiers.whisperOnce}</div>
+            ) : this.state.modifiers.whisperTo ? (
               <div>Whisper to {this.state.modifiers.whisperTo}</div>
             ) : null}
             {this.state.modifiers.replyTo ? (
@@ -340,7 +343,10 @@ export default observer(
                     textArea.style.height = textArea.scrollHeight + 2 + "px";
                     // send the message if it is not a special command
                     if (composition[0] != "\\") {
-                      if (!this.state.modifiers.whisperTo) {
+                      if (
+                        !this.state.modifiers.whisperTo &&
+                        !this.state.modifiers.whisperOnce
+                      ) {
                         this.sendMessage({
                           metaData: {
                             streamKind: "user-chunk",
@@ -361,7 +367,9 @@ export default observer(
                           content: {
                             text: composition,
                             userColor: this.userColor,
-                            recipient: this.state.modifiers.whisperTo,
+                            recipient: this.state.modifiers.whisperOnce
+                              ? this.state.modifiers.whisperOnce
+                              : this.state.modifiers.whisperTo,
                             replyTo: this.state.modifiers.replyTo,
                           },
                         });
@@ -370,6 +378,8 @@ export default observer(
                         this.setState((prevState) => {
                           let state = { ...prevState };
                           state.modifiers.replyTo = null;
+                          state.modifiers.whisperOnce =
+                            state.modifiers.whisperTo;
                           return state;
                         });
                       }

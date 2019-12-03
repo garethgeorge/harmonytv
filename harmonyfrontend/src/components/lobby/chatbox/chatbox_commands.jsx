@@ -509,6 +509,7 @@ export default (chatbox) => {
     (args, stream) => {
       chatbox.setState((prevState) => {
         let state = { ...prevState };
+        state.modifiers.whisperOnce = args.user;
         state.modifiers.whisperTo = args.user;
         return state;
       });
