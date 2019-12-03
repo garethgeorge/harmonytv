@@ -360,7 +360,7 @@ function messageHandler(chatbox) {
         <span className="message-content">
           {message.content.replyTo ? (
             <div className="message-replyto">
-              <div class="message-replyuser">
+              <div className="message-replyuser">
                 <span
                   style={{ color: message.content.replyTo.content.userColor }}
                 >
@@ -463,7 +463,7 @@ function messageHandler(chatbox) {
         <span className="message-content">
           {message.content.replyTo ? (
             <div className="message-replyto">
-              <div class="message-replyuser">
+              <div className="message-replyuser">
                 <span
                   style={{ color: message.content.replyTo.content.userColor }}
                 >
