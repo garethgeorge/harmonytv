@@ -1,6 +1,7 @@
 import React from "react";
 import ReactDOM from "react-dom";
 import model from "../../../model";
+import config from "../../../config";
 import chatboxCommandRegister from "./chatbox_command_registration.jsx";
 import chatboxParsers from "./chatbox_parsers.jsx";
 import chatboxValidaters from "./chatbox_validaters.jsx";
@@ -27,34 +28,37 @@ export default (chatbox) => {
         content: <>Surround text to make it *bold*, or _italic_.</>,
         kind: "info",
       });
-      chatbox.print(stream, {
-        content: (
-          <>
-            <a
-              href="about:blank"
-              target="popup"
-              onClick={() => {
-                let popup = window.open(
-                  "about:blank",
-                  "popup",
-                  "width=600,height=400"
-                );
-                setTimeout(() => {
-                  popup.document.body.innerHTML = "<div id='chat-docs'></div>";
-                  ReactDOM.render(
-                    <ChatboxDocumentation />,
-                    popup.document.getElementById("chat-docs")
+      if (config.development) {
+        chatbox.print(stream, {
+          content: (
+            <>
+              <a
+                href="about:blank"
+                target="popup"
+                onClick={() => {
+                  let popup = window.open(
+                    "about:blank",
+                    "popup",
+                    "width=600,height=400"
                   );
-                }, 0);
-                return false;
-              }}
-            >
-              Full Chat Documentation
-            </a>
-          </>
-        ),
-        kind: "info",
-      });
+                  setTimeout(() => {
+                    popup.document.body.innerHTML =
+                      "<div id='chat-docs'></div>";
+                    ReactDOM.render(
+                      <ChatboxDocumentation />,
+                      popup.document.getElementById("chat-docs")
+                    );
+                  }, 0);
+                  return false;
+                }}
+              >
+                Full Chat Documentation
+              </a>
+            </>
+          ),
+          kind: "info",
+        });
+      }
     },
     {
       help: "show helpful info",
