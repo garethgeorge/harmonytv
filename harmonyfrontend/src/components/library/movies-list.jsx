@@ -4,6 +4,7 @@ import { observer } from "mobx-react";
 import Loading from "../../components/loading";
 import Movie from "./movie";
 import "./library.scss";
+import sortableTitle from "./titlesort";
 
 export default observer(
   class MoviesList extends React.Component {
@@ -52,7 +53,7 @@ export default observer(
       const media = [...this.props.library.media];
 
       media.sort((a, b) => {
-        return a.name > b.name ? 1 : -1;
+        return sortableTitle(a.name) > sortableTitle(b.name) ? 1 : -1;
       });
 
       const movies = [];
