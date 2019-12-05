@@ -49,8 +49,6 @@ export default observer(
     constructor(props) {
       super(props);
 
-      this.loadPreferences();
-
       document.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !(e.ctrlKey || e.metaKey)) {
           if (document.activeElement != this.textEntry.current) {
