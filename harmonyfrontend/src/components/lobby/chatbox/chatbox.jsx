@@ -48,6 +48,9 @@ export default observer(
 
     constructor(props) {
       super(props);
+
+      this.loadPreferences();
+
       document.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !(e.ctrlKey || e.metaKey)) {
           if (document.activeElement != this.textEntry.current) {
@@ -116,19 +119,23 @@ export default observer(
     }
 
     loadPreferences() {
-      let state = Object.assign({}, this.state);
-      try {
-        let preferences = JSON.parse(
-          window.localStorage.getItem("harmonytv-chatbox")
-        );
-        for (const pref in preferences.vars) {
-          this[pref] = preferences.vars[pref];
+      if (window.localStorage.getItem("harmonytv-chatbox")) {
+        let state = Object.assign({}, this.state);
+        try {
+          let preferences = JSON.parse(
+            window.localStorage.getItem("harmonytv-chatbox")
+          );
+          for (const pref in preferences.vars) {
+            this[pref] = preferences.vars[pref];
+          }
+          for (const pref in preferences.state) {
+            state[pref] = preferences.state[pref];
+          }
+        } finally {
+          this.setState(state);
         }
-        for (const pref in preferences.state) {
-          state[pref] = preferences.state[pref];
-        }
-      } finally {
-        this.setState(state);
+      } else {
+        this.savePreferences();
       }
     }
 
