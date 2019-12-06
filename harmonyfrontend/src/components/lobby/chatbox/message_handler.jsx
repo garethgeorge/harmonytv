@@ -225,7 +225,8 @@ function messageHandler(chatbox) {
   let registeredFormatters = [
     {
       name: "urllink",
-      regex: /(https?:\/\/)?(([a-z\d]([a-z\d-]*[a-z\d])*)\.)+[a-z]{2,}(\:\d+)?(\/[-a-z\d%_.~+]*)*(\?[;&a-z\d%_.~+=-]*)?/gi,
+      // make http(s):// required to match regex fast.
+      regex: /(?<=\s|^)(https?:\/\/)(([a-z\d]([a-z\d-]*[a-z\d])*)\.)+[a-z]{2,}(\:\d+)?(\/[-a-z\d%_.~+]*)*(\?[;&a-z\d%_.~+=-]*)?(?=\s|$)/gi,
       //regex: /(^|\s)((https?:\/\/)?((([a-z\d]([a-z\d-]*[a-z\d])*)\.)+[a-z]{2,}|((\d{1,3}\.){3}\d{1,3}))(\:\d+)?(\/[-a-z\d%_.~+]*)*(\?[;&a-z\d%_.~+=-]*)?(\#[-a-z\d_]*)?)($|\s)/gi,
       // regex: new RegExp('(^|\\s)((https?:\\/\\/)?'+ // protocol
       //   '((([a-z\\d]([a-z\\d-]*[a-z\\d])*)\\.)+[a-z]{2,}|'+ // domain name
