@@ -4,17 +4,6 @@ node_modules
 coverage
 config.js
 
-# development favicons
-favicon.ico
-logo512.png
-logo192.png
-devfavicon.ico
-devlogo512.png
-devlogo192.png
-orig_favicon.ico
-orig_logo512.png
-orig_logo192.png
-
 # production
 build
 

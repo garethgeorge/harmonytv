@@ -85,6 +85,21 @@ const exports = {
         console.log("ERROR FETCHING LIBRARIES");
       });
   },
+
+  helpers: {
+    // sortMediaTitles: (mediaTitles) => {
+    //   const articles = ["a", "an", "the"];
+
+    //   mediaTitles.sort((a, b) => {
+    //   })
+
+    //   let words = title.toLowerCase().split(" ");
+    //   if (words[0] == "a" || words[0] == "an" || words[0] == "the") {
+    //     words.shift();
+    //   }
+    //   let noArticleTitle = words.join(" ");
+    // },
+  },
 };
 
 // automatically refresh the libraries when we detect we are signed in
