@@ -169,10 +169,12 @@
           right: 0;
           border-radius: 0.4em;
           overflow: hidden;
+          min-width: 120px;
 
           .message-menu-item {
             background-color: rgb(15, 15, 15);
             padding: 0.4em;
+            width: 100%;
 
             &:hover {
               background-color: rgb(31, 31, 39);
@@ -437,6 +439,8 @@
       padding: 0.2em 0.3em;
       // padding: 0.3em;
       // padding-bottom: 0.3em;
+
+      word-break: break-word;
 
       .markup-bold {
         font-weight: bold;
