@@ -61,33 +61,36 @@ function messageHandler(chatbox) {
     if (!newMessage.metaData) {
       newMessage.metaData = {};
     }
-    if (!newMessage.metaData.protocolVersion) {
+    if (!newMessage.metaData.hasOwnProperty("protocolVersion")) {
       newMessage.metaData.protocolVersion = chatbox.protocolVersion;
     }
-    if (!newMessage.metaData.senderName) {
+    if (!newMessage.metaData.hasOwnProperty("senderName")) {
       newMessage.metaData.senderName = model.state.user.username;
     }
-    if (!newMessage.metaData.senderDeviceId) {
+    if (!newMessage.metaData.hasOwnProperty("addMessage")) {
+      newMessage.metaData.addMessage = true;
+    }
+    if (!newMessage.metaData.hasOwnProperty("senderDeviceId")) {
       newMessage.metaData.senderDeviceId = chatbox.uniqueId;
     }
-    if (!newMessage.metaData.timeSent) {
+    if (!newMessage.metaData.hasOwnProperty("timeSent")) {
       newMessage.metaData.timeSent = Date.now();
     }
-    if (!newMessage.metaData.videoTime) {
+    if (!newMessage.metaData.hasOwnProperty("videoTime")) {
       newMessage.metaData.videoTime = document.getElementById(
         "video"
       ).currentTime;
     }
-    if (!newMessage.metaData.streamKind) {
+    if (!newMessage.metaData.hasOwnProperty("streamKind")) {
       newMessage.metaData.streamKind = "normal";
     }
     // if (!newMessage.metaData.messageKind) {
     //   newMessage.metaData.messageKind = "normal";
     // }
-    if (!newMessage.metaData.messageType) {
+    if (!newMessage.metaData.hasOwnProperty("messageType")) {
       newMessage.metaData.messageType = "none";
     }
-    if (!newMessage.metaData.group) {
+    if (!newMessage.metaData.hasOwnProperty("group")) {
       let group = {
         streamKind: newMessage.metaData.streamKind,
         messageType: newMessage.metaData.messageType,
@@ -147,15 +150,22 @@ function messageHandler(chatbox) {
   };
 
   chatbox.sendMessage = (message, metoo = true) => {
-    message = fillMessageData(message);
-    chatbox.props.socket.emit("client:message", JSON.stringify(message));
+    message = JSON.stringify(fillMessageData(message));
+    chatbox.props.socket.emit("client:message", message);
     if (metoo) {
-      chatbox.addMessage(message);
+      chatbox.receiveMessage(message);
     }
   };
 
   chatbox.receiveMessage = (message) => {
-    chatbox.addMessage(JSON.parse(message));
+    message = JSON.parse(message);
+    if (message.metaData.addMessage) {
+      chatbox.addMessage(message);
+    } else {
+      if (chatbox.messageTypes.hasOwnProperty(message.metaData.messageType)) {
+        chatbox.messageTypes[message.metaData.messageType](message);
+      }
+    }
   };
 
   function enrich(intext, specN = -1) {
@@ -332,6 +342,29 @@ function messageHandler(chatbox) {
         </span>
       </span>
     );
+  });
+  chatbox.registerMessageType("user-typing", (message) => {
+    if (message.content) {
+      chatbox.setState((prevState) => {
+        let state = { ...prevState };
+        if (model.state.user.username != message.metaData.senderName)
+          state.usersTyping.push(message.metaData.senderName);
+        return state;
+      });
+      //return <span>{message.metaData.senderName} is typing...</span>;
+    } else {
+      chatbox.setState((prevState) => {
+        let state = { ...prevState };
+        let index;
+        while (
+          (index = state.usersTyping.indexOf(message.metaData.senderName)) != -1
+        ) {
+          state.usersTyping.splice(index, 1);
+        }
+        return state;
+      });
+      //return <span>{message.metaData.senderName} stopped typing.</span>;
+    }
   });
   chatbox.registerMessageType("user-message", (message) => {
     const enriched = enrichContent(message.content);

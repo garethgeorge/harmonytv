@@ -40,12 +40,26 @@
     flex-direction: column;
     padding-bottom: 0.75em;
     max-height: none;
-    margin-bottom: 0.3em;
   }
 
   .chatbox-text-entry {
     margin: 0;
     position: relative;
+  }
+}
+
+@keyframes ellipses {
+  0% {
+    content: "";
+  }
+  25% {
+    content: ".";
+  }
+  50% {
+    content: "..";
+  }
+  75% {
+    content: "...";
   }
 }
 
@@ -74,6 +88,7 @@
     border-radius: 0.5em;
     overflow-y: scroll;
     max-height: 50vh;
+    margin-bottom: 0.3em;
 
     &::-webkit-scrollbar {
       background-color: transparent;
@@ -90,6 +105,16 @@
     &::-webkit-scrollbar-thumb {
       background-color: rgba(255, 223, 239, 0.15);
       border-radius: 1em;
+    }
+
+    .users-typing {
+      font-size: 0.8em;
+      padding: 0.1em 1em;
+    }
+    .users-typing::after {
+      animation: ellipses 4s infinite;
+      display: inline-block;
+      content: "";
     }
   }
 
