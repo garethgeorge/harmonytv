@@ -1,7 +1,6 @@
 import React from "react";
 import { observer } from "mobx-react";
 import "./chatbox.scss";
-import model from "../../../model";
 import chatboxCommands from "./chatbox_commands.jsx";
 import uuidv4 from "uuid/v4";
 import config from "../../../config";
