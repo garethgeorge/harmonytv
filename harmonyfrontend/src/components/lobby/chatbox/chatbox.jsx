@@ -467,6 +467,7 @@ export default observer(
           >
             Type Here
           </textarea>
+          <div className="send-button">&gt;</div>
         </div>
       );
     }
