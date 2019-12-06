@@ -20,7 +20,7 @@ export default {
     } else if (color == "yellow") {
       return "#FFDE00";
     } else if (color == "green") {
-      return "#00DD40";
+      return "#00BB66";
     } else if (color == "blue") {
       return "#3020FF";
     } else if (color == "white") {

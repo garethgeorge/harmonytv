@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { observer } from "mobx-react";
 import Loading from "../../components/loading";
 import "./library.scss";
+import sortableTitle from "./titlesort";
 
 export default observer(
   class SeriesList extends React.Component {
@@ -49,8 +50,12 @@ export default observer(
         return <Loading />;
       }
 
+      let seriesTitles = Object.keys(series).sort((a, b) => {
+        return sortableTitle(a) > sortableTitle(b) ? 1 : -1;
+      });
+
       const shows = [];
-      for (const seriesName of Object.keys(series)) {
+      for (const seriesName of seriesTitles) {
         shows.push(
           <Link
             key={seriesName}

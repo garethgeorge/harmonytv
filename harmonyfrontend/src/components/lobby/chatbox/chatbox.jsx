@@ -19,6 +19,11 @@ export default observer(
   class ChatBox extends React.Component {
     state = {
       composition: "",
+      modifiers: {
+        whisperTo: null,
+        whisperOnce: null,
+        replyTo: null,
+      },
       streams: [],
       users: 1,
       display: "docked",
@@ -43,6 +48,7 @@ export default observer(
 
     constructor(props) {
       super(props);
+
       document.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !(e.ctrlKey || e.metaKey)) {
           if (document.activeElement != this.textEntry.current) {
@@ -111,19 +117,23 @@ export default observer(
     }
 
     loadPreferences() {
-      let state = Object.assign({}, this.state);
-      try {
-        let preferences = JSON.parse(
-          window.localStorage.getItem("harmonytv-chatbox")
-        );
-        for (const pref in preferences.vars) {
-          this[pref] = preferences.vars[pref];
+      if (window.localStorage.getItem("harmonytv-chatbox")) {
+        let state = Object.assign({}, this.state);
+        try {
+          let preferences = JSON.parse(
+            window.localStorage.getItem("harmonytv-chatbox")
+          );
+          for (const pref in preferences.vars) {
+            this[pref] = preferences.vars[pref];
+          }
+          for (const pref in preferences.state) {
+            state[pref] = preferences.state[pref];
+          }
+        } finally {
+          this.setState(state);
         }
-        for (const pref in preferences.state) {
-          state[pref] = preferences.state[pref];
-        }
-      } finally {
-        this.setState(state);
+      } else {
+        this.savePreferences();
       }
     }
 
@@ -279,11 +289,11 @@ export default observer(
                 kind={stream.kind}
                 key={stream.key}
               >
-                {stream.lines.map((line) => (
+                {stream.lines.map((line, i) => (
                   <div
                     className={"stream-line " + line.classlist.join(" ")}
                     kind={line.kind}
-                    key={line.key}
+                    key={line.key || i}
                   >
                     {line.content}
                   </div>
@@ -292,6 +302,19 @@ export default observer(
             ))}
           </div>
           {/* this is the actual text input */}
+          <div className="chatbox-modifiers">
+            {this.state.modifiers.whisperOnce ? (
+              <div>Whisper to {this.state.modifiers.whisperOnce}</div>
+            ) : this.state.modifiers.whisperTo ? (
+              <div>Whisper to {this.state.modifiers.whisperTo}</div>
+            ) : null}
+            {this.state.modifiers.replyTo ? (
+              <div>
+                Reply to "{this.state.modifiers.replyTo.content.text}" -
+                {this.state.modifiers.replyTo.metaData.senderName}
+              </div>
+            ) : null}
+          </div>
           <textarea
             ref={this.textEntry}
             className={
@@ -325,25 +348,63 @@ export default observer(
                     textArea.style.height = textArea.scrollHeight + 2 + "px";
                     // send the message if it is not a special command
                     if (composition[0] != "\\") {
-                      this.sendMessage({
-                        metaData: {
-                          streamKind: "user-chunk",
-                          messageType: "user-message",
-                        },
-                        content: {
-                          text: composition,
-                          userColor: this.userColor,
-                        },
-                      });
+                      if (
+                        !this.state.modifiers.whisperTo &&
+                        !this.state.modifiers.whisperOnce
+                      ) {
+                        this.sendMessage({
+                          metaData: {
+                            streamKind: "user-chunk",
+                            messageType: "user-message",
+                          },
+                          content: {
+                            text: composition,
+                            userColor: this.userColor,
+                            replyTo: this.state.modifiers.replyTo,
+                          },
+                        });
+                      } else {
+                        this.sendMessage({
+                          metaData: {
+                            streamKind: "whisper-chunk",
+                            messageType: "whisper-message",
+                          },
+                          content: {
+                            text: composition,
+                            userColor: this.userColor,
+                            recipient: this.state.modifiers.whisperOnce
+                              ? this.state.modifiers.whisperOnce
+                              : this.state.modifiers.whisperTo,
+                            replyTo: this.state.modifiers.replyTo,
+                          },
+                        });
+                      }
+                      if (this.state.modifiers.replyTo) {
+                        this.setState((prevState) => {
+                          let state = { ...prevState };
+                          state.modifiers.replyTo = null;
+                          state.modifiers.whisperOnce =
+                            state.modifiers.whisperTo;
+                          return state;
+                        });
+                      }
                     } else {
                       // do the command if it is known
                       this.execCommand(composition);
                     }
                   });
                 } else {
-                  if (this.state.display !== "docked") {
-                    this.textEntry.current.blur();
-                  }
+                  this.textEntry.current.blur();
+                  this.setState((prevState) => {
+                    let state = { ...prevState };
+                    state.modifiers.replyTo = null;
+                    state.modifiers.whisperOnce = null;
+                    state.modifiers.whisperTo = null;
+                    return state;
+                  });
+                  // if (this.state.display !== "docked") {
+                  //
+                  // }
                 }
               }
             }}

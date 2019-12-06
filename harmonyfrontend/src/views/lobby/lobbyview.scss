@@ -5,3 +5,30 @@
   display: flex;
   flex-direction: row-reverse;
 }
+
+.chatbox {
+  flex-basis: 0;
+  flex-grow: 1;
+}
+
+#videoContainer {
+  flex-basis: 0;
+  flex-grow: 3;
+}
+
+@media only screen and (max-width: 600px) {
+  .lobbyview {
+    width: 100%;
+    height: 100%;
+    background-color: black;
+    display: initial;
+  }
+
+  .chatbox {
+    height: calc(100vh - 58vw) !important;
+  }
+
+  #videoContainer {
+    height: 58vw;
+  }
+}

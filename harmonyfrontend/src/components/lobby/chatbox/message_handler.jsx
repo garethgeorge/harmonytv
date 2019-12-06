@@ -88,11 +88,15 @@ function messageHandler(chatbox) {
       newMessage.metaData.messageType = "none";
     }
     if (!newMessage.metaData.group) {
-      newMessage.metaData.group = {
+      let group = {
         streamKind: newMessage.metaData.streamKind,
         messageType: newMessage.metaData.messageType,
         senderDeviceId: newMessage.metaData.senderDeviceId,
       };
+      if (newMessage.metaData.messageType == "whisper-message") {
+        group.recipient = newMessage.content.recipient;
+      }
+      newMessage.metaData.group = group;
     }
     return newMessage;
   };
@@ -154,7 +158,8 @@ function messageHandler(chatbox) {
     chatbox.addMessage(JSON.parse(message));
   };
 
-  function enrich(text, specN = -1) {
+  function enrich(intext, specN = -1) {
+    let text = intext;
     if (specN == -1) {
       text = text.replace(/[\\{}]/g, "\\$&");
     }
@@ -176,7 +181,12 @@ function messageHandler(chatbox) {
       }
     }
     if (firstmatch == null) {
-      return { text: text, specs: [], specN: specN };
+      return {
+        text: text.replace(/\\([\\{}])/g, "$1"),
+        specs: [],
+        specN: specN,
+        extras: [],
+      };
     }
     let match = matches[firstmatch];
     let mark = registeredFormatters[firstmatchI].handler(match);
@@ -187,11 +197,15 @@ function messageHandler(chatbox) {
       inner = enrich(mark.text, specN);
       specN = inner.specN;
     } else {
-      inner = { text: mark.text, specs: [], specN: specN };
+      inner = { text: mark.text, specs: [], specN: specN, extras: [] };
     }
     let rest = enrich(text.substring(match.index + match[0].length), specN);
     specN = rest.specN;
     let specs = [mark.spec].concat(inner.specs, rest.specs);
+    let extras = (mark.extra ? [mark.extra] : []).concat(
+      inner.extras,
+      rest.extras
+    );
     let newtext =
       text.substring(text, match.index) +
       (mark.before ? mark.before : "") +
@@ -205,7 +219,7 @@ function messageHandler(chatbox) {
       (mark.after ? mark.after : "") +
       rest.text;
 
-    return { text: newtext, specs: specs, specN: specN };
+    return { text: newtext, specs: specs, specN: specN, extras: extras };
   }
 
   let registeredFormatters = [
@@ -221,16 +235,43 @@ function messageHandler(chatbox) {
       //   '(\\#[-a-z\\d_]*)?)($|\\s)','gi'), // fragment locator
       handler: (match) => {
         const url = match[0];
+        const linkto = url.split("://").length > 1 ? url : "https://" + url;
+        const domain = linkto.match(
+          /(https?:\/\/)(([a-z\d]([a-z\d-]*[a-z\d])*)\.)+[a-z]{2,}/gi
+        );
+        // ideally fetch the webpage head to get title and description
+        // CORS was making that difficult though.
+        const title = /(https?:\/\/)?([a-z\d]([a-z\d-]*[a-z\d])*)+/gi.exec(
+          linkto
+        )[2];
+        const description = linkto;
         return {
           text: url,
           spec: {
             tag: "a",
             props: {
               target: "_",
-              href: url.split("://").length > 1 ? url : "https://" + url,
+              href: linkto,
             },
           },
           halt: true,
+          extra: (
+            <>
+              <a className="message-extra-urllink" href={linkto} target="_">
+                <object
+                  data={domain + "/favicon.ico"}
+                  type="image/x-icon"
+                  className="extra-urllink-icon"
+                ></object>
+                <div className="extra-urllink-info">
+                  <h6 className="extra-urllink-title">
+                    {title.replace(/^./, title[0].toUpperCase())}
+                  </h6>
+                  <p className="extra-urllink-description">{linkto}</p>
+                </div>
+              </a>
+            </>
+          ),
         };
       },
     },
@@ -258,13 +299,19 @@ function messageHandler(chatbox) {
 
   function enrichContent(content) {
     if (content.raw) {
-      return content.text;
+      // for raw content
+      return { content: content.text, extras: [] };
     } else if (!content.rich) {
-      let enriched = enrich(content.text.replace(/\\([\\{}])/, "$1"));
-      return reactifyMyMarkup(enriched.text, enriched.specs);
+      // for normally enriched content
+      let enriched = enrich(content.text);
+      return {
+        content: reactifyMyMarkup(enriched.text, enriched.specs),
+        extras: enriched.extras,
+      };
     } else {
+      // for content specifically intended to be rich.
       // fill this in.
-      return content.text;
+      return { content: content.text, extras: [] };
     }
   }
 
@@ -286,7 +333,10 @@ function messageHandler(chatbox) {
     );
   });
   chatbox.registerMessageType("user-message", (message) => {
-    const messageContent = enrichContent(message.content);
+    const enriched = enrichContent(message.content);
+    const messageContent = enriched.content;
+    const messageExtras = enriched.extras;
+    console.log("EXTRAS:", messageExtras);
     let date = new Date(message.metaData.timeSent);
     const timestamp = date.toLocaleTimeString([], {
       hour: "numeric",
@@ -308,21 +358,83 @@ function messageHandler(chatbox) {
           <span className="sender-tab">{message.metaData.senderName}</span>
         </span>
         <span className="message-content">
+          {message.content.replyTo ? (
+            <div className="message-replyto">
+              <div className="message-replyuser">
+                <span
+                  style={{ color: message.content.replyTo.content.userColor }}
+                >
+                  {message.content.replyTo.metaData.senderName}
+                </span>{" "}
+                said:
+              </div>
+              <blockquote
+                style={{
+                  borderColor: message.content.replyTo.content.userColor,
+                }}
+              >
+                {enrichContent(message.content.replyTo.content).content}
+              </blockquote>
+            </div>
+          ) : null}
           {messageContent}
           <div className="message-time">
             <span>{timestamp}</span>
           </div>
+          <span className="message-more">
+            <i className="material-icons md-light" style={{ fontSize: "14px" }}>
+              more_vert
+            </i>
+            <div className="message-menu">
+              <div
+                className="message-menu-item"
+                onClick={() => {
+                  chatbox.textEntry.current.focus();
+                  chatbox.setState((prevState) => {
+                    let state = { ...prevState };
+                    state.modifiers.replyTo = message;
+                    return state;
+                  });
+                }}
+              >
+                <i
+                  className="material-icons md-light"
+                  style={{ fontSize: "14px" }}
+                >
+                  reply
+                </i>
+                Reply
+              </div>
+            </div>
+          </span>
         </span>
+        {messageExtras.map((extra, i) => {
+          return (
+            <div className="message-extra" key={i}>
+              {extra}
+            </div>
+          );
+        })}
       </span>
     );
   });
   chatbox.registerMessageType("whisper-message", (message) => {
-    const messageContent = enrichContent(message.content);
+    const enriched = enrichContent(message.content);
+    const messageContent = enriched.content;
+    const messageExtras = enriched.extras;
+    console.log("EXTRAS:", messageExtras);
     let date = new Date(message.metaData.timeSent);
     const timestamp = date.toLocaleTimeString([], {
       hour: "numeric",
       minute: "2-digit",
     });
+    // IDEALLY, THIS LOGIC SHOULD BE SERVERSIDE.
+    if (
+      model.state.user.username != message.content.recipient &&
+      model.state.user.username != message.metaData.senderName
+    ) {
+      return null;
+    }
     return (
       <span
         className={
@@ -338,7 +450,7 @@ function messageHandler(chatbox) {
         >
           <span className="sender-tab">
             {message.metaData.senderName}
-            <span class="whisper-indicator">
+            <span className="whisper-indicator">
               {" "}
               (whisper
               {message.metaData.senderName == model.state.user.username
@@ -349,11 +461,64 @@ function messageHandler(chatbox) {
           </span>
         </span>
         <span className="message-content">
+          {message.content.replyTo ? (
+            <div className="message-replyto">
+              <div className="message-replyuser">
+                <span
+                  style={{ color: message.content.replyTo.content.userColor }}
+                >
+                  {message.content.replyTo.metaData.senderName}
+                </span>{" "}
+                said:
+              </div>
+              <blockquote
+                style={{
+                  borderColor: message.content.replyTo.content.userColor,
+                }}
+              >
+                {enrichContent(message.content.replyTo.content).content}
+              </blockquote>
+            </div>
+          ) : null}
           {messageContent}
           <div className="message-time">
             <span>{timestamp}</span>
           </div>
+          <span className="message-more">
+            <i className="material-icons md-light" style={{ fontSize: "14px" }}>
+              more_vert
+            </i>
+            <div className="message-menu">
+              <div
+                className="message-menu-item"
+                onClick={() => {
+                  chatbox.textEntry.current.focus();
+                  chatbox.setState((prevState) => {
+                    let state = { ...prevState };
+                    state.modifiers.whisperOnce = message.metaData.senderName;
+                    state.modifiers.replyTo = message;
+                    return state;
+                  });
+                }}
+              >
+                <i
+                  className="material-icons md-light"
+                  style={{ fontSize: "14px" }}
+                >
+                  reply
+                </i>
+                Reply
+              </div>
+            </div>
+          </span>
         </span>
+        {messageExtras.map((extra, i) => {
+          return (
+            <div className="message-extra" key={i}>
+              {extra}
+            </div>
+          );
+        })}
       </span>
     );
   });

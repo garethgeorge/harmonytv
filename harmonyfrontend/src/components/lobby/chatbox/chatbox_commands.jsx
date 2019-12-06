@@ -1,8 +1,11 @@
 import React from "react";
+import ReactDOM from "react-dom";
 import model from "../../../model";
+import config from "../../../config";
 import chatboxCommandRegister from "./chatbox_command_registration.jsx";
 import chatboxParsers from "./chatbox_parsers.jsx";
 import chatboxValidaters from "./chatbox_validaters.jsx";
+import ChatboxDocumentation from "./chatbox_documentation.jsx";
 const debug = require("debug")("components:lobby:chatbox:commands");
 
 export default (chatbox) => {
@@ -25,6 +28,37 @@ export default (chatbox) => {
         content: <>Surround text to make it *bold*, or _italic_.</>,
         kind: "info",
       });
+      if (config.development) {
+        chatbox.print(stream, {
+          content: (
+            <>
+              <a
+                href="about:blank"
+                target="popup"
+                onClick={() => {
+                  let popup = window.open(
+                    "about:blank",
+                    "popup",
+                    "width=600,height=400"
+                  );
+                  setTimeout(() => {
+                    popup.document.body.innerHTML =
+                      "<div id='chat-docs'></div>";
+                    ReactDOM.render(
+                      <ChatboxDocumentation />,
+                      popup.document.getElementById("chat-docs")
+                    );
+                  }, 0);
+                  return false;
+                }}
+              >
+                Full Chat Documentation
+              </a>
+            </>
+          ),
+          kind: "info",
+        });
+      }
     },
     {
       help: "show helpful info",
@@ -474,6 +508,29 @@ export default (chatbox) => {
         {
           name: "message",
           optional: false,
+        },
+      ],
+    }
+  );
+
+  chatbox.registerCommand(
+    "whisperto",
+    (args, stream) => {
+      chatbox.setState((prevState) => {
+        let state = { ...prevState };
+        state.modifiers.whisperOnce = args.user;
+        state.modifiers.whisperTo = args.user;
+        return state;
+      });
+    },
+    {
+      help: "set a user to whisper to",
+      category: "chat",
+      noOutput: true,
+      args: [
+        {
+          name: "user",
+          optional: true,
         },
       ],
     }
