@@ -40,12 +40,27 @@
     flex-direction: column;
     padding-bottom: 0.75em;
     max-height: none;
-    margin-bottom: 0.3em;
+    margin-bottom: 0;
   }
 
   .chatbox-text-entry {
     margin: 0;
     position: relative;
+  }
+}
+
+@keyframes ellipses {
+  0% {
+    content: "";
+  }
+  25% {
+    content: ".";
+  }
+  50% {
+    content: "..";
+  }
+  75% {
+    content: "...";
   }
 }
 
@@ -74,6 +89,7 @@
     border-radius: 0.5em;
     overflow-y: scroll;
     max-height: 50vh;
+    margin-bottom: 0.3em;
 
     &::-webkit-scrollbar {
       background-color: transparent;
@@ -90,6 +106,16 @@
     &::-webkit-scrollbar-thumb {
       background-color: rgba(255, 223, 239, 0.15);
       border-radius: 1em;
+    }
+
+    .users-typing {
+      font-size: 0.8em;
+      padding: 0.1em 1em;
+    }
+    .users-typing::after {
+      animation: ellipses 4s infinite;
+      display: inline-block;
+      content: "";
     }
   }
 
@@ -169,10 +195,12 @@
           right: 0;
           border-radius: 0.4em;
           overflow: hidden;
+          min-width: 120px;
 
           .message-menu-item {
             background-color: rgb(15, 15, 15);
             padding: 0.4em;
+            width: 100%;
 
             &:hover {
               background-color: rgb(31, 31, 39);
@@ -284,8 +312,33 @@
     @include fullchat;
   }
 
+  .send-button {
+    display: none;
+  }
+
   @media only screen and (max-width: 600px) {
     @include fullchat;
+    font-size: 20px !important;
+
+    .chatbox-text-entry {
+      font-size: 22px;
+    }
+
+    .send-button {
+      // display: inline-block;
+      // position: absolute;
+      // right: 0;
+      // bottom: 1px;
+      // height: 38px;
+      // width: 38px;
+      // font-size: 24px;
+      // text-align: center;
+      // border-radius: 5px;
+      // border-top-left-radius: 0;
+      // border-bottom-left-radius: 0;
+      // background-color: rgba(255, 255, 255, 0.9);
+      // color: blue;
+    }
   }
 
   &:not([display="docked"]) {
@@ -437,6 +490,8 @@
       padding: 0.2em 0.3em;
       // padding: 0.3em;
       // padding-bottom: 0.3em;
+
+      word-break: break-word;
 
       .markup-bold {
         font-weight: bold;

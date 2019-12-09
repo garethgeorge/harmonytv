@@ -30,15 +30,18 @@ export default observer(
         side: "left",
         visibility: true,
       },
+      usersTyping: [],
+      showUsersTyping: true,
     };
 
-    persistentState = ["display", "displayOptions"];
+    persistentState = ["display", "displayOptions", "showUsersTyping"];
     persistentVars = ["userColor"];
     userColor = randomColor();
     uniqueId = uuidv4();
     streamCount = 0;
     chatArea = React.createRef();
     textEntry = React.createRef();
+    usersTypingNote = React.createRef();
     notes = [];
     userList = [];
 
@@ -61,6 +64,50 @@ export default observer(
       chatboxCommands(this);
       messageHandler(this);
 
+      let chatbox = this;
+      this.typing = {
+        _currently: false,
+        _timeout: null,
+        pause: 3, // number of seconds before sending stopped-typing message
+        get currently() {
+          return this._currently;
+        },
+        set currently(newVal) {
+          if (newVal) {
+            if (!this._currently) {
+              // send message
+              // console.log("started typing");
+              chatbox.sendMessage({
+                metaData: {
+                  messageType: "user-typing",
+                  addMessage: false,
+                },
+                content: true,
+              });
+            }
+            this._currently = true;
+            clearTimeout(this._timeout);
+            this._timeout = setTimeout(() => {
+              this.currently = false;
+            }, this.pause * 1000);
+          } else {
+            if (this._currently) {
+              // send message
+              // console.log("stopped typing");
+              chatbox.sendMessage({
+                metaData: {
+                  messageType: "user-typing",
+                  addMessage: false,
+                },
+                content: false,
+              });
+            }
+            clearTimeout(this._timeout);
+            this._currently = false;
+          }
+        },
+      };
+
       setTimeout(() => {
         this.addMessage({
           metaData: {
@@ -81,7 +128,9 @@ export default observer(
       this.props.socket.on("server:lobby-connected-users", (users) => {
         const state = Object.assign({}, this.state);
         state.users = users;
+        state.usersTyping = [];
         this.setState(state);
+        this.typing.currently = false;
         this.addMessage({
           metaData: {
             streamKind: "info-chunk",
@@ -299,6 +348,11 @@ export default observer(
                 ))}
               </div>
             ))}
+            {this.state.showUsersTyping && this.state.usersTyping.length > 0 ? (
+              <span className="users-typing" ref={this.usersTypingNote}>
+                {this.state.usersTyping.join(", ")} typing
+              </span>
+            ) : null}
           </div>
           {/* this is the actual text input */}
           <div className="chatbox-modifiers">
@@ -332,10 +386,13 @@ export default observer(
                 "calc(" + textArea.scrollHeight + "px + 2px)";
               textArea.style.overflowY = "auto";
               state.composition = textArea.value; //e.target.value;
+              if (state.composition.length > 0 && state.composition[0] != "\\")
+                this.typing.currently = true;
               this.setState(state);
             }}
             onKeyDown={(e) => {
               if (e.key === "Enter" && !e.shiftKey) {
+                this.typing.currently = false;
                 e.preventDefault();
                 if (this.state.composition.length > 0) {
                   const state = Object.assign({}, this.state);
@@ -410,6 +467,7 @@ export default observer(
           >
             Type Here
           </textarea>
+          <div className="send-button">&gt;</div>
         </div>
       );
     }

@@ -666,4 +666,33 @@ export default (chatbox) => {
       category: "queue",
     }
   );
+
+  chatbox.registerCommand(
+    "showuserstyping",
+    (args, stream) => {
+      chatbox.setState((prevState) => {
+        let state = { ...prevState };
+        state.showUsersTyping = true;
+        return state;
+      }, chatbox.savePreferences.bind(chatbox));
+    },
+    {
+      help: "show the users typing",
+      category: "chat",
+    }
+  );
+  chatbox.registerCommand(
+    "hideuserstyping",
+    (args, stream) => {
+      chatbox.setState((prevState) => {
+        let state = { ...prevState };
+        state.showUsersTyping = false;
+        return state;
+      }, chatbox.savePreferences.bind(chatbox));
+    },
+    {
+      help: "hide the users typing",
+      category: "chat",
+    }
+  );
 };
