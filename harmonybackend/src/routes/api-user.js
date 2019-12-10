@@ -5,11 +5,16 @@ const route = require("express").Router();
 /*
   resume watching management routes 
 */
+route.get("/createAuthToken", async (req, res) => {
+  const duration = req.query.duration ? req.query.duration : "5m";
+  res.end(await model.user.createAuthToken(req.user, duration));
+});
+
 route.post("/setPlaybackPosition", async (req, res) => {
   if (!req.body.position || !req.body.total_duration || !req.body.mediaid) {
     return res.end(
       JSON.stringify({
-        error: "bad arguments, expected body.position && body.total_duration"
+        error: "bad arguments, expected body.position && body.total_duration",
       })
     );
   }
@@ -30,7 +35,7 @@ route.post("/setMediaPlayed", async (req, res) => {
   if (!req.body.mediaid || !req.body.played) {
     res.end(
       JSON.stringify({
-        error: "bad arguments, expected body.mediaid and body.played"
+        error: "bad arguments, expected body.mediaid and body.played",
       })
     );
   }
@@ -46,7 +51,7 @@ route.post("/setMediaPlayed", async (req, res) => {
   return res.end(
     JSON.stringify({
       mediaid: req.body.mediaid,
-      played: req.body.played
+      played: req.body.played,
     })
   );
 });

@@ -14,9 +14,9 @@ const scanFiles = (dir, results) => {
 };
 
 module.exports = {
-  dirtree: dir => {
+  dirtree: (dir) => {
     const results = [];
     scanFiles(dir, results);
     return results;
-  }
+  },
 };

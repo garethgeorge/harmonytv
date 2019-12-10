@@ -11,7 +11,7 @@ function StreamStringWriter(callback) {
     final: function(cb) {
       cb();
       callback(bufferedData.join(""));
-    }
+    },
   });
 }
 
@@ -25,7 +25,18 @@ function StringStreamReadable(string) {
   return s;
 }
 
+const streamToBuffer = async (stream) => {
+  const chunks = [];
+  for await (const chunk of stream) {
+    chunks.push(chunk);
+  }
+  if (chunks[0] instanceof Buffer) {
+    return Buffer.concat(chunks);
+  } else return chunks.join("");
+};
+
 module.exports = {
   StreamStringWriter: StreamStringWriter,
-  StringStreamReadable: StringStreamReadable
+  StringStreamReadable: StringStreamReadable,
+  streamToBuffer: streamToBuffer,
 };

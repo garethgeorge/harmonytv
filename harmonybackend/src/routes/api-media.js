@@ -1,6 +1,8 @@
 const debug = require("debug")("web:api/media");
 const model = require("../model");
 const route = require("express").Router();
+const config = require("../config");
+const util = require("../util/");
 
 route.get("/:mediaid/info.json", async (req, res) => {
   debug("getting info for media: " + req.params.mediaid);
@@ -16,8 +18,6 @@ route.get("/:mediaid/info.json", async (req, res) => {
 });
 
 route.get("/:mediaid/files/:path", async (req, res) => {
-  res.setHeader("Cache-Control", "public, max-age=86400");
-
   const mediaId = req.params.mediaid;
   const path = req.params.path;
 
@@ -35,21 +35,44 @@ route.get("/:mediaid/files/:path", async (req, res) => {
 
   let range;
   if (req.headers.range) {
-    let bytesPart = req.headers.range.substr(req.headers.range.indexOf("=") + 1);
+    let bytesPart = req.headers.range.substr(
+      req.headers.range.indexOf("=") + 1
+    );
     const segments = bytesPart.split("-");
     let startRange = parseInt(segments[0]);
     let stopRange = parseInt(segments[1]);
     range = {
       start: startRange,
-      stop: stopRange
+      stop: stopRange,
     };
 
-    debug("should try to only fetch range: ", range, " OPERATION NOT YET SUPPORTED");
+    debug(
+      "should try to only fetch range: ",
+      range,
+      " OPERATION NOT YET SUPPORTED"
+    );
   }
 
   const obj = await model.media.getStreamObject(mediaId, mediaObjId);
   res.setHeader("Content-Type", obj.mimetype);
-  obj.stream.pipe(res);
+
+  if (path === "stream.mpd") {
+    let streamMpd = obj.data.toString("utf-8");
+
+    streamMpd = streamMpd.replace(/("init\-stream.*?")/g, (match, path) => {
+      return config.urlForMediaObject(req.params.mediaid, path);
+    });
+    streamMpd = streamMpd.replace(/("chunk\-stream.*?")/g, (match, path) => {
+      return config.urlForMediaObject(req.params.mediaid, path);
+    });
+
+    debug("sending stream mpd as response!");
+    debug("stream mpd: " + streamMpd);
+    return res.end(streamMpd);
+  }
+
+  res.setHeader("Cache-Control", "public, max-age=86400");
+  res.end(obj.data);
 });
 
 module.exports = route;

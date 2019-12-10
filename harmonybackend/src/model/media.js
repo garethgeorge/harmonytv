@@ -6,11 +6,12 @@ const debug = require("debug")("model:media");
 const config = require("../config");
 const crypto = require("crypto");
 const AsyncLock = require("async-lock");
-const StreamCache = require("stream-cache");
+const LRU = require("lru-cache");
+const stream_helpers = require("../util/stream_helpers");
 
 let storageBackend = null;
 
-module.exports.setup = async setup => {
+module.exports.setup = async (setup) => {
   // bit of a race condition here but it makes life much easier to just live w/it
   debug("initializing cloud data stores");
 
@@ -72,9 +73,11 @@ const mimetypes = {
   ".m4s": "video/iso.segment",
   ".vtt": "text/vtt",
   ".m3u8": "application/x-mpegURL",
-  ".js": "application/javascript"
+  ".js": "application/javascript",
 };
+
 exports.mimetypes = mimetypes;
+
 exports.putStreamObject = async (mediaid, uploadDir, file, conn = null) => {
   if (!conn) conn = pool;
 
@@ -144,7 +147,7 @@ class Cache {
       timeout: setTimeout(() => {
         delete this.cache[key];
       }, this.timeout),
-      value: value
+      value: value,
     };
   }
 
@@ -164,53 +167,70 @@ class Cache {
   }
 }
 
-const objectCache = new Cache(config.inMemoryObjectCacheDuration);
+// const objectCache = new Cache(config.inMemoryObjectCacheDuration * 1000);
+const objectCache = new LRU({
+  max: config.inMemoryObjectCacheSize,
+  length: (obj, key) => {
+    debug("computed length for %o to be %o", key, obj.length);
+    return obj.length;
+  },
+  dispose: (key, obj) => {
+    debug("cache disposing of old object: " + key);
+  },
+  maxAge: config.inMemoryObjectCacheDuration * 1000,
+});
+setInterval(() => {
+  debug("attempting to prune the object cache");
+  objectCache.prune();
+}, 30 * 1000);
+
 const objectCacheLock = new AsyncLock();
 
 exports.getStreamObject = async (mediaid, objectid, conn = null) => {
   if (!conn) conn = pool;
 
-  let encryptionKey = null;
-  const res = await conn.query(
-    pgformat(
-      "SELECT encryptionkey FROM media_objects WHERE objectid = %L",
-      objectid
-    )
-  );
-  if (res.rows.length > 0) {
-    debug("getStreamObject(...): encryptionkey: ", res.rows[0].encryptionkey);
-    if (res.rows[0].encryptionkey)
-      encryptionKey = res.rows[0].encryptionkey.trim();
-  }
-
-  return await objectCacheLock.acquire(objectid, callback => {
+  return await objectCacheLock.acquire(objectid, async (callback) => {
     debug(`getStreamObject(${mediaid}, ${objectid})`);
+    try {
+      // check the cache
+      const cacheObject = objectCache.get(objectid);
+      if (cacheObject) {
+        debug("\tHIT THE CACHE :)");
+        return callback(null, cacheObject);
+      }
+      debug("\tMISSED THE CACHE");
 
-    // check the cache
-    const cacheObject = objectCache.get(objectid);
-    if (cacheObject) {
-      debug("\tHIT THE CACHE :)");
-      return callback(null, cacheObject);
-    }
-
-    debug(`\tNOT CACHED :( fetching from backing store`);
-    const object = storageBackend
-      .getBlock(objectid, encryptionKey)
-      .then(object => {
-        // swap the object's stream with a stream cache
-        const stream = new StreamCache();
-        object.stream.pipe(stream);
-        object.stream = stream;
-
+      // we will have to get and decrypt it, fetch the encryption key
+      let encryptionKey = null;
+      const res = await conn.query(
+        pgformat(
+          "SELECT encryptionkey FROM media_objects WHERE objectid = %L",
+          objectid
+        )
+      );
+      if (res.rows.length > 0) {
         debug(
-          `\t\tfetched object ${objectid} successfully, caching it and returning it`
+          "getStreamObject(...): encryptionkey: ",
+          res.rows[0].encryptionkey
         );
-        objectCache.set(objectid, object);
-        debug(`\t\tthere are ${objectCache.size()} items in the cache`);
+        if (res.rows[0].encryptionkey)
+          encryptionKey = res.rows[0].encryptionkey.trim();
+      }
 
-        callback(null, object);
-      })
-      .catch(callback);
+      // get the object
+      const object = await storageBackend.getBlock(objectid, encryptionKey);
+      object.data = await stream_helpers.streamToBuffer(object.stream);
+      delete object.stream;
+      objectCache.set(objectid, object);
+
+      debug(
+        `\t\tfetched object ${objectid} successfully, caching it and returning it`
+      );
+
+      callback(null, object);
+    } catch (e) {
+      callback(e);
+    }
   });
 };
 

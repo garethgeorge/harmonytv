@@ -1,8 +1,10 @@
 const pgformat = require("pg-format");
 const uuidv4 = require("uuid/v4");
+const jwt = require("jsonwebtoken");
 const crypto = require("crypto");
 const pool = require("./db");
 const debug = require("debug")("model:user");
+const config = require("../config");
 
 const hashPassword = (userid, password) => {
   return crypto
@@ -46,7 +48,7 @@ class User {
   toJSON() {
     return {
       userid: this.userid,
-      username: this.username
+      username: this.username,
     };
   }
 
@@ -93,11 +95,11 @@ class User {
         this.userid
       )
     );
-    return res.rows.map(row => {
+    return res.rows.map((row) => {
       return {
         mediaid: row.mediaid,
         position: parseInt(row.position),
-        total_duration: parseInt(row.total_duration)
+        total_duration: parseInt(row.total_duration),
       };
     });
   }
@@ -114,10 +116,10 @@ class User {
       )
     );
     if (res.rows.length === 0) return null;
-    return res.rows.map(row => {
+    return res.rows.map((row) => {
       return {
         position: parseInt(row.position),
-        total_duration: parseInt(row.total_duration)
+        total_duration: parseInt(row.total_duration),
       };
     })[0];
   }
@@ -177,4 +179,25 @@ exports.getByUsername = async (username, conn = null) => {
   const user = new User(res.rows[0].userid);
   await user.load();
   return user;
+};
+
+exports.createAuthToken = async (user, duration = "5m") => {
+  return jwt.sign(
+    {
+      userid: user.userid,
+    },
+    config.secret,
+    {
+      algorithm: "HS384",
+      expiresIn: "5m",
+    }
+  );
+};
+
+exports.checkAuthToken = async (tokenStr) => {
+  const token = jwt.verify(tokenStr, {
+    alogrithm: "HS384",
+  });
+
+  return await exports.getById(token.userid);
 };

@@ -3,7 +3,7 @@ const mkdirpsync = require("mkdirpsync");
 const process = require("process");
 const AWS = require("aws-sdk");
 
-const resolvePath = filepath => {
+const resolvePath = (filepath) => {
   if (filepath[0] == "~") {
     filepath = path.join(process.env.HOME, filepath.slice(1));
   }
@@ -12,10 +12,9 @@ const resolvePath = filepath => {
 };
 
 module.exports = {
-  inMemoryObjectCacheSize: 4000 * 1000 * 1000, // 1 GB in bytes
-  inMemoryObjectCacheDuration: 3600, // keep it for an hour
+  secret: "a good secret for session authentication",
 
-  baseEncryptionKey: "<your encryption key>", // NOTE: in recent versions this isn't acutally used, rather each file is encrypted with its own key
+  inMemoryObjectCacheDuration: 3600, // duration in seconds
 
   // gets combined with object id's to generate unique encryption keys for
   // media objects and other files, changing this will corrupt all stored data
@@ -25,7 +24,7 @@ module.exports = {
     database: process.env.POSTGRES_DB || "postgres",
     password: process.env.POSTGRES_PASSWORD || "postgres",
     port: parseInt(process.env.POSTGRES_PORT || "5432"),
-    ssl: (process.env.POSTGRES_SSL || "false") === "true"
+    ssl: (process.env.POSTGRES_SSL || "false") === "true",
   },
 
   gdrive: {
@@ -35,7 +34,7 @@ module.exports = {
     tokenPath: resolvePath("~/.config/myplex/gdrive-token.json"), // TODO: update this to an application specific path instead of sharing w/plexfs
     credentials: {
       /* Your credentials here */
-    }
+    },
   },
 
   // options not currently used
@@ -43,6 +42,6 @@ module.exports = {
     bucket: "myplex-movies",
     endpoint: "s3.wasabisys.com",
     urlBase: "https://s3.us-west-1.wasabisys.com/",
-    credentials: new AWS.SharedIniFileCredentials({ profile: "wasabi" })
-  }
+    credentials: new AWS.SharedIniFileCredentials({ profile: "wasabi" }),
+  },
 };

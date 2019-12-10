@@ -8,11 +8,6 @@ const _ = require("lodash");
 const crypto = require("crypto");
 const debug = require("debug")("storage-backend:gdrive");
 
-const {
-  StreamStringWriter,
-  StringStreamReadable
-} = require("../util/stream_helpers");
-
 const SCOPES = config.gdrive.scopes;
 const TOKEN_PATH = config.gdrive.tokenPath;
 const credentials = config.gdrive.credentials;
@@ -46,13 +41,13 @@ async function getAuthenticationToken(credentials) {
 
     const authUrl = oAuth2Client.generateAuthUrl({
       access_type: "offline",
-      scope: SCOPES
+      scope: SCOPES,
     });
 
     console.log("Authorize this app by visiting this url:", authUrl);
     const rl = readline.createInterface({
       input: process.stdin,
-      output: process.stdout
+      output: process.stdout,
     });
 
     // get the code
@@ -89,10 +84,10 @@ class GDriveBlockStore {
       this.gapi.files.get(
         {
           fileId: blockId,
-          alt: "media"
+          alt: "media",
         },
         {
-          responseType: "stream"
+          responseType: "stream",
         },
         (err, res) => {
           if (err) return reject(err);
@@ -100,7 +95,7 @@ class GDriveBlockStore {
           accept({
             stream: res.data,
             mimetype: res.headers["content-type"],
-            length: parseInt(res.headers["content-length"])
+            length: parseInt(res.headers["content-length"]),
           });
         }
       );
@@ -115,12 +110,12 @@ class GDriveBlockStore {
           resource: {
             name: uuidv4(), // the name doesn't actually matter it should not be used to retrieve the file but can
             parents: [this.rootFolderId],
-            mimeType: mimetype || "application/octet-stream"
+            mimeType: mimetype || "application/octet-stream",
           },
           media: {
-            body: srcPipe
+            body: srcPipe,
           },
-          fields: "id"
+          fields: "id",
         },
         function(err, res) {
           if (err) return reject(err);
@@ -134,7 +129,7 @@ class GDriveBlockStore {
     return new Promise((accept, reject) => {
       this.gapi.files.delete(
         {
-          fileId: blockId
+          fileId: blockId,
         },
         function(err) {
           if (err) return reject(err);
@@ -159,7 +154,7 @@ class GDriveBlockStore {
             fields: "nextPageToken, files(id, mimeType)",
             spaces: "drive",
             pageSize: 512,
-            pageToken: nextPageToken
+            pageToken: nextPageToken,
           },
           (err, res) => {
             console.log("WTF? ", err, res);
@@ -187,7 +182,7 @@ class GDriveBlockStore {
       this.gapi.files.get(
         {
           fileId: id,
-          fields: fields
+          fields: fields,
         },
         (err, res) => {
           if (err) return reject(err);
@@ -209,7 +204,7 @@ class GDriveBlockStore {
             q: "'" + id + "' in parents and trashed = false",
             fields: "nextPageToken, files(id, name, mimeType)",
             spaces: "drive",
-            pageToken: nextPageToken
+            pageToken: nextPageToken,
           },
           (err, res) => {
             if (err) return reject(err);
@@ -235,8 +230,8 @@ class GDriveBlockStore {
           resource: {
             name: name,
             mimeType: "application/vnd.google-apps.folder",
-            parents: [parentId]
-          }
+            parents: [parentId],
+          },
         },
         (err, file) => {
           if (err) return reject(err);
@@ -247,7 +242,7 @@ class GDriveBlockStore {
   }
 }
 
-module.exports = async rootFolderId => {
+module.exports = async (rootFolderId) => {
   const oAuth2Client = await authenticate(credentials);
   const drive = google.drive({ version: "v3", auth: oAuth2Client });
   return new GDriveBlockStore(drive, rootFolderId);

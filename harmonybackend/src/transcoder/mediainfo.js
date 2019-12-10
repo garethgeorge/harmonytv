@@ -6,13 +6,13 @@ const mediaExtensions = [
   ".mkv",
   ".mp4",
   ".flv",
-  ".avi"
+  ".avi",
 ];
 
-const sanatizeName = name => {
+const sanatizeName = (name) => {
   return name
     .split(" ")
-    .filter(segment => {
+    .filter((segment) => {
       if (
         segment.match(
           /.*(p|\[.*\])\.(mp4|mkv|flv|mov|webm|mkv\.original|mp4\.original|flv\.original)$/
@@ -24,7 +24,7 @@ const sanatizeName = name => {
     .join(" ");
 };
 
-const extractQuality = path => {
+const extractQuality = (path) => {
   // try a few things
   let match = null;
   match = path.match(/(\d+)p/);
@@ -36,11 +36,11 @@ const extractQuality = path => {
 };
 
 module.exports = {
-  infoFromEpisodePath: originPath => {
+  infoFromEpisodePath: (originPath) => {
     const info = {
       originPath: originPath,
       qualityScore: extractQuality(originPath),
-      extScore: module.exports.mediaFileExtScore(originPath)
+      extScore: module.exports.mediaFileExtScore(originPath),
     };
 
     const pathSegments = originPath.split("/").reverse();
@@ -82,11 +82,11 @@ module.exports = {
     return info;
   },
 
-  infoFromMoviePath: originPath => {
+  infoFromMoviePath: (originPath) => {
     const info = {
       originPath: originPath,
       qualityScore: extractQuality(originPath),
-      extScore: module.exports.mediaFileExtScore(originPath)
+      extScore: module.exports.mediaFileExtScore(originPath),
     };
 
     // the parent folder name is the name of the movie :P
@@ -99,12 +99,12 @@ module.exports = {
   mediaExtensions: mediaExtensions,
 
   // returns the index of the extension in media extensions, lower is a better quality i.e. closer to raw
-  mediaFileExtScore: path => {
+  mediaFileExtScore: (path) => {
     for (const idx in mediaExtensions) {
       if (path.endsWith(mediaExtensions[idx])) return idx;
     }
     return -1;
-  }
+  },
 
   // TODO: info from movie path
 };

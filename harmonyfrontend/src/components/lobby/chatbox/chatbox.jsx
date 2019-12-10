@@ -458,9 +458,6 @@ export default observer(
                     state.modifiers.whisperTo = null;
                     return state;
                   });
-                  // if (this.state.display !== "docked") {
-                  //
-                  // }
                 }
               }
             }}
@@ -474,48 +471,3 @@ export default observer(
   }
 );
 
-// <input
-//   ref={this.textEntry}
-//   className={
-//     "chatbox-text-entry " +
-//     (this.state.composition[0] == "\\" ? "command" : "")
-//   }
-//   type="text"
-//   value={this.state.composition}
-//   onChange={e => {
-//     const state = Object.assign({}, this.state);
-//     state.composition = e.target.value;
-//     this.setState(state);
-//   }}
-//   onKeyDown={e => {
-//     if (e.key === "Enter") {
-//       if (this.state.composition.length > 0) {
-//         const state = Object.assign({}, this.state);
-//         const composition = this.state.composition;
-//         state.composition = "";
-//         this.setState(state, () => {
-//           // send the message if it is not a special command
-//           if (composition[0] != "\\") {
-//             this.sendMessage({
-//               metaData: {
-//                 streamKind: "user-chunk",
-//                 messageType: "user-message",
-//               },
-//               content: {
-//                 text: composition,
-//                 userColor: this.userColor,
-//               }
-//             });
-//           } else {
-//             // do the command if it is known
-//             this.execCommand(composition);
-//           }
-//         });
-//       } else {
-//         if (this.state.display !== "docked") {
-//           this.textEntry.current.blur();
-//         }
-//       }
-//     }
-//   }}
-// />
