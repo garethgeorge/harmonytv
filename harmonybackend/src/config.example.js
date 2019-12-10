@@ -15,6 +15,19 @@ module.exports = {
   secret: "a good secret for session authentication",
 
   inMemoryObjectCacheDuration: 3600, // duration in seconds
+  inMemoryObjectCacheSize: 32 * 1024 * 1024,
+
+  urlForMediaObject: (mediaid, path) => {
+    return path;
+  },
+  /*
+  // if you are using a CDN like BunnyCDN
+  urlForMediaObject: (mediaid, path) => {
+    return (
+      "https://<your pull zone>.b-cdn.net/api/media/" + mediaid + "/files/" + path
+    );
+  },
+  */
 
   // gets combined with object id's to generate unique encryption keys for
   // media objects and other files, changing this will corrupt all stored data
