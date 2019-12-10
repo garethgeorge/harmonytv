@@ -59,11 +59,11 @@ route.get("/:mediaid/files/:path", async (req, res) => {
   if (path === "stream.mpd") {
     let streamMpd = obj.data.toString("utf-8");
 
-    streamMpd = streamMpd.replace(/("init\-stream.*?")/g, (match, path) => {
-      return config.urlForMediaObject(req.params.mediaid, path);
+    streamMpd = streamMpd.replace(/"(init\-stream.*?)"/g, (match, path) => {
+      return '"' + config.urlForMediaObject(req.params.mediaid, path) + '"';
     });
-    streamMpd = streamMpd.replace(/("chunk\-stream.*?")/g, (match, path) => {
-      return config.urlForMediaObject(req.params.mediaid, path);
+    streamMpd = streamMpd.replace(/"(chunk\-stream.*?)"/g, (match, path) => {
+      return '"' + config.urlForMediaObject(req.params.mediaid, path) + '"';
     });
 
     debug("sending stream mpd as response!");
