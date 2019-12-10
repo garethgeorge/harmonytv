@@ -21,6 +21,8 @@ services:
       - NODE_ENV=development
       - POSTGRES_HOST=db
       - DEBUG=model*,web*
+    ports:
+      - "127.0.0.1:9229:9229"
     depends_on:
       - db
     command: "./node_modules/nodemon/bin/nodemon.js bin/web.js"

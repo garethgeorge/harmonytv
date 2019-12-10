@@ -16,16 +16,20 @@ app.use(
   require("express-session")({
     secret: "AnVjaVMfpAIvfpeZfp",
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
   })
 );
 app.use(passport.initialize());
 app.use(passport.session());
 
-var whitelist = ["https://harmonytv.lastpengu.in", "http://localhost", "http://localhost:3000"];
+var whitelist = [
+  "https://harmonytv.lastpengu.in",
+  "http://localhost",
+  "http://localhost:3000",
+];
 var corsOptions = {
   origin: true,
-  credentials: true
+  credentials: true,
 };
 
 app.use(require("cors")(corsOptions));
@@ -63,10 +67,10 @@ passport.serializeUser((user, cb) => {
 passport.deserializeUser((id, cb) => {
   model.user
     .getById(id)
-    .then(user => {
+    .then((user) => {
       cb(null, user);
     })
-    .catch(err => {
+    .catch((err) => {
       cb(err, null);
     });
 });

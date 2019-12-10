@@ -18,16 +18,16 @@ const mediainfo = require("../src/transcoder/mediainfo");
 
 parser = new ArgumentParser({
   help: true,
-  description: "command line tool for uploading a video to plex"
+  description: "command line tool for uploading a video to plex",
 });
 
 parser.addArgument("library", {
-  help: "the name of the library it belongs to"
+  help: "the name of the library it belongs to",
 });
 
 parser.addArgument("originPath", {
   help:
-    "the path to the file to be uploaded, it will be transcoded before uploading"
+    "the path to the file to be uploaded, it will be transcoded before uploading",
 });
 
 const args = parser.parseArgs();
@@ -61,7 +61,7 @@ if (mediainfo.mediaExtensions.indexOf(path.extname(args.originPath)) === -1) {
       console.log("Error: no library with name '" + args.library + "'");
       console.log(
         "Did you mean one of the following: ",
-        (await model.getAllLibraries()).map(library => {
+        (await model.getAllLibraries()).map((library) => {
           return library.libraryname;
         })
       );
@@ -103,7 +103,7 @@ if (mediainfo.mediaExtensions.indexOf(path.extname(args.originPath)) === -1) {
 
     const metadata = await transcoder({
       filename: args.originPath,
-      outputdir: uploadDir
+      outputdir: uploadDir,
     });
 
     console.log(
@@ -114,10 +114,10 @@ if (mediainfo.mediaExtensions.indexOf(path.extname(args.originPath)) === -1) {
       scan files for upload 
     */
 
-    const files = _.filter(fsutil.dirtree(uploadDir), f => {
+    const files = _.filter(fsutil.dirtree(uploadDir), (f) => {
       if (f.endsWith(".DS_Store")) return false;
       return true;
-    }).map(value => {
+    }).map((value) => {
       return path.relative(uploadDir, value);
     });
 
@@ -220,6 +220,7 @@ if (mediainfo.mediaExtensions.indexOf(path.extname(args.originPath)) === -1) {
     }
 
     await client.query("COMMIT");
+    console.log("New media file from " + args.originPath + " was committed.");
   } catch (e) {
     await client.query("ROLLBACK");
     throw e;
