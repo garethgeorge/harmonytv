@@ -6,6 +6,7 @@ const mediainfo = require("../src/transcoder/mediainfo");
 const pgformat = require("pg-format");
 const debug = require("debug")("main");
 const process = require("process");
+const util = require("../src/util/");
 
 parser = new ArgumentParser({
   help: true, 
@@ -55,20 +56,10 @@ if (args.type == "tv") {
 }
 
 // order the files by quality, highest quality a the top via lexographic comparator
-const lexographic_comparator = (a, b) => {
-  for (let i = 0; i < a.length; ++i) {
-    if (a[i] < b[i]) {
-      return -1;
-    } else if (a[i] > b[i]) 
-      return 1;
-  }
-  return 0;
-}
-
 filesInfo.sort((a, b) => {
-  return lexographic_comparator(
-    [a.niceName, a.qualityScore, a.extScore],
-    [b.niceName, b.qualityScore, b.extScore]
+  return util.lexographic_comparator(
+    [a.niceName, -a.qualityScore, a.extScore],
+    [b.niceName, -b.qualityScore, b.extScore]
   );
 });
 

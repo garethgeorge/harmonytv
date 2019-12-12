@@ -37,14 +37,14 @@ const waitForFFmpeg = (proc) => {
     proc
       .on("progress", (info) => {
         // console.log('progress', info);
-        bar.update(Math.round(info.percent * 100) / 100);
+        // bar.update(Math.round(info.percent * 100) / 100);
       })
       .on("end", () => {
         bar.stop();
         accept();
       })
-      // .on("stderr", console.log)
-      // .on("stdout", console.log)
+      .on("stderr", console.log)
+      .on("stdout", console.log)
       .on("error", (err) => {
         bar.stop();
         reject(err);
@@ -70,6 +70,7 @@ module.exports = async (args) => {
     try {
       rimraf.sync(tmpDir);
     } catch (e) {}
+    process.exit(0);
   });
 
   try {
@@ -145,6 +146,7 @@ module.exports = async (args) => {
     for (const stream of mediaInfo.streams) {
       if (stream.codec_type === "video") {
         videoStreamIdx = stream.index;
+        break;
       }
     }
 
@@ -287,7 +289,7 @@ module.exports = async (args) => {
         "-use_timeline 1",
         "-b_strategy 0",
         "-bf 1",
-        "-map 0:a",
+        "-map 0:a?",
         "-b:a 196k",
         "-hls_playlist 1",
         "-seg_duration 10",
@@ -300,11 +302,11 @@ module.exports = async (args) => {
       const bitrate = size.bitrate;
 
       proc.outputOptions([
-        `-filter_complex [0]format=pix_fmts=yuv420p[temp${index}];[temp${index}]scale=-2:${size.height}[A${index}]`,
+        `-filter_complex [0]format=pix_fmts=yuv420p[temp${index}];[temp${index}]scale=-2:${Math.round(size.height)}[A${index}]`,
         `-map [A${index}]:v`,
         `-crf 24`,
-        `-maxrate ${bitrate}k`,
-        `-bufsize ${bitrate * 2}k`,
+        `-maxrate ${Math.round(bitrate)}k`,
+        `-bufsize ${Math.round(bitrate) * 2}k`,
       ]);
     }
 

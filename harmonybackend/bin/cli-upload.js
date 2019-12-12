@@ -33,8 +33,8 @@ parser.addArgument("originPath", {
 const args = parser.parseArgs();
 args.originPath = path.resolve(args.originPath);
 
-if (mediainfo.mediaExtensions.indexOf(path.extname(args.originPath)) === -1) {
-  console.log(`file ${args.originPath} is not a video file`);
+if (!mediainfo.isMediaFile(args.originPath)) {
+  console.log(`file ${args.originPath} with extension ${path.extname(args.originPath)} is not a video file`);
   process.exit(0);
 }
 
@@ -227,9 +227,10 @@ if (mediainfo.mediaExtensions.indexOf(path.extname(args.originPath)) === -1) {
   } finally {
     client.release();
     model.shutdown();
-
+    console.log("Shutdown media encoder/uploader");
     if (uploadDir != args.originPath) {
       rimraf.sync(uploadDir);
     }
+    process.exit(0);
   }
 })();

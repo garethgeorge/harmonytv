@@ -2,11 +2,11 @@ const mediaExtensions = [
   ".mkv.original",
   ".mp4.original",
   ".flv.original",
-  ".avi.original",
+  // ".avi.original",
   ".mkv",
   ".mp4",
-  ".flv",
-  ".avi",
+  // ".flv",
+  // ".avi",
 ];
 
 const sanatizeName = (name) => {
@@ -36,6 +36,15 @@ const extractQuality = (path) => {
 };
 
 module.exports = {
+  isMediaFile: (path) => {
+    for (const ext of mediaExtensions) {
+      if (path.endsWith(ext)) {
+        return true;
+      }
+    }
+    return false;
+  },
+
   infoFromEpisodePath: (originPath) => {
     const info = {
       originPath: originPath,
