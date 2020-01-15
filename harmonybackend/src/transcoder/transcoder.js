@@ -22,6 +22,15 @@ const extractSubtitleStream = async (sourcefn, streamno, outputSubsFile) => {
   return await waitForFFmpeg(proc);
 };
 
+const encodeSubtitleStreamFromDisk = async (sourcefn, outputSubsFile) => {
+  const proc = ffmpeg({
+    source: sourcefn,
+    cwd: ".",
+  });
+  proc.output(outputSubsFile);
+  return await waitForFFmpeg(proc);
+}
+
 const waitForFFmpeg = (proc) => {
   return new Promise((accept, reject) => {
     const bar = new cliprogress.SingleBar(
@@ -37,14 +46,14 @@ const waitForFFmpeg = (proc) => {
     proc
       .on("progress", (info) => {
         // console.log('progress', info);
-        // bar.update(Math.round(info.percent * 100) / 100);
+        bar.update(Math.round(info.percent * 100) / 100);
       })
       .on("end", () => {
         bar.stop();
         accept();
       })
-      .on("stderr", console.log)
-      .on("stdout", console.log)
+      // .on("stderr", console.log)
+      // .on("stdout", console.log)
       .on("error", (err) => {
         bar.stop();
         reject(err);
@@ -52,6 +61,109 @@ const waitForFFmpeg = (proc) => {
     proc.run();
   });
 };
+
+const processSubtitlesForFile = async (filepath, mediaInfo, tmpDir) => {
+  const subtitlesMetadata = {};
+
+  // scan for subtitles
+  //       this will likely require coding an additional utility that can sweep the disk for .srt's, check if they are included, and if not translate and upload them.
+  console.log("scanning for subtitles to extract");
+  let imageSubtitlesIdx = -1;
+  const subtitleStreams = {};
+  for (const stream of mediaInfo.streams) {
+    if (
+      stream.codec_type === "subtitle" ||
+      stream.codec_name.indexOf("text") !== -1
+    ) {
+      if (
+        stream.codec_name.indexOf("text") !== -1 ||
+        stream.codec_name === "ass" ||
+        stream.codec_name === "ssa"
+      ) {
+        console.log(
+          "\tfound subtitles, language: " +
+            stream.tags.language +
+            " on stream #" +
+            stream.index
+        );
+        let language;
+        if (stream.tags.language === "und") language = ".eng";
+        else language = "." + stream.tags.language;
+
+        if (subtitleStreams[language]) {
+          console.log(
+            "\t\talready have subtitles for language '" +
+              language +
+              "' skipping."
+          );
+          continue;
+        }
+        subtitleStreams[language] = stream;
+
+        const subtitleFile = "subtitles" + language + ".vtt";
+        await extractSubtitleStream(
+          args.filename,
+          stream.index,
+          path.join(tmpDir, subtitleFile)
+        );
+        subtitlesMetadata[stream.tags.language] = {
+          file: subtitleFile,
+        };
+      } else {
+        console.log("\tfound video subtitles, index: " + stream.index);
+        imageSubtitlesIdx = stream.index;
+        break;
+      }
+    }
+  }
+
+  // TODO: handle image subtitles properly!!!
+  if (imageSubtitlesIdx !== -1) {
+    console.log("\tWARNING!!!! THIS VIDEO CONTAINS IMAGE SUBTITLES, HOWEVER THESE IMAGE FORMATS ARE NOT YET SUPPORTED FOR BURNIN");
+  }
+
+  // ! scan the disk for subtitles
+  const videoDir = path.dirname(filepath);
+  const videoBasename = path.basename(filepath);
+  const videoBasenameNoExt = videoBasename.substr(0, videoBasename.lastIndexOf("."));
+  const subtitleFiles = fs.readdirSync(videoDir).filter(filename => {
+    return filename.substr(0, videoBasenameNoExt.length) === videoBasenameNoExt && filename.endsWith(".srt");
+  }).map(subtitleFile => {
+    return path.join(videoDir, subtitleFile);
+  });
+
+  console.log("processing subtitle files found on disk");
+  for (const subtitleFile of subtitleFiles) {
+    const extPos = subtitleFile.lastIndexOf(".");
+    const langCodePos = subtitleFile.substr(0, extPos).lastIndexOf(".");
+    let language = ".eng";
+    if (extPos - langCodePos <= 3)
+      language = subtitleFile.substr(langCodePos, extPos - langCodePos);
+    console.log("\t - " + subtitleFile + " language: " + language);
+
+    if (subtitleStreams[language]) {
+      console.log(
+        "\t\talready have subtitles for language '" +
+          language +
+          "' skipping."
+      );
+      continue;
+    }
+    subtitleStreams[language] = true;
+
+    const outputSubtitleFile = "subtitles" + language + ".vtt";
+    await encodeSubtitleStreamFromDisk(
+      subtitleFile,
+      path.join(tmpDir, outputSubtitleFile)
+    );
+    subtitlesMetadata[language] = {
+      file: outputSubtitleFile,
+    };
+  }
+
+
+  return subtitlesMetadata;
+}
 
 // NOTE: can only be one 'preprocess' process at a time :P
 // rimraf.sync(path.join(os.tmpdir(), "/plex_preprocess/"));
@@ -77,6 +189,7 @@ module.exports = async (args) => {
     /*
       analyze the video file
     */
+    console.log("trying to get media info");
     const mediaInfo = await util.promisify(ffmpeg.ffprobe)(args.filename);
     console.log(JSON.stringify(mediaInfo, false, 2));
 
@@ -84,64 +197,14 @@ module.exports = async (args) => {
       transcoder_version: "0.1.0",
       dashStream: "stream.mpd",
       hlsStream: "master.m3u8",
-      subtitles: {},
       capabilities: ["dash", "hls", "subtitles"],
     };
 
-    // scan for subtitles
-    // TODO: find a good way to include separate .srt files from the disk and add them!
-    //       this will likely require coding an additional utility that can sweep the disk for .srt's, check if they are included, and if not translate and upload them.
-    console.log("scanning for subtitles to extract");
-    let imageSubtitlesIdx = -1;
-    const subtitleStreams = {};
-    for (const stream of mediaInfo.streams) {
-      if (
-        stream.codec_type === "subtitle" ||
-        stream.codec_name.indexOf("text") !== -1
-      ) {
-        if (
-          stream.codec_name.indexOf("text") !== -1 ||
-          stream.codec_name === "ass" ||
-          stream.codec_name === "ssa"
-        ) {
-          console.log(
-            "\tfound subtitles, language: " +
-              stream.tags.language +
-              " on stream #" +
-              stream.index
-          );
-          let language;
-          if (stream.tags.language === "und") language = ".eng";
-          else language = "." + stream.tags.language;
+    
+    metadata.subtitles = await processSubtitlesForFile(args.filename, mediaInfo, tmpDir);
+    console.log("all subtitles found: " + JSON.stringify(metadata.subtitles, null, 2));
 
-          if (subtitleStreams[language]) {
-            console.log(
-              "\t\talready have subtitles for language '" +
-                language +
-                "' skipping."
-            );
-            continue;
-          }
-          subtitleStreams[language] = stream;
-
-          const subtitleFile = "subtitles" + language + ".vtt";
-          await extractSubtitleStream(
-            args.filename,
-            stream.index,
-            path.join(tmpDir, subtitleFile)
-          );
-          metadata.subtitles[stream.tags.language] = {
-            file: subtitleFile,
-          };
-        } else {
-          console.log("\tfound video subtitles, index: " + stream.index);
-          imageSubtitlesIdx = stream.index;
-          break;
-        }
-      }
-    }
-
-    // select the audio stream to keep
+    // select the video stream to use 
     let videoStreamIdx = -1;
     for (const stream of mediaInfo.streams) {
       if (stream.codec_type === "video") {
@@ -154,20 +217,6 @@ module.exports = async (args) => {
 
     if (!videoStream)
       throw new Error(args.filename + " was unable to find a video stream");
-
-    // NOTE: todo burn in the subtitles
-    // if (imageSubtitlesIdx !== -1) {
-    //   throw new Error(args.filename + " uses image subtitle stream at index: " + imageSubtitlesIdx);
-    //   // going to wind up being something like this: // ffmpeg -i input.mkv -filter_complex "[0:v][0:s]overlay[v]" -map "[v]" -map 0:a <output options> output.mkv
-    // }
-
-    if (imageSubtitlesIdx !== -1) {
-      console.log(
-        "Image subtitles at index: " +
-          imageSubtitlesIdx +
-          ", at somepoint we need to decide how to handle these."
-      );
-    }
 
     console.log("using video at stream #" + videoStreamIdx + ".");
 
@@ -336,6 +385,7 @@ module.exports = async (args) => {
 
     return metadata;
   } catch (e) {
+    console.log(e);
     rimraf.sync(tmpDir);
     throw e;
   }

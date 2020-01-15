@@ -223,6 +223,7 @@ if (!mediainfo.isMediaFile(args.originPath)) {
     console.log("New media file from " + args.originPath + " was committed.");
   } catch (e) {
     await client.query("ROLLBACK");
+    console.log(e);
     throw e;
   } finally {
     client.release();

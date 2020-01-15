@@ -167,22 +167,22 @@ class Cache {
   }
 }
 
-// const objectCache = new Cache(config.inMemoryObjectCacheDuration * 1000);
-const objectCache = new LRU({
-  max: config.inMemoryObjectCacheSize,
-  length: (obj, key) => {
-    debug("computed length for %o to be %o", key, obj.length);
-    return obj.length;
-  },
-  dispose: (key, obj) => {
-    debug("cache disposing of old object: " + key);
-  },
-  maxAge: config.inMemoryObjectCacheDuration * 1000,
-});
-setInterval(() => {
-  debug("attempting to prune the object cache");
-  objectCache.prune();
-}, 30 * 1000);
+const objectCache = new Cache(config.inMemoryObjectCacheDuration * 1000);
+// const objectCache = new LRU({
+//   max: config.inMemoryObjectCacheSize,
+//   length: (obj, key) => {
+//     debug("computed length for %o to be %o", key, obj.length);
+//     return obj.length;
+//   },
+//   dispose: (key, obj) => {
+//     debug("cache disposing of old object: " + key);
+//   },
+//   maxAge: config.inMemoryObjectCacheDuration * 1000,
+// });
+// setInterval(() => {
+//   debug("attempting to prune the object cache");
+//   objectCache.prune();
+// }, 30 * 1000);
 
 const objectCacheLock = new AsyncLock();
 

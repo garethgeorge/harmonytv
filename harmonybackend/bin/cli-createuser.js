@@ -35,5 +35,6 @@ const args = parser.parseArgs();
   } finally {
     client.release();
     model.shutdown();
+    console.log(require("wtfnode").dump());
   }
 })();

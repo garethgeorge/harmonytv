@@ -1,6 +1,7 @@
 const pgformat = require("pg-format");
 const config = require("../config");
 const debug = require("debug")("model");
+const process = require("process");
 const fs = require("fs");
 const { migrate } = require("postgres-migrations");
 
@@ -29,6 +30,9 @@ exports.setup = async (conn = null) => {
 
 exports.shutdown = () => {
   pool.end();
+  setImmediate(() => {
+    process.exit(0);
+  });
 };
 
 // direct access to a client can be needed for supporting transactional insertions
