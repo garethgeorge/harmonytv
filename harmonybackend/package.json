@@ -25,7 +25,7 @@
         "fluent-ffmpeg": "^2.1.2",
         "forever": "^1.0.0",
         "googleapis": "^43.0.0",
-        "http-proxy": "^1.18.0",
+        "http-proxy": "^1.18.1",
         "jsonwebtoken": "^8.5.1",
         "lodash": "^4.17.15",
         "lru-cache": "^5.1.1",
