@@ -20,7 +20,7 @@
         "cli-progress": "^3.1.0",
         "cors": "^2.8.5",
         "debug": "^4.1.1",
-        "express": "^4.17.1",
+        "express": "^4.17.3",
         "express-session": "^1.17.0",
         "fluent-ffmpeg": "^2.1.2",
         "forever": "^1.0.0",
